@@ -5,8 +5,8 @@ import { AppIcon } from '@/components/icons/AppIcon';
 type RoleFilter = 'all' | 'admin' | 'user';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
-export function UsersTable({ users }: { users: any[] }) {
-  const [query, setQuery] = useState('');
+export function UsersTable({ users, initialQuery = '' }: { users: any[]; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [role, setRole] = useState<RoleFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [provider, setProvider] = useState('all');

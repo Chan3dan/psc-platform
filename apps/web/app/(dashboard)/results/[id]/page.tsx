@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Result } from '@psc/shared/models';
 import { ResultDetails } from '@/components/exam/ResultDetails';
+import { formatDuration, formatResultDateTime } from '@/lib/results';
 
 async function getResult(id: string, userId: string) {
   await connectDB();
@@ -21,5 +22,18 @@ export default async function ResultPage({ params }: { params: { id: string } })
   if (!session) notFound();
   const result = await getResult(params.id, session.user.id) as any;
   if (!result) notFound();
-  return <ResultDetails result={result} backHref="/dashboard" backLabel="Dashboard" heading="Test Result" subtitle={result.test_id?.title ?? 'Practice Session'} />;
+  return (
+    <ResultDetails
+      result={result}
+      backHref="/dashboard"
+      backLabel="Dashboard"
+      heading="Test Result"
+      subtitle={result.test_id?.title ?? 'Practice Session'}
+      metaItems={[
+        { label: 'Type', value: result.test_type ?? 'unknown' },
+        { label: 'Duration', value: formatDuration(result.total_time_seconds) },
+        { label: 'Submitted', value: formatResultDateTime(result.created_at) },
+      ]}
+    />
+  );
 }

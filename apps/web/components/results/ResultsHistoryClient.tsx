@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { formatDuration } from '@/lib/results';
+import { formatDuration, formatResultDate } from '@/lib/results';
 
 type ResultFilter = 'all' | 'flagged' | 'mock' | 'practice';
 
@@ -99,7 +99,7 @@ export function ResultsHistoryClient({ results }: { results: any[] }) {
                     </div>
                     <div className="text-left md:text-right">
                       <p className={`text-sm font-semibold ${pct >= 40 ? 'text-emerald-600' : 'text-red-500'}`}>{result.score}/{result.max_score}</p>
-                      <p className="text-xs text-[var(--muted)] mt-0.5">{new Date(result.created_at).toLocaleDateString()} · {result.accuracy_percent}% accuracy</p>
+                      <p className="text-xs text-[var(--muted)] mt-0.5">{formatResultDate(result.created_at)} · {result.accuracy_percent}% accuracy</p>
                     </div>
                   </div>
                 </Link>

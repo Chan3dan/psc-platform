@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { formatDuration } from '@/lib/results';
+import { formatDuration, formatResultDate } from '@/lib/results';
 
 type AdminResultFilter = 'all' | 'flagged' | 'mock' | 'practice';
 
@@ -72,14 +72,16 @@ export function AdminResultsClient({ results }: { results: any[] }) {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="font-medium text-[var(--text)] truncate">{result.test_id?.title ?? 'Practice Session'}</p>
-                        <p className="text-xs text-[var(--muted)] truncate mt-0.5">{result.user_id?.name ?? 'Unknown user'} · {result.exam_id?.name ?? 'Unknown exam'}</p>
+                        <p className="text-xs text-[var(--muted)] truncate mt-0.5">
+                          {result.user_id?.name ?? 'Unknown user'} · {result.user_id?.email ?? 'No email'} · {result.exam_id?.name ?? 'Unknown exam'}
+                        </p>
                       </div>
                       <span className={`badge text-xs ${flaggedCount > 0 ? 'badge-amber' : 'badge-gray'}`}>
                         {flaggedCount > 0 ? `${flaggedCount} flagged` : result.test_type}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-[var(--muted)]">
-                      <span>{formatDuration(result.total_time_seconds)} · {new Date(result.created_at).toLocaleDateString()}</span>
+                      <span>{formatDuration(result.total_time_seconds)} · {formatResultDate(result.created_at)}</span>
                       <span className="font-semibold text-[var(--text)]">{result.score}/{result.max_score}</span>
                     </div>
                   </Link>
@@ -102,14 +104,27 @@ export function AdminResultsClient({ results }: { results: any[] }) {
                     return (
                       <tr key={result._id} className="hover:bg-[var(--brand-soft)]/25">
                         <td className="px-6 py-3 font-medium text-[var(--text)]">{result.test_id?.title ?? 'Practice Session'}</td>
-                        <td className="px-6 py-3 text-[var(--muted)]">{result.user_id?.name ?? 'Unknown user'}</td>
+                        <td className="px-6 py-3 text-[var(--muted)]">
+                          <div className="space-y-1">
+                            <p className="text-[var(--text)]">{result.user_id?.name ?? 'Unknown user'}</p>
+                            <p className="text-xs">{result.user_id?.email ?? 'No email'}</p>
+                            {result.user_id?._id && (
+                              <Link
+                                href={`/admin/users?query=${encodeURIComponent(result.user_id.email ?? result.user_id._id)}`}
+                                className="text-xs text-[var(--brand)] hover:underline"
+                              >
+                                Find user
+                              </Link>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-6 py-3 text-[var(--muted)]">{result.exam_id?.name ?? 'Unknown exam'}</td>
                         <td className="px-6 py-3"><span className="badge-gray">{result.test_type}</span></td>
                         <td className="px-6 py-3 text-[var(--text)] font-semibold">{result.score}/{result.max_score}</td>
                         <td className="px-6 py-3">
                           <span className={`badge ${flaggedCount > 0 ? 'badge-amber' : 'badge-gray'}`}>{flaggedCount}</span>
                         </td>
-                        <td className="px-6 py-3 text-[var(--muted)]">{formatDuration(result.total_time_seconds)} · {new Date(result.created_at).toLocaleDateString()}</td>
+                        <td className="px-6 py-3 text-[var(--muted)]">{formatDuration(result.total_time_seconds)} · {formatResultDate(result.created_at)}</td>
                         <td className="px-6 py-3">
                           <Link href={`/admin/results/${result._id}`} className="text-[var(--brand)] font-medium hover:underline">Review</Link>
                         </td>

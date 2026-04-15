@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db';
 import { Exam, Question, User, Result } from '@psc/shared/models';
 import Link from 'next/link';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { formatResultDateTime } from '@/lib/results';
 
 export default async function AdminPage() {
   await connectDB();
@@ -116,7 +117,7 @@ export default async function AdminPage() {
                   </div>
                 </div>
                 <p className="text-xs text-[var(--muted)]">
-                  {new Date(item.createdAt).toLocaleString()}
+                  {formatResultDateTime(item.createdAt)}
                 </p>
               </div>
             ))}

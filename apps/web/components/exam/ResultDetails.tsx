@@ -10,6 +10,7 @@ export function ResultDetails({
   heading,
   subtitle,
   metaItems = [],
+  actionItems = [],
 }: {
   result: any;
   backHref: string;
@@ -17,6 +18,7 @@ export function ResultDetails({
   heading: string;
   subtitle?: string;
   metaItems?: Array<{ label: string; value: string }>;
+  actionItems?: Array<{ label: string; href: string }>;
 }) {
   const pct = ((result.score / result.max_score) * 100).toFixed(1);
   const pass = result.score >= result.max_score * 0.4;
@@ -54,6 +56,12 @@ export function ResultDetails({
           <AppIcon name="arrow-right" className="h-4 w-4 rotate-180" />
           Back
         </Link>
+        {actionItems.map((action) => (
+          <Link key={`${action.label}-${action.href}`} href={action.href} className="btn-secondary inline-flex items-center gap-2">
+            <AppIcon name="results" className="h-4 w-4" />
+            {action.label}
+          </Link>
+        ))}
         <span className="badge-gray inline-flex items-center gap-1.5">
           <AppIcon name="mock" className="h-3.5 w-3.5" />
           Attempt Time: {duration}

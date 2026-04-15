@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { formatResultDateTime } from '@/lib/results';
 
 type FlaggedFilter = 'all' | 'attempts' | 'questions' | 'recent';
 
@@ -90,7 +91,7 @@ export function AdminFlaggedClient({ flaggedItems }: { flaggedItems: any[] }) {
                       {item.userName} {item.userEmail ? `(${item.userEmail})` : ''} · {item.testTitle} · {item.examName}
                     </p>
                     <p className="text-xs text-[var(--muted)] mt-0.5">
-                      Attempt score {item.score}/{item.maxScore} · {new Date(item.createdAt).toLocaleString()}
+                      Attempt score {item.score}/{item.maxScore} · {formatResultDateTime(item.createdAt)}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
