@@ -16,16 +16,15 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"],
-      "@psc/shared": ["../../packages/shared/index.ts"],
-      "@psc/shared/*": ["../../packages/shared/*"]
+      "@psc/shared": ["./shared/index.ts"],
+      "@psc/shared/*": ["./shared/*"]
     }
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "../../packages/shared/**/*.ts"
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

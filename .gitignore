@@ -45,3 +45,5 @@ coverage/
 .expo/
 dist/
 web-build/
+
+.vercel
