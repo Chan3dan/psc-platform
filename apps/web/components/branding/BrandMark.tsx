@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { DEFAULT_LOGO_URL, normalizeLogoUrl } from '@/lib/site-settings-config';
 
@@ -25,7 +24,6 @@ export function BrandMark({
   const title = admin ? `${name} Admin` : name;
   const normalizedLogoUrl = useMemo(() => normalizeLogoUrl(logoUrl), [logoUrl]);
   const [currentLogoUrl, setCurrentLogoUrl] = useState(normalizedLogoUrl);
-  const isDataUrl = currentLogoUrl.startsWith('data:');
 
   useEffect(() => {
     setCurrentLogoUrl(normalizedLogoUrl);
@@ -34,13 +32,13 @@ export function BrandMark({
   return (
     <Link href={href} className="flex items-center gap-3 min-w-0 max-w-full">
       <div className={`${compact ? 'h-11 w-11 rounded-xl' : 'h-14 w-14 rounded-2xl'} overflow-hidden border border-[var(--line)] bg-white shrink-0 shadow-sm`}>
-        <Image
+        <img
           src={currentLogoUrl}
           alt={name}
-          width={96}
-          height={96}
           className="h-full w-full object-contain"
-          unoptimized={isDataUrl}
+          loading="eager"
+          decoding="async"
+          referrerPolicy="no-referrer"
           onError={() => {
             if (currentLogoUrl !== DEFAULT_LOGO_URL) {
               setCurrentLogoUrl(DEFAULT_LOGO_URL);
