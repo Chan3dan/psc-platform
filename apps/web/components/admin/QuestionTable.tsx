@@ -173,8 +173,8 @@ export function QuestionTable({ questions }: { questions: any[] }) {
 
   return (
     <div>
-      <div className="px-6 py-3 border-b border-[var(--line)]">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+      <div className="px-4 md:px-6 py-3 border-b border-[var(--line)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
           <input
             type="text"
             placeholder="Search question / subject / exam..."
@@ -205,7 +205,7 @@ export function QuestionTable({ questions }: { questions: any[] }) {
             <option value="hard">Hard</option>
           </select>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
           <button
             className={`card p-2 text-left transition border ${difficultyFilter === '' ? 'border-blue-400 ring-2 ring-blue-200 dark:ring-blue-900' : 'border-[var(--line)]'}`}
             onClick={() => { setDifficultyFilter(''); setPage(1); }}
@@ -244,8 +244,8 @@ export function QuestionTable({ questions }: { questions: any[] }) {
             if (e.target === e.currentTarget) setEditing(null);
           }}
         >
-          <div className="w-full max-w-5xl max-h-[92vh] overflow-y-auto card glass p-5 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="w-full max-w-5xl max-h-[92vh] overflow-y-auto card glass p-4 md:p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Edit Question</h3>
               <button onClick={() => setEditing(null)} className="btn-secondary text-xs px-3 py-1.5">Close</button>
             </div>
@@ -361,21 +361,25 @@ export function QuestionTable({ questions }: { questions: any[] }) {
           return (
             <div key={q._id}>
               <button
-                className="w-full text-left px-6 py-3 hover:bg-[var(--brand-soft)]/35 transition-colors"
+                className="w-full text-left px-4 md:px-6 py-3 hover:bg-[var(--brand-soft)]/35 transition-colors"
                 onClick={() => setExpanded(open ? null : q._id)}
               >
-                <div className="flex items-center gap-3">
-                  <span className={`badge text-xs shrink-0 ${DIFF[q.difficulty] ?? 'badge-gray'}`}>{q.difficulty}</span>
-                  <span className="text-xs text-[var(--muted)] shrink-0">{q.exam_id?.name}</span>
-                  <span className="text-[var(--muted)]">›</span>
-                  <span className="text-xs text-[var(--muted)] shrink-0">{q.subject_id?.name}</span>
-                  <p className="text-sm text-[var(--text)] truncate flex-1">{q.question_text}</p>
-                  <span className="text-[var(--muted)] text-xs shrink-0">{open ? '▲' : '▼'}</span>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <span className={`badge text-[10px] shrink-0 ${DIFF[q.difficulty] ?? 'badge-gray'}`}>{q.difficulty}</span>
+                      <span className="text-[11px] text-[var(--muted)]">{q.exam_id?.name}</span>
+                      <span className="text-[var(--muted)] text-[11px]">•</span>
+                      <span className="text-[11px] text-[var(--muted)]">{q.subject_id?.name}</span>
+                    </div>
+                    <p className="text-sm text-[var(--text)] leading-relaxed md:truncate">{q.question_text}</p>
+                  </div>
+                  <span className="text-[var(--muted)] text-xs shrink-0 pt-1">{open ? '▲' : '▼'}</span>
                 </div>
               </button>
 
               {open && (
-                <div className="px-6 pb-4 bg-[var(--brand-soft)]/20 space-y-2">
+                <div className="px-4 md:px-6 pb-4 bg-[var(--brand-soft)]/20 space-y-2">
                   <div className="mt-2 space-y-1">
                     {q.options?.map((o: any) => (
                       <p
@@ -394,9 +398,9 @@ export function QuestionTable({ questions }: { questions: any[] }) {
                   {q.explanation && (
                     <p className="text-xs text-[var(--muted)] italic border-t border-[var(--line)] pt-2 mt-2">{q.explanation}</p>
                   )}
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-xs text-[var(--muted)]">{q.year ? `Year: ${q.year}` : 'Year: N/A'}</p>
-                    <button onClick={() => startEdit(q)} className="text-sm text-[var(--brand)] font-semibold">
+                    <button onClick={() => startEdit(q)} className="text-sm text-[var(--brand)] font-semibold self-start sm:self-auto">
                       Edit
                     </button>
                   </div>
@@ -407,11 +411,11 @@ export function QuestionTable({ questions }: { questions: any[] }) {
         })}
       </div>
       {filtered.length > 0 && (
-        <div className="px-6 py-3 border-t border-[var(--line)] flex items-center justify-between">
+        <div className="px-4 md:px-6 py-3 border-t border-[var(--line)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-[var(--muted)]">
             Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filtered.length)} of {filtered.length}
           </p>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center">
             <select
               className="input text-xs py-1.5 px-2 w-[88px]"
               value={pageSize}

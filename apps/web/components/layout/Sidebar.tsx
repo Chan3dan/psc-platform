@@ -4,22 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { SearchModal } from '@/components/layout/SearchModal';
+import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; role?: string };
 }
-
-const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '◎' },
-  { href: '/exams', label: 'Exams', icon: '📋' },
-  { href: '/practice', label: 'Practice', icon: '✏️' },
-  { href: '/mock', label: 'Mock Tests', icon: '⏱' },
-  { href: '/drill', label: 'Speed Drill', icon: '⚡' },
-  { href: '/planner', label: 'Study Planner', icon: '📅' },
-  { href: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
-  { href: '/notes', label: 'Notes', icon: '📚' },
-  { href: '/bookmarks', label: 'Bookmarks', icon: '🔖' },
-];
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
@@ -52,7 +41,7 @@ export function Sidebar({ user }: SidebarProps) {
           </button>
         </div>
         <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-          {NAV.map(item => {
+          {APP_NAV_ITEMS.map(item => {
             const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href}

@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
-      <MobileNav user={session.user as any} />
+      <MobileNav />
     </div>
   );
 }
