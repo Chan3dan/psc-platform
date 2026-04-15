@@ -37,9 +37,14 @@ export function MobileHeader({ user }: MobileHeaderProps) {
       <div className="md:hidden sticky top-0 z-40 px-3 pt-3 pb-2">
         <div className="glass rounded-2xl border border-[var(--line)] shadow-[var(--shadow-soft)] px-3 py-2.5">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{settings.brandName}</p>
-              <p className="text-sm font-semibold text-[var(--text)] truncate">Hi, {firstName}</p>
+            <div className="min-w-0 flex-1">
+              <BrandMark
+                name={settings.brandName}
+                logoUrl={settings.logoUrl}
+                subtitle={`Hi, ${firstName}`}
+                compact
+                hideSubtitleOnMobile={false}
+              />
             </div>
             <button
               onClick={() => setMenuOpen(true)}
@@ -65,6 +70,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
                 name={settings.brandName}
                 logoUrl={settings.logoUrl}
                 subtitle="Everything in one menu"
+                hideSubtitleOnMobile
               />
               <button onClick={() => setMenuOpen(false)} className="btn-secondary !px-3 !py-2">
                 Close

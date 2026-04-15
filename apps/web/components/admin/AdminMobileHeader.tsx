@@ -8,7 +8,6 @@ import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
-import { getAdminBrandName } from '@/lib/site-settings-config';
 
 interface AdminMobileHeaderProps {
   user: { name?: string | null; email?: string | null };
@@ -38,9 +37,14 @@ export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
       <div className="md:hidden sticky top-0 z-40 px-3 pt-3 pb-2">
         <div className="glass rounded-2xl border border-[var(--line)] shadow-[var(--shadow-soft)] px-3 py-2.5">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-orange-600">{getAdminBrandName(settings)}</p>
-              <p className="text-sm font-semibold text-[var(--text)] truncate">Hi, {firstName}</p>
+            <div className="min-w-0 flex-1">
+              <BrandMark
+                name={settings.brandName}
+                logoUrl={settings.logoUrl}
+                subtitle={`Hi, ${firstName}`}
+                compact
+                admin
+              />
             </div>
             <button
               onClick={() => setMenuOpen(true)}
@@ -67,6 +71,7 @@ export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
                 logoUrl={settings.logoUrl}
                 subtitle="Manage the whole platform"
                 admin
+                hideSubtitleOnMobile
               />
               <button onClick={() => setMenuOpen(false)} className="btn-secondary !px-3 !py-2">
                 Close

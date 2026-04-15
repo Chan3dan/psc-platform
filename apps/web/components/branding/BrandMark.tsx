@@ -8,6 +8,7 @@ export function BrandMark({
   subtitle,
   compact = false,
   admin = false,
+  hideSubtitleOnMobile = false,
 }: {
   href?: string;
   name: string;
@@ -15,6 +16,7 @@ export function BrandMark({
   subtitle?: string;
   compact?: boolean;
   admin?: boolean;
+  hideSubtitleOnMobile?: boolean;
 }) {
   const title = admin ? `${name} Admin` : name;
   const isDataUrl = logoUrl.startsWith('data:');
@@ -36,7 +38,7 @@ export function BrandMark({
           {title}
         </p>
         {subtitle ? (
-          <p className={`${compact ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm'} text-[var(--muted)] mt-0.5 leading-snug break-words`}>
+          <p className={`${hideSubtitleOnMobile ? 'hidden sm:block' : 'block'} ${compact ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm'} text-[var(--muted)] mt-0.5 leading-snug break-words`}>
             {subtitle}
           </p>
         ) : null}
