@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useState } from 'react';
+import { startTransition, useRef, useState } from 'react';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useUpdateSiteSettings } from '@/components/branding/SiteSettingsProvider';
 import {
@@ -15,6 +15,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const updateSiteSettings = useUpdateSiteSettings();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   function updateField<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -53,6 +54,32 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
     setForm(DEFAULT_SITE_SETTINGS);
     setMessage('');
     setError('');
+  }
+
+  function handleLogoUpload(file?: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file for the logo.');
+      return;
+    }
+    if (file.size > 1_500_000) {
+      setError('Logo file is too large. Please use an image under 1.5 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) {
+        setError('Could not read that logo file.');
+        return;
+      }
+      updateField('logoUrl', result);
+      setError('');
+      setMessage('Logo loaded into settings. Save settings to publish it.');
+    };
+    reader.onerror = () => setError('Could not read that logo file.');
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -94,7 +121,32 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
             onChange={(e) => updateField('logoUrl', e.target.value)}
             placeholder="/brand/niyukta-logo.jpeg"
           />
-          <p className="text-xs text-[var(--muted)] mt-1">Use a public path like `/brand/niyukta-logo.jpeg`.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload logo
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => updateField('logoUrl', DEFAULT_SITE_SETTINGS.logoUrl)}
+            >
+              Use default logo
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            className="hidden"
+            onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
+          />
+          <p className="text-xs text-[var(--muted)] mt-1">
+            Paste a public path like `/brand/niyukta-logo.jpeg` or upload a small logo image directly.
+          </p>
         </div>
 
         <div>
