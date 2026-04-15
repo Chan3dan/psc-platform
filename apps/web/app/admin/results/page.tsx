@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Result } from '@psc/shared/models';
+import { formatDuration } from '@/lib/results';
 
 async function getResults() {
   await connectDB();
@@ -66,7 +67,7 @@ export default async function AdminResultsPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-[var(--muted)]">
-                  <span>{new Date(result.created_at).toLocaleString()}</span>
+                  <span>{formatDuration(result.total_time_seconds)} · {new Date(result.created_at).toLocaleDateString()}</span>
                   <span className="font-semibold text-[var(--text)]">{result.score}/{result.max_score}</span>
                 </div>
               </Link>
@@ -96,7 +97,7 @@ export default async function AdminResultsPage() {
                     <td className="px-6 py-3">
                       <span className={`badge ${flaggedCount > 0 ? 'badge-amber' : 'badge-gray'}`}>{flaggedCount}</span>
                     </td>
-                    <td className="px-6 py-3 text-[var(--muted)]">{new Date(result.created_at).toLocaleString()}</td>
+                    <td className="px-6 py-3 text-[var(--muted)]">{formatDuration(result.total_time_seconds)} · {new Date(result.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-3">
                       <Link href={`/admin/results/${result._id}`} className="text-[var(--brand)] font-medium hover:underline">Review</Link>
                     </td>

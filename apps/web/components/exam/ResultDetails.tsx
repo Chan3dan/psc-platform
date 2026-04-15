@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ResultReview } from '@/components/exam/ResultReview';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { formatDuration } from '@/lib/results';
 
 export function ResultDetails({
   result,
@@ -29,6 +30,7 @@ export function ResultDetails({
   const flaggedCount = Array.isArray(result.answers)
     ? result.answers.filter((answer: any) => Boolean(answer?.flagged)).length
     : 0;
+  const duration = formatDuration(result.total_time_seconds);
 
   return (
     <div className="page-wrap max-w-5xl space-y-8">
@@ -45,6 +47,21 @@ export function ResultDetails({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Link href={backHref} className="btn-secondary inline-flex items-center gap-2">
+          <AppIcon name="arrow-right" className="h-4 w-4 rotate-180" />
+          Back
+        </Link>
+        <span className="badge-gray inline-flex items-center gap-1.5">
+          <AppIcon name="mock" className="h-3.5 w-3.5" />
+          Attempt Time: {duration}
+        </span>
+        <span className="badge-gray inline-flex items-center gap-1.5">
+          <AppIcon name="questions" className="h-3.5 w-3.5" />
+          {result.answers.length} questions reviewed
+        </span>
       </div>
 
       <div className={`card p-6 md:p-8 text-center border-2 ${pass ? 'border-emerald-300 dark:border-emerald-700' : 'border-red-300 dark:border-red-700'}`}>
@@ -74,17 +91,14 @@ export function ResultDetails({
         </div>
       </div>
 
-      <div className="card p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-        <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">Negative Marking Summary</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-          <div><div className="text-emerald-600 font-semibold">+{(result.correct_count * marksPerQuestion).toFixed(2)}</div><div className="text-[var(--muted)] text-xs">Earned</div></div>
-          <div><div className="text-red-500 font-semibold">−{(result.wrong_count * negativePerWrong).toFixed(2)}</div><div className="text-[var(--muted)] text-xs">Deducted ({negativePercent}% each wrong)</div></div>
-          <div><div className="text-blue-600 font-semibold">{result.score}</div><div className="text-[var(--muted)] text-xs">Final score</div></div>
-        </div>
-      </div>
-
       <section>
-        <h2 className="text-base font-semibold text-[var(--text)] mb-4">Subject Breakdown</h2>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 className="text-base font-semibold text-[var(--text)]">Subject Breakdown</h2>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="badge-gray">+{(result.correct_count * marksPerQuestion).toFixed(2)} earned</span>
+            <span className="badge-gray">−{(result.wrong_count * negativePerWrong).toFixed(2)} deducted</span>
+          </div>
+        </div>
         <div className="space-y-3">
           {result.subject_breakdown.map((sb: any) => (
             <div key={sb.subject_id} className="card p-4">

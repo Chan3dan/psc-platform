@@ -77,7 +77,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
           const open = expanded === q._id;
           return (
             <div key={q._id} className={`card border-l-4 ${borderColor(a)}`}>
-              <button className="w-full text-left p-4" onClick={() => setExpanded(open ? null : q._id)}>
+              <button className="w-full text-left p-4 hover:bg-[var(--brand-soft)]/25 transition-colors cursor-pointer" onClick={() => setExpanded(open ? null : q._id)}>
                 <div className="flex items-start gap-3">
                   <span className={`mt-0.5 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
                     ${a.is_correct ? 'bg-emerald-100 text-emerald-700' : a.selected_option === null ? 'bg-gray-100 dark:bg-gray-800 text-gray-500' : 'bg-red-100 text-red-600'}`}>
@@ -101,7 +101,10 @@ export function ResultReview({ answers }: { answers: any[] }) {
                       </span>
                     </div>
                   </div>
-                  <span className="text-gray-400 text-xs shrink-0">{open ? '▲' : '▼'}</span>
+                  <div className="text-right shrink-0">
+                    <span className="text-gray-400 text-xs block">{open ? 'Hide' : 'Review'}</span>
+                    <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
+                  </div>
                 </div>
               </button>
               {open && (

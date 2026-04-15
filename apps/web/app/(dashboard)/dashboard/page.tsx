@@ -7,6 +7,7 @@ import { generateAnalytics } from '@psc/shared/utils/analytics';
 import Link from 'next/link';
 import { DashboardCharts } from '@/components/analytics/DashboardCharts';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { formatDuration } from '@/lib/results';
 
 async function getData(userId: string) {
   await connectDB();
@@ -221,7 +222,7 @@ export default async function DashboardPage() {
         <section className="card overflow-hidden">
           <div className="px-5 py-3 border-b border-[var(--line)] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[var(--text)]">Recent Test Attempts</h2>
-            <span className="text-xs text-[var(--muted)]">Last {Math.min(results.length, 5)} records</span>
+            <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">View all</Link>
           </div>
           <div className="divide-y divide-[var(--line)]">
             {(results as any[]).slice(0, 5).map((r) => {
@@ -235,12 +236,12 @@ export default async function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-[var(--text)]">{r.test_id?.title ?? 'Practice Session'}</p>
                     <p className="text-xs text-[var(--muted)] mt-0.5">
-                      {new Date(r.created_at).toLocaleDateString()} · {r.correct_count} correct · {r.wrong_count} wrong · {r.skipped_count} skipped
+                      {formatDuration(r.total_time_seconds)} · {r.correct_count} correct · {r.wrong_count} wrong · {r.skipped_count} skipped
                     </p>
                   </div>
                   <div className="text-right">
                     <span className={`text-sm font-semibold ${Number(pct) >= 40 ? 'text-emerald-600' : 'text-red-500'}`}>{pct}%</span>
-                    <p className="text-xs text-[var(--muted)]">{r.accuracy_percent}% accuracy</p>
+                    <p className="text-xs text-[var(--muted)]">{new Date(r.created_at).toLocaleDateString()}</p>
                   </div>
                 </Link>
               );

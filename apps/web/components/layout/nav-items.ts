@@ -11,6 +11,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { href: '/mock', label: 'Mock Tests', icon: 'mock' },
   { href: '/drill', label: 'Speed Drill', icon: 'drill' },
   { href: '/planner', label: 'Study Planner', icon: 'planner' },
+  { href: '/results', label: 'Results', icon: 'results' },
   { href: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
   { href: '/notes', label: 'Notes', icon: 'notes' },
   { href: '/bookmarks', label: 'Bookmarks', icon: 'bookmarks' },

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Result } from '@psc/shared/models';
 import { ResultDetails } from '@/components/exam/ResultDetails';
+import { formatDuration } from '@/lib/results';
 
 async function getResult(id: string) {
   await connectDB();
@@ -38,6 +39,7 @@ export default async function AdminResultDetailPage({ params }: { params: { id: 
         { label: 'Exam', value: result.exam_id?.name ?? 'Unknown exam' },
         { label: 'Type', value: result.test_type ?? 'unknown' },
         { label: 'Flagged', value: String(flaggedCount) },
+        { label: 'Duration', value: formatDuration(result.total_time_seconds) },
         { label: 'Submitted', value: new Date(result.created_at).toLocaleString() },
       ]}
     />
