@@ -25,11 +25,10 @@ export function MockTestPageInner() {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [bookmarkBusy, setBookmarkBusy] = useState(false);
   const [bookmarkError, setBookmarkError] = useState('');
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
 
-  // Load test on mount
   useEffect(() => {
     if (!testId) return;
-    // Reset any previous session
     useExamStore.getState().reset();
 
     fetch('/api/tests/start', {
@@ -37,11 +36,10 @@ export function MockTestPageInner() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ test_id: testId, test_type: 'mock' }),
     })
-      .then(r => r.json())
-      .then(d => { if (d.success) startSession(d.data); })
+      .then((r) => r.json())
+      .then((d) => { if (d.success) startSession(d.data); })
       .catch(console.error);
 
-    // Warn user before leaving mid-test
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
@@ -67,6 +65,27 @@ export function MockTestPageInner() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [isRunning, tick]);
+
+  useEffect(() => {
+    if (isSubmitted && result) {
+      router.push(`/results/${result.result_id}`);
+    }
+  }, [isSubmitted, result, router]);
+
+  useEffect(() => {
+    if (!submitConfirmOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [submitConfirmOpen]);
 
   async function toggleBookmark(questionId: string) {
     if (!questionId || bookmarkBusy) return;
@@ -97,21 +116,6 @@ export function MockTestPageInner() {
     }
   }
 
-  // Countdown timer
-  useEffect(() => {
-    if (!isRunning) return;
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [isRunning, tick]);
-
-  // Redirect to results when submitted
-  useEffect(() => {
-    if (isSubmitted && result) {
-      router.push(`/results/${result.result_id}`);
-    }
-  }, [isSubmitted, result, router]);
-
-  // Loading state
   if (!session) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-950">
@@ -132,7 +136,6 @@ export function MockTestPageInner() {
     );
   }
 
-  // Submitting state
   if (isSubmitting) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-950">
@@ -169,10 +172,9 @@ export function MockTestPageInner() {
   const completionPct = session.questions.length > 0 ? Math.round((answeredCount / session.questions.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
-      {/* ── HEADER ── */}
-      <header className="sticky top-0 z-10 bg-[var(--surface)]/95 backdrop-blur border-b border-[var(--border)] px-4 md:px-6 py-3">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col overflow-x-hidden">
+      <header className="sticky top-0 z-10 bg-[var(--surface)]/95 backdrop-blur border-b border-[var(--border)] px-3 sm:px-4 md:px-6 py-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <h1 className="font-semibold text-sm text-[var(--text)] truncate">{session.config.title}</h1>
             <p className="text-xs text-[var(--muted)] mt-0.5">
@@ -180,29 +182,25 @@ export function MockTestPageInner() {
             </p>
           </div>
 
-          {/* Timer */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className={`font-mono font-bold text-lg tabular-nums transition-colors ${isLow ? 'text-red-500 animate-pulse' : 'text-[var(--text)]'}`}>
-              {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-            </span>
-            <div className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ${isLow ? 'bg-red-500' : totalPct > 50 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                style={{ width: `${Math.max(0, totalPct)}%` }}
-              />
+          <div className="flex items-center gap-3 sm:gap-2">
+            <div className="min-w-0 flex-1 sm:flex-none">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`font-mono font-bold text-lg tabular-nums transition-colors ${isLow ? 'text-red-500 animate-pulse' : 'text-[var(--text)]'}`}>
+                  {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+                </span>
+                <span className="text-[11px] text-[var(--muted)] sm:hidden">Time left</span>
+              </div>
+              <div className="w-full sm:w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-1">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${isLow ? 'bg-red-500' : totalPct > 50 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                  style={{ width: `${Math.max(0, totalPct)}%` }}
+                />
+              </div>
             </div>
+            <button onClick={() => setSubmitConfirmOpen(true)} className="btn-primary text-sm shrink-0 min-w-[92px]">
+              Submit
+            </button>
           </div>
-
-          <button
-            onClick={() => {
-              if (confirm('Submit the test now? You cannot change answers after submitting.')) {
-                submitExam();
-              }
-            }}
-            className="btn-primary text-sm shrink-0"
-          >
-            Submit
-          </button>
         </div>
 
         <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -214,11 +212,9 @@ export function MockTestPageInner() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* ── MAIN QUESTION AREA ── */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-3 md:p-6 pb-28 md:pb-6">
           <div className="max-w-3xl mx-auto">
-            {/* Difficulty badge */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
               <span className={`badge text-xs ${q.difficulty === 'easy' ? 'badge-green' : q.difficulty === 'medium' ? 'badge-amber' : 'badge-red'}`}>
                 {q.difficulty}
               </span>
@@ -226,15 +222,13 @@ export function MockTestPageInner() {
               {ans?.flagged && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 text-xs">Flagged</span>}
             </div>
 
-            {/* Question */}
-            <div className="card glass p-5 mb-4">
-              <p className="text-[var(--text)] leading-relaxed text-[15px]">{q.question_text ?? 'Question text unavailable.'}</p>
+            <div className="card glass p-4 md:p-5 mb-4">
+              <p className="text-[var(--text)] leading-relaxed text-[15px] break-words">{q.question_text ?? 'Question text unavailable.'}</p>
               {q.question_image_url && (
                 <img src={q.question_image_url} alt="" className="mt-4 rounded-lg max-h-56 object-contain w-full bg-black/5 p-2" />
               )}
             </div>
 
-            {/* Options */}
             <div className="space-y-3">
               {q.options.map((opt: any) => {
                 const selected = ans?.selected_option === opt.index;
@@ -248,29 +242,30 @@ export function MockTestPageInner() {
                         : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-950/30'
                       }`}
                   >
-                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 text-xs font-bold shrink-0
-                      ${selected ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
-                      {String.fromCharCode(65 + opt.index)}
+                    <span className="flex items-start gap-3">
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0
+                        ${selected ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                        {String.fromCharCode(65 + opt.index)}
+                      </span>
+                      <span className="min-w-0 break-words">{opt.text ?? 'Option text unavailable'}</span>
                     </span>
-                    {opt.text ?? 'Option text unavailable'}
                   </button>
                 );
               })}
             </div>
 
-            {/* Actions row */}
-            <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex gap-2">
+            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   onClick={() => toggleBookmark(q._id)}
                   disabled={bookmarkBusy}
-                  className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+                  className={`text-sm px-3 py-2 rounded-lg border transition-colors w-full ${
                     isBookmarked
                       ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
                       : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
                   } disabled:opacity-50`}
                 >
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-flex items-center justify-center gap-1.5 w-full">
                     <AppIcon name="bookmarks" className="h-3.5 w-3.5" />
                     {isBookmarked ? 'Bookmarked' : 'Bookmark'}
                   </span>
@@ -278,38 +273,43 @@ export function MockTestPageInner() {
                 <button
                   onClick={() => clearAnswer(q._id)}
                   disabled={!ans?.selected_option && ans?.selected_option !== 0}
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-30"
+                  className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-30 border border-transparent"
                 >
                   Clear
                 </button>
                 <button
                   onClick={() => flagQuestion(q._id)}
-                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${ans?.flagged ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                  className={`text-sm px-3 py-2 rounded-lg transition-colors border ${
+                    ans?.flagged
+                      ? 'border-amber-200 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800'
+                  }`}
                 >
                   {ans?.flagged ? 'Flagged' : 'Flag for review'}
                 </button>
               </div>
-              <div className="flex gap-2">
-                <button onClick={prevQuestion} disabled={currentIndex === 0}
-                  className="btn-secondary text-sm disabled:opacity-40 py-1.5">Previous</button>
-                <button onClick={nextQuestion} disabled={currentIndex === session.questions.length - 1}
-                  className="btn-secondary text-sm disabled:opacity-40 py-1.5">Next</button>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={prevQuestion} disabled={currentIndex === 0} className="btn-secondary text-sm disabled:opacity-40 py-2">
+                  Previous
+                </button>
+                <button onClick={nextQuestion} disabled={currentIndex === session.questions.length - 1} className="btn-secondary text-sm disabled:opacity-40 py-2">
+                  Next
+                </button>
               </div>
             </div>
-            {bookmarkError && (
-              <p className="text-xs text-red-500 mt-2">{bookmarkError}</p>
-            )}
+
+            {bookmarkError && <p className="text-xs text-red-500 mt-2">{bookmarkError}</p>}
 
             <div className="lg:hidden mt-4 card p-3">
               <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Quick Jump</p>
-              <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5">
+              <div className="grid grid-cols-5 sm:grid-cols-8 gap-1.5">
                 {session.questions.map((sq: any, i: number) => {
                   const status = getStatus(sq._id);
                   return (
                     <button
                       key={sq._id}
                       onClick={() => goToQuestion(i)}
-                      className={`w-8 h-8 text-xs rounded font-medium transition-all ${STATUS_COLOR[status]} ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900' : ''}`}
+                      className={`w-full aspect-square text-xs rounded font-medium transition-all ${STATUS_COLOR[status]} ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900' : ''}`}
                     >
                       {i + 1}
                     </button>
@@ -320,7 +320,6 @@ export function MockTestPageInner() {
           </div>
         </main>
 
-        {/* ── QUESTION PALETTE SIDEBAR ── */}
         <aside className="hidden lg:flex flex-col w-56 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 overflow-y-auto">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Questions</h3>
           <div className="grid grid-cols-5 gap-1.5 mb-4">
@@ -341,7 +340,6 @@ export function MockTestPageInner() {
             })}
           </div>
 
-          {/* Legend */}
           <div className="space-y-1.5 text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
             {[
               ['bg-emerald-500', 'Answered'],
@@ -355,15 +353,16 @@ export function MockTestPageInner() {
             ))}
           </div>
 
-          {/* Quick stats */}
           <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-1 text-xs">
-            {(['answered', 'flagged', 'skipped', 'not-visited'] as const).map(s => {
+            {(['answered', 'flagged', 'skipped', 'not-visited'] as const).map((s) => {
               const count = session.questions.filter((sq: any) => getStatus(sq._id) === s).length;
-              if (s === 'not-visited') return (
-                <div key={s} className="flex justify-between text-gray-400">
-                  <span>Not visited</span><span>{count}</span>
-                </div>
-              );
+              if (s === 'not-visited') {
+                return (
+                  <div key={s} className="flex justify-between text-gray-400">
+                    <span>Not visited</span><span>{count}</span>
+                  </div>
+                );
+              }
               return (
                 <div key={s} className={`flex justify-between font-medium ${s === 'answered' ? 'text-emerald-600' : s === 'flagged' ? 'text-amber-600' : 'text-gray-400'}`}>
                   <span>{s.charAt(0).toUpperCase() + s.slice(1)}</span>
@@ -374,6 +373,36 @@ export function MockTestPageInner() {
           </div>
         </aside>
       </div>
+
+      {submitConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[90] bg-slate-950/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setSubmitConfirmOpen(false); }}
+        >
+          <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl bg-[var(--bg-elev)] border border-[var(--line)] shadow-[var(--shadow-strong)] p-4 sm:p-5 space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-[var(--text)]">Submit test?</h3>
+              <p className="text-sm text-[var(--muted)] mt-1">
+                You won’t be able to change answers after submission.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="btn-secondary" onClick={() => setSubmitConfirmOpen(false)}>
+                Keep reviewing
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setSubmitConfirmOpen(false);
+                  submitExam();
+                }}
+              >
+                Submit now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
