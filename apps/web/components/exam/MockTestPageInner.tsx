@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useExamStore } from '@/store/examStore';
 import { AppIcon } from '@/components/icons/AppIcon';
@@ -26,6 +26,9 @@ export function MockTestPageInner() {
   const [bookmarkBusy, setBookmarkBusy] = useState(false);
   const [bookmarkError, setBookmarkError] = useState('');
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
+  const [quickJumpOpen, setQuickJumpOpen] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
     if (!testId) return;
@@ -87,6 +90,15 @@ export function MockTestPageInner() {
     };
   }, [submitConfirmOpen]);
 
+  useEffect(() => {
+    if (!quickJumpOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [quickJumpOpen]);
+
   async function toggleBookmark(questionId: string) {
     if (!questionId || bookmarkBusy) return;
     setBookmarkError('');
@@ -113,6 +125,32 @@ export function MockTestPageInner() {
       setBookmarkError('Could not update bookmark.');
     } finally {
       setBookmarkBusy(false);
+    }
+  }
+
+  function handleTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
+    if (!session) return;
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+
+    if (Math.abs(deltaX) < 60 || Math.abs(deltaY) > 40) return;
+
+    if (deltaX < 0 && currentIndex < session.questions.length - 1) {
+      nextQuestion();
+    }
+
+    if (deltaX > 0 && currentIndex > 0) {
+      prevQuestion();
     }
   }
 
@@ -212,17 +250,46 @@ export function MockTestPageInner() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-3 md:p-6 pb-28 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-3 md:p-6 pb-40 md:pb-6">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4 flex-wrap">
               <span className={`badge text-xs ${q.difficulty === 'easy' ? 'badge-green' : q.difficulty === 'medium' ? 'badge-amber' : 'badge-red'}`}>
                 {q.difficulty}
               </span>
               <span className="text-xs text-[var(--muted)]">Question {currentIndex + 1}</span>
-              {ans?.flagged && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 text-xs">Flagged</span>}
+              <div className="ml-auto flex items-center gap-2">
+                {ans?.flagged && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 text-xs">Flagged</span>}
+                <button
+                  onClick={() => flagQuestion(q._id)}
+                  className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition-colors ${
+                    ans?.flagged
+                      ? 'border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800'
+                  }`}
+                  aria-label={ans?.flagged ? 'Question flagged for review' : 'Flag question for review'}
+                >
+                  <AppIcon name="alert" className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => toggleBookmark(q._id)}
+                  disabled={bookmarkBusy}
+                  className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition-colors ${
+                    isBookmarked
+                      ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                      : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
+                  } disabled:opacity-50`}
+                  aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
+                >
+                  <AppIcon name="bookmarks" className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="card glass p-4 md:p-5 mb-4">
+            <div
+              className="card glass p-4 md:p-5 mb-4"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               <p className="text-[var(--text)] leading-relaxed text-[15px] break-words">{q.question_text ?? 'Question text unavailable.'}</p>
               {q.question_image_url && (
                 <img src={q.question_image_url} alt="" className="mt-4 rounded-lg max-h-56 object-contain w-full bg-black/5 p-2" />
@@ -255,21 +322,7 @@ export function MockTestPageInner() {
             </div>
 
             <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                  onClick={() => toggleBookmark(q._id)}
-                  disabled={bookmarkBusy}
-                  className={`text-sm px-3 py-2 rounded-lg border transition-colors w-full ${
-                    isBookmarked
-                      ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                      : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
-                  } disabled:opacity-50`}
-                >
-                  <span className="inline-flex items-center justify-center gap-1.5 w-full">
-                    <AppIcon name="bookmarks" className="h-3.5 w-3.5" />
-                    {isBookmarked ? 'Bookmarked' : 'Bookmark'}
-                  </span>
-                </button>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
                 <button
                   onClick={() => clearAnswer(q._id)}
                   disabled={!ans?.selected_option && ans?.selected_option !== 0}
@@ -278,45 +331,15 @@ export function MockTestPageInner() {
                   Clear
                 </button>
                 <button
-                  onClick={() => flagQuestion(q._id)}
-                  className={`text-sm px-3 py-2 rounded-lg transition-colors border ${
-                    ans?.flagged
-                      ? 'border-amber-200 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
-                      : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800'
-                  }`}
+                  onClick={() => setQuickJumpOpen(true)}
+                  className="text-sm px-3 py-2 rounded-lg transition-colors border border-gray-200 text-gray-600 hover:bg-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
-                  {ans?.flagged ? 'Flagged' : 'Flag for review'}
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={prevQuestion} disabled={currentIndex === 0} className="btn-secondary text-sm disabled:opacity-40 py-2">
-                  Previous
-                </button>
-                <button onClick={nextQuestion} disabled={currentIndex === session.questions.length - 1} className="btn-secondary text-sm disabled:opacity-40 py-2">
-                  Next
+                  Quick Jump
                 </button>
               </div>
             </div>
 
             {bookmarkError && <p className="text-xs text-red-500 mt-2">{bookmarkError}</p>}
-
-            <div className="lg:hidden mt-4 card p-3">
-              <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Quick Jump</p>
-              <div className="grid grid-cols-5 sm:grid-cols-8 gap-1.5">
-                {session.questions.map((sq: any, i: number) => {
-                  const status = getStatus(sq._id);
-                  return (
-                    <button
-                      key={sq._id}
-                      onClick={() => goToQuestion(i)}
-                      className={`w-full aspect-square text-xs rounded font-medium transition-all ${STATUS_COLOR[status]} ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900' : ''}`}
-                    >
-                      {i + 1}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </main>
 
@@ -374,6 +397,33 @@ export function MockTestPageInner() {
         </aside>
       </div>
 
+      <div className="lg:hidden fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[35] px-3">
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)]/96 backdrop-blur-md shadow-[var(--shadow-strong)] p-2">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={prevQuestion}
+              disabled={currentIndex === 0}
+              className="btn-secondary text-sm disabled:opacity-40 py-2"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setQuickJumpOpen(true)}
+              className="btn-secondary text-sm py-2"
+            >
+              Jump to
+            </button>
+            <button
+              onClick={nextQuestion}
+              disabled={currentIndex === session.questions.length - 1}
+              className="btn-secondary text-sm disabled:opacity-40 py-2"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+
       {submitConfirmOpen && (
         <div
           className="fixed inset-0 z-[90] bg-slate-950/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -399,6 +449,45 @@ export function MockTestPageInner() {
               >
                 Submit now
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {quickJumpOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px] flex items-end justify-center p-0"
+          onClick={(e) => { if (e.target === e.currentTarget) setQuickJumpOpen(false); }}
+        >
+          <div className="w-full max-h-[72vh] rounded-t-3xl bg-[var(--bg-elev)] border border-[var(--line)] shadow-[var(--shadow-strong)] p-4 space-y-4 overflow-y-auto">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-[var(--text)]">Quick Jump</h3>
+                <p className="text-xs text-[var(--muted)] mt-1">
+                  Swipe left or right on the question card to move faster.
+                </p>
+              </div>
+              <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setQuickJumpOpen(false)}>
+                Close
+              </button>
+            </div>
+
+            <div className="grid grid-cols-5 gap-1.5">
+              {session.questions.map((sq: any, i: number) => {
+                const status = getStatus(sq._id);
+                return (
+                  <button
+                    key={sq._id}
+                    onClick={() => {
+                      goToQuestion(i);
+                      setQuickJumpOpen(false);
+                    }}
+                    className={`w-full aspect-square text-xs rounded font-medium transition-all ${STATUS_COLOR[status]} ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900' : ''}`}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
