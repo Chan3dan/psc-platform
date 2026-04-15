@@ -19,7 +19,15 @@ interface EditState {
   tags: string;
 }
 
-export function QuestionTable({ questions }: { questions: any[] }) {
+export function QuestionTable({
+  questions,
+  focusQuestionId,
+  autoEdit = false,
+}: {
+  questions: any[];
+  focusQuestionId?: string;
+  autoEdit?: boolean;
+}) {
   const [rows, setRows] = useState<any[]>(questions);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -32,6 +40,7 @@ export function QuestionTable({ questions }: { questions: any[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [autoFocused, setAutoFocused] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -115,6 +124,21 @@ export function QuestionTable({ questions }: { questions: any[] }) {
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
+
+  useEffect(() => {
+    if (!focusQuestionId || autoFocused) return;
+    const targetIndex = filtered.findIndex((q) => q._id === focusQuestionId);
+    if (targetIndex === -1) return;
+    const nextPage = Math.floor(targetIndex / pageSize) + 1;
+    if (page !== nextPage) {
+      setPage(nextPage);
+      return;
+    }
+    const target = filtered[targetIndex];
+    setExpanded(target._id);
+    if (autoEdit) startEdit(target);
+    setAutoFocused(true);
+  }, [focusQuestionId, autoEdit, autoFocused, filtered, pageSize, page]);
 
   function startEdit(q: any) {
     setError('');

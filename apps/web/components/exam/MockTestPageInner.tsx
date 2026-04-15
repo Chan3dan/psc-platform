@@ -348,7 +348,7 @@ export function MockTestPageInner() {
             </div>
 
             <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:hidden">
                 <button
                   onClick={() => clearAnswer(q._id)}
                   disabled={!ans?.selected_option && ans?.selected_option !== 0}
@@ -364,11 +364,15 @@ export function MockTestPageInner() {
                 </button>
               </div>
               <div className="hidden lg:grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => clearAnswer(q._id)}
+                  disabled={!ans?.selected_option && ans?.selected_option !== 0}
+                  className="btn-secondary text-sm disabled:opacity-40 py-2"
+                >
+                  Clear
+                </button>
                 <button onClick={prevQuestion} disabled={currentIndex === 0} className="btn-secondary text-sm disabled:opacity-40 py-2">
                   Previous
-                </button>
-                <button onClick={() => setQuickJumpOpen(true)} className="btn-secondary text-sm py-2">
-                  Quick Jump
                 </button>
                 <button onClick={nextQuestion} disabled={currentIndex === session.questions.length - 1} className="btn-secondary text-sm disabled:opacity-40 py-2">
                   Next
@@ -504,10 +508,10 @@ export function MockTestPageInner() {
 
       {quickJumpOpen && (
         <div
-          className="fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px] flex items-end lg:items-center justify-center p-0 lg:p-4"
+          className="lg:hidden fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px] flex items-end justify-center p-0"
           onClick={(e) => { if (e.target === e.currentTarget) setQuickJumpOpen(false); }}
         >
-          <div className="w-full max-h-[72vh] lg:max-w-2xl rounded-t-3xl lg:rounded-3xl bg-[var(--bg-elev)] border border-[var(--line)] shadow-[var(--shadow-strong)] p-4 space-y-4 overflow-y-auto">
+          <div className="w-full max-h-[72vh] rounded-t-3xl bg-[var(--bg-elev)] border border-[var(--line)] shadow-[var(--shadow-strong)] p-4 space-y-4 overflow-y-auto">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold text-[var(--text)]">Quick Jump</h3>
@@ -525,7 +529,7 @@ export function MockTestPageInner() {
               </button>
             </div>
 
-            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-1.5">
+            <div className="grid grid-cols-5 sm:grid-cols-6 gap-1.5">
               {session.questions.map((sq: any, i: number) => {
                 const status = getStatus(sq._id);
                 return (

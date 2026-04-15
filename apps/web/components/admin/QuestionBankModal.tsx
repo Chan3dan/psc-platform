@@ -1,9 +1,25 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { QuestionTable } from '@/components/admin/QuestionTable';
 
-export function QuestionBankModal({ questions, total }: { questions: any[]; total: number }) {
-  const [open, setOpen] = useState(false);
+export function QuestionBankModal({
+  questions,
+  total,
+  initialOpen = false,
+  focusQuestionId,
+  autoEdit = false,
+}: {
+  questions: any[];
+  total: number;
+  initialOpen?: boolean;
+  focusQuestionId?: string;
+  autoEdit?: boolean;
+}) {
+  const [open, setOpen] = useState(initialOpen);
+
+  useEffect(() => {
+    if (initialOpen) setOpen(true);
+  }, [initialOpen]);
 
   return (
     <>
@@ -26,7 +42,7 @@ export function QuestionBankModal({ questions, total }: { questions: any[]; tota
                 Close
               </button>
             </div>
-            <QuestionTable questions={questions} />
+            <QuestionTable questions={questions} focusQuestionId={focusQuestionId} autoEdit={autoEdit} />
           </div>
         </div>
       )}

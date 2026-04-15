@@ -105,7 +105,15 @@ export default async function AdminPage() {
                       {item.userName} · {item.testTitle}
                     </p>
                   </div>
-                  <span className="badge badge-amber text-xs shrink-0">Flagged</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="badge badge-amber text-xs">Flagged</span>
+                    <Link
+                      href={`/admin/questions?open=bank&questionId=${item.questionId}&mode=edit`}
+                      className="text-xs text-[var(--brand)] hover:underline"
+                    >
+                      Review
+                    </Link>
+                  </div>
                 </div>
                 <p className="text-xs text-[var(--muted)]">
                   {new Date(item.createdAt).toLocaleString()}
