@@ -366,6 +366,16 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
   }, [mocks, search, examFilter, statusFilter]);
 
   useEffect(() => {
+    const hasOpenModal = Boolean(editing || existingModalOpen || importModalOpen || deleteTarget);
+    if (!hasOpenModal) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [editing, existingModalOpen, importModalOpen, deleteTarget]);
+
+  useEffect(() => {
     if (!title) return;
     setSlug(slugify(title));
   }, [title]);
@@ -694,7 +704,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {editing && (
         <div
-          className="fixed inset-0 z-[90] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
+          className="fixed inset-0 z-[120] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
           <div className="w-full max-w-5xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5 space-y-4">
@@ -776,7 +786,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {existingModalOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
+          className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setExistingModalOpen(false); }}
         >
           <div className="w-full max-w-6xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5">
@@ -844,7 +854,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[95] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[130] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}
         >
           <div className="w-full max-w-md card glass p-5 space-y-4">
@@ -876,7 +886,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {importModalOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
+          className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setImportModalOpen(false); }}
         >
           <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5 space-y-4">

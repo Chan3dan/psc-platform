@@ -239,12 +239,12 @@ export function QuestionTable({ questions }: { questions: any[] }) {
 
       {mounted && editing && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[120] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) setEditing(null);
           }}
         >
-          <div className="w-full max-w-5xl max-h-[92vh] overflow-y-auto card glass p-4 md:p-5 space-y-4">
+          <div className="w-full max-w-5xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Edit Question</h3>
               <button onClick={() => setEditing(null)} className="btn-secondary text-xs px-3 py-1.5">Close</button>

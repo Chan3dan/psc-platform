@@ -121,10 +121,10 @@ export function SubjectManager({ exams, initialSubjects }: { exams: any[]; initi
 
       {mounted && editing && createPortal(
         <div
-          className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
-          <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto card glass p-6 space-y-4">
+          <div className="w-full max-w-3xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-6 pb-24 md:pb-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editing._id ? 'Edit Subject' : 'New Subject'}</h3>
               <button onClick={() => setEditing(null)} className="btn-secondary text-xs px-3 py-1.5">Close</button>
