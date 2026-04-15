@@ -18,6 +18,7 @@ type IconName =
   | 'alert'
   | 'idea'
   | 'upload'
+  | 'close'
   | 'arrow-right';
 
 interface AppIconProps {
@@ -192,6 +193,13 @@ export function AppIcon({ name, className = 'h-5 w-5' }: AppIconProps) {
           <path d="M12 16V5" />
           <path d="m7.5 9.5 4.5-4.5 4.5 4.5" />
           <path d="M5 19.5h14" />
+        </svg>
+      );
+    case 'close':
+      return (
+        <svg {...baseProps}>
+          <path d="m6 6 12 12" />
+          <path d="M18 6 6 18" />
         </svg>
       );
     case 'arrow-right':

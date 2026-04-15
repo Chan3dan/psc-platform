@@ -27,6 +27,7 @@ export function MockTestPageInner() {
   const [bookmarkError, setBookmarkError] = useState('');
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   const [quickJumpOpen, setQuickJumpOpen] = useState(false);
+  const [swipeFeedback, setSwipeFeedback] = useState<'prev' | 'next' | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
@@ -99,6 +100,12 @@ export function MockTestPageInner() {
     };
   }, [quickJumpOpen]);
 
+  useEffect(() => {
+    if (!swipeFeedback) return;
+    const timer = window.setTimeout(() => setSwipeFeedback(null), 220);
+    return () => window.clearTimeout(timer);
+  }, [swipeFeedback]);
+
   async function toggleBookmark(questionId: string) {
     if (!questionId || bookmarkBusy) return;
     setBookmarkError('');
@@ -146,10 +153,12 @@ export function MockTestPageInner() {
     if (Math.abs(deltaX) < 60 || Math.abs(deltaY) > 40) return;
 
     if (deltaX < 0 && currentIndex < session.questions.length - 1) {
+      setSwipeFeedback('next');
       nextQuestion();
     }
 
     if (deltaX > 0 && currentIndex > 0) {
+      setSwipeFeedback('prev');
       prevQuestion();
     }
   }
@@ -261,6 +270,7 @@ export function MockTestPageInner() {
                 {ans?.flagged && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 text-xs">Flagged</span>}
                 <button
                   onClick={() => flagQuestion(q._id)}
+                  title={ans?.flagged ? 'Flagged for review' : 'Flag for review'}
                   className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition-colors ${
                     ans?.flagged
                       ? 'border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
@@ -273,6 +283,7 @@ export function MockTestPageInner() {
                 <button
                   onClick={() => toggleBookmark(q._id)}
                   disabled={bookmarkBusy}
+                  title={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
                   className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition-colors ${
                     isBookmarked
                       ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
@@ -337,6 +348,17 @@ export function MockTestPageInner() {
                   Quick Jump
                 </button>
               </div>
+              <div className="hidden lg:grid grid-cols-3 gap-2">
+                <button onClick={prevQuestion} disabled={currentIndex === 0} className="btn-secondary text-sm disabled:opacity-40 py-2">
+                  Previous
+                </button>
+                <button onClick={() => setQuickJumpOpen(true)} className="btn-secondary text-sm py-2">
+                  Quick Jump
+                </button>
+                <button onClick={nextQuestion} disabled={currentIndex === session.questions.length - 1} className="btn-secondary text-sm disabled:opacity-40 py-2">
+                  Next
+                </button>
+              </div>
             </div>
 
             {bookmarkError && <p className="text-xs text-red-500 mt-2">{bookmarkError}</p>}
@@ -399,13 +421,23 @@ export function MockTestPageInner() {
 
       <div className="lg:hidden fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[35] px-3">
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)]/96 backdrop-blur-md shadow-[var(--shadow-strong)] p-2">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <button
               onClick={prevQuestion}
               disabled={currentIndex === 0}
               className="btn-secondary text-sm disabled:opacity-40 py-2"
             >
               Previous
+            </button>
+            <button
+              onClick={() => clearAnswer(q._id)}
+              disabled={!ans?.selected_option && ans?.selected_option !== 0}
+              title="Clear selected answer"
+              className="btn-secondary text-sm disabled:opacity-40 py-2 px-2"
+            >
+              <span className="inline-flex items-center justify-center">
+                <AppIcon name="close" className="h-4 w-4" />
+              </span>
             </button>
             <button
               onClick={() => setQuickJumpOpen(true)}
@@ -466,6 +498,10 @@ export function MockTestPageInner() {
                 <p className="text-xs text-[var(--muted)] mt-1">
                   Swipe left or right on the question card to move faster.
                 </p>
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className="badge badge-green text-xs">Answered: {answeredCount}</span>
+                  <span className="badge badge-amber text-xs">Flagged: {flaggedCount}</span>
+                </div>
               </div>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setQuickJumpOpen(false)}>
                 Close
@@ -489,6 +525,14 @@ export function MockTestPageInner() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {swipeFeedback && (
+        <div className="lg:hidden pointer-events-none fixed left-1/2 top-1/2 z-[85] -translate-x-1/2 -translate-y-1/2">
+          <div className="rounded-full bg-[var(--surface)]/96 px-4 py-2 text-sm font-medium text-[var(--text)] shadow-[var(--shadow-strong)] border border-[var(--line)]">
+            {swipeFeedback === 'next' ? 'Next question' : 'Previous question'}
           </div>
         </div>
       )}
