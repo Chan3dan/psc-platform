@@ -7,7 +7,7 @@ export function QuestionBankModal({ questions, total }: { questions: any[]; tota
 
   return (
     <>
-      <button className="btn-secondary" onClick={() => setOpen(true)}>
+      <button className="btn-secondary w-full sm:w-auto" onClick={() => setOpen(true)}>
         Question Bank
       </button>
 

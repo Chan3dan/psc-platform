@@ -146,7 +146,57 @@ export function UsersTable({ users }: { users: any[] }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden divide-y divide-[var(--line)]">
+        {paged.length === 0 && (
+          <div className="px-4 py-8 text-center text-sm text-[var(--muted)]">
+            No users match your filters.
+          </div>
+        )}
+        {paged.map((u) => (
+          <div key={u._id} className="p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium text-[var(--text)] truncate">{u.name}</p>
+                <p className="text-xs text-[var(--muted)] truncate mt-0.5">{u.email}</p>
+              </div>
+              <span className={`badge text-xs ${u.is_active ? 'badge-green' : 'badge-red'}`}>
+                {u.is_active ? 'active' : 'inactive'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
+                <p className="text-[var(--muted)]">Role</p>
+                <p className={`${u.role === 'admin' ? 'text-orange-600' : 'text-[var(--text)]'} font-semibold mt-1`}>
+                  {u.role}
+                </p>
+              </div>
+              <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
+                <p className="text-[var(--muted)]">Provider</p>
+                <p className="text-[var(--text)] font-semibold mt-1">{u.auth_provider ?? 'email'}</p>
+              </div>
+              <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
+                <p className="text-[var(--muted)]">Tests</p>
+                <p className="text-[var(--text)] font-semibold mt-1">{u.stats?.total_tests ?? 0}</p>
+              </div>
+              <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
+                <p className="text-[var(--muted)]">Accuracy</p>
+                <p className="text-[var(--text)] font-semibold mt-1">{Math.round(u.stats?.average_accuracy ?? 0)}%</p>
+              </div>
+              <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
+                <p className="text-[var(--muted)]">Streak</p>
+                <p className="text-orange-500 font-semibold mt-1">{u.stats?.current_streak ?? 0}🔥</p>
+              </div>
+              <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
+                <p className="text-[var(--muted)]">Joined</p>
+                <p className="text-[var(--text)] font-semibold mt-1">{new Date(u.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm min-w-[760px]">
           <thead className="bg-[var(--brand-soft)]/35">
             <tr>
@@ -191,7 +241,7 @@ export function UsersTable({ users }: { users: any[] }) {
       </div>
 
       {filtered.length > 0 && (
-        <div className="px-4 py-3 border-t border-[var(--line)] flex items-center justify-between">
+        <div className="px-4 py-3 border-t border-[var(--line)] flex items-center justify-between gap-3 flex-wrap">
           <button
             className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
             disabled={safePage <= 1}

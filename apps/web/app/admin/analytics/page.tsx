@@ -19,7 +19,7 @@ export default async function AdminAnalyticsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="page-wrap space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-[var(--text)]">Analytics</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
@@ -37,4 +37,3 @@ export default async function AdminAnalyticsPage() {
     </div>
   );
 }
-

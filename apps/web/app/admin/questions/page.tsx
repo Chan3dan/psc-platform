@@ -13,7 +13,7 @@ export default async function AdminQuestionsPage() {
   ]);
   return (
     <div className="page-wrap space-y-8">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text)]">Questions</h1>
           <p className="text-sm text-[var(--muted)] mt-0.5">Manage the MCQ question bank.</p>
@@ -23,7 +23,7 @@ export default async function AdminQuestionsPage() {
           total={totalQuestions}
         />
       </div>
-      <div className="card p-6">
+      <div className="card p-4 md:p-6">
         <h2 className="font-semibold text-[var(--text)] mb-4">Bulk Upload</h2>
         <BulkUploadClient exams={JSON.parse(JSON.stringify(exams))} />
       </div>

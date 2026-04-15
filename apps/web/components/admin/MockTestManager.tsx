@@ -231,7 +231,7 @@ function DistEditor({
 
   return (
     <div className="card p-3">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
         <p className="text-sm font-semibold text-[var(--text)]">Subject Distribution</p>
         <p className={`text-xs ${totalCount === totalQuestions ? 'text-emerald-600' : 'text-amber-600'}`}>
           Total selected: {totalCount} / {totalQuestions}
@@ -246,7 +246,7 @@ function DistEditor({
       </div>
       <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
         {rows.map((r, i) => (
-          <div key={`${r.subject_id}-${i}`} className="grid grid-cols-1 md:grid-cols-6 gap-2">
+          <div key={`${r.subject_id}-${i}`} className="grid grid-cols-1 md:grid-cols-6 gap-2 rounded-2xl border border-[var(--line)] p-3 md:p-0 md:border-0">
             <select
               className="input text-sm md:col-span-2"
               value={r.subject_id}
@@ -275,7 +275,7 @@ function DistEditor({
               onChange={(e) => setRows((prev) => prev.map((x, idx) => idx === i ? { ...x, difficulty_split: { ...x.difficulty_split, medium: Number(e.target.value) || 0 } } : x))}
               placeholder="Medium%"
             />
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 className="input text-sm"
                 type="number"
@@ -627,11 +627,11 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
   return (
     <div className="space-y-5">
-      <div className="flex justify-end gap-2">
-        <button className="btn-secondary shrink-0" onClick={() => setImportModalOpen(true)}>
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
+        <button className="btn-secondary shrink-0 w-full sm:w-auto" onClick={() => setImportModalOpen(true)}>
           Import Past Mock (CSV/JSON)
         </button>
-        <button className="btn-secondary shrink-0" onClick={() => setExistingModalOpen(true)}>
+        <button className="btn-secondary shrink-0 w-full sm:w-auto" onClick={() => setExistingModalOpen(true)}>
           Existing Mock Tests
         </button>
       </div>
@@ -661,7 +661,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           <div>
             <label className="label">Duration (min)</label>
             <input type="number" className="input" value={duration} onChange={(e) => setDuration(Number(e.target.value) || 45)} />
@@ -686,7 +686,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
         <DistEditor rows={rows} setRows={setRows} subjects={subjects} totalQuestions={totalQuestions} />
 
         {error && <p className="text-sm text-red-500">{error}</p>}
-        <button className="btn-primary" onClick={createMock} disabled={saving}>
+        <button className="btn-primary w-full sm:w-auto" onClick={createMock} disabled={saving}>
           {saving ? 'Creating...' : 'Create Mock Test'}
         </button>
       </div>
@@ -696,8 +696,8 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
           className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
-          <div className="w-full max-w-5xl max-h-[92vh] overflow-y-auto card glass p-5 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="w-full max-w-5xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto card glass rounded-none md:rounded-2xl p-4 md:p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Edit Mock Test</h3>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setEditing(null)}>Close</button>
             </div>
@@ -735,7 +735,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
               <div>
                 <label className="label">Duration (min)</label>
                 <input type="number" className="input" value={editing.duration_minutes} onChange={(e) => setEditing((p) => p ? { ...p, duration_minutes: Number(e.target.value) || 45 } : p)} />
@@ -760,9 +760,9 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
             <DistEditor rows={editing.rows} setRows={(next) => setEditing((p) => p ? { ...p, rows: typeof next === 'function' ? next(p.rows) : next } : p)} subjects={editSubjects} totalQuestions={editing.total_questions} />
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {editError ? <p className="text-sm text-red-500">{editError}</p> : <div />}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <button className="btn-secondary text-sm" onClick={() => setEditing((p) => p ? { ...p, slug: slugify(p.title) } : p)}>Regenerate Slug</button>
                 <button className="btn-primary text-sm" onClick={saveEdit} disabled={updating}>
                   {updating ? 'Saving...' : 'Save Changes'}
@@ -778,8 +778,8 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
           className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setExistingModalOpen(false); }}
         >
-          <div className="w-full max-w-6xl max-h-[92vh] overflow-y-auto card glass p-5">
-            <div className="flex items-center justify-between">
+          <div className="w-full max-w-6xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto card glass rounded-none md:rounded-2xl p-4 md:p-5">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Existing Mock Tests</h3>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setExistingModalOpen(false)}>Close</button>
             </div>
@@ -821,13 +821,13 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
                       <span>Total marks: {m.total_marks}</span>
                       <span>Negative: {negPct}% ({negPerWrong}/wrong)</span>
                     </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => openEdit(m)}>Edit</button>
-                      <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => toggleActive(m._id, m.is_active)}>
+                    <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                      <button className="btn-secondary text-xs px-3 py-1.5 w-full sm:w-auto" onClick={() => openEdit(m)}>Edit</button>
+                      <button className="btn-secondary text-xs px-3 py-1.5 w-full sm:w-auto" onClick={() => toggleActive(m._id, m.is_active)}>
                         {m.is_active ? 'Deactivate' : 'Activate'}
                       </button>
                       <button
-                        className="text-xs px-3 py-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300 w-full sm:w-auto"
                         onClick={() => setDeleteTarget({ id: m._id, title: m.title })}
                       >
                         Delete
@@ -878,8 +878,8 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
           className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setImportModalOpen(false); }}
         >
-          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto card glass p-5 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto card glass rounded-none md:rounded-2xl p-4 md:p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Import Past Questions as Mock Test</h3>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setImportModalOpen(false)}>Close</button>
             </div>
@@ -913,7 +913,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
               Fallback Subject is optional. It is only used when a row in CSV/JSON has no `subject_name`/`subject_id`.
             </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
               <div>
                 <label className="label">Duration (min)</label>
                 <input type="number" className="input" value={importDuration} onChange={(e) => setImportDuration(Number(e.target.value) || 45)} />
@@ -928,14 +928,14 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
               </div>
               <div>
                 <label className="label">Format</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button className={`btn-secondary text-xs px-3 py-2 ${importMode === 'json' ? 'ring-2 ring-blue-500' : ''}`} onClick={() => setImportMode('json')}>JSON</button>
                   <button className={`btn-secondary text-xs px-3 py-2 ${importMode === 'csv' ? 'ring-2 ring-blue-500' : ''}`} onClick={() => setImportMode('csv')}>CSV</button>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
               <label className="btn-secondary text-xs px-3 py-1.5 cursor-pointer">
                 Select File (.json/.csv)
                 <input
@@ -990,7 +990,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
             {importQuestions && <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">✓ {importQuestions.length} questions ready to import</p>}
 
             <div className="flex justify-end">
-              <button className="btn-primary" onClick={createPastMockFromImport} disabled={importing || !importQuestions?.length}>
+              <button className="btn-primary w-full sm:w-auto" onClick={createPastMockFromImport} disabled={importing || !importQuestions?.length}>
                 {importing ? 'Importing...' : 'Create Past Mock Test'}
               </button>
             </div>

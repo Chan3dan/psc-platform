@@ -313,7 +313,7 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
           <label className="btn-secondary text-xs px-3 py-1.5 cursor-pointer">
             Import File (.json/.csv)
             <input
@@ -357,9 +357,9 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
               }}
               className="input font-mono text-xs resize-none"
             />
-            <button onClick={validateFromJsonText} disabled={!jsonText.trim()} className="btn-secondary disabled:opacity-50 mt-3">
-              Validate JSON
-            </button>
+          <button onClick={validateFromJsonText} disabled={!jsonText.trim()} className="btn-secondary disabled:opacity-50 mt-3 w-full sm:w-auto">
+            Validate JSON
+          </button>
           </div>
         ) : (
           <div className="text-sm text-[var(--muted)] bg-[var(--brand-soft)]/35 rounded-lg p-3">
@@ -379,19 +379,19 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
         {parsed && <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">✓ {parsedCount} valid questions ready to upload</p>}
         {result && <p className={`text-sm px-3 py-2 rounded-lg ${result.startsWith('✓') ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950 text-red-600'}`}>{result}</p>}
 
-        <button onClick={upload} disabled={!parsed || uploading || !subjectId} className="btn-primary disabled:opacity-50">
+        <button onClick={upload} disabled={!parsed || uploading || !subjectId} className="btn-primary disabled:opacity-50 w-full sm:w-auto">
           {uploading ? 'Uploading...' : `Upload ${parsedCount} Questions`}
         </button>
       </div>
 
       <div className="card p-4 space-y-3">
         <p className="text-sm font-semibold text-[var(--text)]">Export Questions</p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
           <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv')} className="input max-w-[160px]">
             <option value="json">JSON</option>
             <option value="csv">CSV</option>
           </select>
-          <button onClick={exportQuestions} disabled={exporting} className="btn-secondary">
+          <button onClick={exportQuestions} disabled={exporting} className="btn-secondary w-full sm:w-auto">
             {exporting ? 'Exporting...' : 'Export Selected Exam/Subject'}
           </button>
         </div>
