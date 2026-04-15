@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
   DEFAULT_SITE_SETTINGS,
   normalizeSiteSettings,
@@ -18,6 +18,32 @@ export function SiteSettingsProvider({
   settings: SiteSettings;
 }) {
   const [currentSettings, setCurrentSettings] = useState(settings);
+
+  useEffect(() => {
+    setCurrentSettings(normalizeSiteSettings(settings));
+  }, [settings]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function refreshSettings() {
+      try {
+        const res = await fetch('/api/site-settings', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active || !data?.success || !data?.data) return;
+        setCurrentSettings(normalizeSiteSettings(data.data));
+      } catch {
+        // Keep the server-provided settings if live refresh fails.
+      }
+    }
+
+    refreshSettings();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <SiteSettingsUpdateContext.Provider value={(next) => setCurrentSettings(normalizeSiteSettings(next))}>
