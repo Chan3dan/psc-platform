@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/db';
 import { Exam } from '@psc/shared/models';
 import Link from 'next/link';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export default async function ExamsPage() {
   await connectDB();
@@ -24,9 +25,9 @@ export default async function ExamsPage() {
             className="card p-5 group">
             <h2 className="font-semibold text-[var(--text)] group-hover:text-[var(--brand)] transition-colors">{exam.name}</h2>
             <p className="text-sm text-[var(--muted)] mt-1 mb-3 line-clamp-2">{exam.description}</p>
-            <div className="flex items-center gap-3 text-xs text-[var(--muted)]">
-              <span>⏱ {exam.duration_minutes}min</span>
-              <span>📝 {exam.total_questions}q</span>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
+              <span className="inline-flex items-center gap-1.5"><AppIcon name="mock" className="h-3.5 w-3.5" /> {exam.duration_minutes}min</span>
+              <span className="inline-flex items-center gap-1.5"><AppIcon name="questions" className="h-3.5 w-3.5" /> {exam.total_questions}q</span>
               <span className="text-red-500">−{negativePercent}% ({negativePerWrong.toFixed(2)}/wrong)</span>
             </div>
           </Link>

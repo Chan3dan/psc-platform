@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export function MockTestCatalog({ tests }: { tests: any[] }) {
   const [query, setQuery] = useState('');
@@ -56,9 +57,9 @@ export function MockTestCatalog({ tests }: { tests: any[] }) {
                 <p className="text-xs uppercase tracking-wide text-[var(--muted)] font-semibold">{test.exam_id?.name}</p>
                 <h2 className="font-semibold text-[var(--text)] text-lg mt-1 line-clamp-2">{test.title}</h2>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  <span className="badge badge-blue">⏱ {test.duration_minutes} min</span>
-                  <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">📝 {test.total_questions} questions</span>
-                  <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">👥 {test.attempt_count ?? 0} attempts</span>
+                  <span className="badge badge-blue inline-flex items-center gap-1.5"><AppIcon name="mock" className="h-3.5 w-3.5" /> {test.duration_minutes} min</span>
+                  <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 inline-flex items-center gap-1.5"><AppIcon name="questions" className="h-3.5 w-3.5" /> {test.total_questions} questions</span>
+                  <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 inline-flex items-center gap-1.5"><AppIcon name="users" className="h-3.5 w-3.5" /> {test.attempt_count ?? 0} attempts</span>
                 </div>
               </div>
               <Link href={`/mock/${test.exam_id?.slug}?test=${test._id}`} className="btn-primary shrink-0">

@@ -1,5 +1,3 @@
-'use client';
-
 type IconName =
   | 'dashboard'
   | 'exams'
@@ -15,7 +13,12 @@ type IconName =
   | 'questions'
   | 'analytics'
   | 'users'
-  | 'logout';
+  | 'logout'
+  | 'check'
+  | 'alert'
+  | 'idea'
+  | 'upload'
+  | 'arrow-right';
 
 interface AppIconProps {
   name: IconName;
@@ -159,6 +162,43 @@ export function AppIcon({ name, className = 'h-5 w-5' }: AppIconProps) {
           <path d="M14 7V5.5A1.5 1.5 0 0 0 12.5 4h-6A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20h6a1.5 1.5 0 0 0 1.5-1.5V17" />
           <path d="M10 12h10" />
           <path d="m17 8 4 4-4 4" />
+        </svg>
+      );
+    case 'check':
+      return (
+        <svg {...baseProps}>
+          <path d="m5 12 4.2 4.2L19 6.5" />
+        </svg>
+      );
+    case 'alert':
+      return (
+        <svg {...baseProps}>
+          <path d="M12 4 3.8 18.5h16.4L12 4Z" />
+          <path d="M12 9v4.5" />
+          <circle cx="12" cy="16.5" r=".8" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case 'idea':
+      return (
+        <svg {...baseProps}>
+          <path d="M9 18h6" />
+          <path d="M10 21h4" />
+          <path d="M8.7 14.5A5.5 5.5 0 1 1 15.3 14.5c-.7.6-1.1 1.2-1.3 2h-4c-.2-.8-.6-1.4-1.3-2Z" />
+        </svg>
+      );
+    case 'upload':
+      return (
+        <svg {...baseProps}>
+          <path d="M12 16V5" />
+          <path d="m7.5 9.5 4.5-4.5 4.5 4.5" />
+          <path d="M5 19.5h14" />
+        </svg>
+      );
+    case 'arrow-right':
+      return (
+        <svg {...baseProps}>
+          <path d="M5 12h14" />
+          <path d="m13 6 6 6-6 6" />
         </svg>
       );
     default:

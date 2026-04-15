@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/db';
 import { Exam, Question, User, Result } from '@psc/shared/models';
 import Link from 'next/link';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export default async function AdminPage() {
   await connectDB();
@@ -35,13 +36,15 @@ export default async function AdminPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {[
-          { href: '/admin/exams', label: 'Add New Exam', desc: 'Create a new PSC exam type', icon: '📋' },
-          { href: '/admin/questions', label: 'Upload Questions', desc: 'Bulk upload MCQ bank via JSON', icon: '⬆️' },
-          { href: '/admin/notes', label: 'Upload Notes', desc: 'Add PDFs and study materials', icon: '📚' },
+          { href: '/admin/exams', label: 'Add New Exam', desc: 'Create a new PSC exam type', icon: 'exams' },
+          { href: '/admin/questions', label: 'Upload Questions', desc: 'Bulk upload MCQ bank via JSON', icon: 'upload' },
+          { href: '/admin/notes', label: 'Upload Notes', desc: 'Add PDFs and study materials', icon: 'notes' },
         ].map(a => (
           <Link key={a.href} href={a.href}
             className="card p-4 md:p-5">
-            <div className="text-2xl mb-2">{a.icon}</div>
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
+              <AppIcon name={a.icon as any} className="h-5 w-5" />
+            </div>
             <h3 className="font-medium text-[var(--text)] text-sm">{a.label}</h3>
             <p className="text-xs text-[var(--muted)] mt-0.5">{a.desc}</p>
           </Link>

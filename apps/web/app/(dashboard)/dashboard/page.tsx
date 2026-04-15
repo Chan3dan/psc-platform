@@ -6,6 +6,7 @@ import { Result, User, StudyPlan } from '@psc/shared/models';
 import { generateAnalytics } from '@psc/shared/utils/analytics';
 import Link from 'next/link';
 import { DashboardCharts } from '@/components/analytics/DashboardCharts';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 async function getData(userId: string) {
   await connectDB();
@@ -52,9 +53,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col lg:flex-row gap-5 lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Your Command Center</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mt-1">
-              Hello, {firstName} <span className="text-2xl">👋</span>
-            </h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mt-1">Hello, {firstName}</h1>
             <p className="text-sm text-[var(--muted)] mt-2">
               {streak > 0
                 ? `You are on a ${streak}-day streak. Stay consistent and keep momentum high.`
@@ -83,7 +82,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-[var(--text)]">Quick Drill</h2>
-            <p className="text-sm text-[var(--muted)] mt-1">5 questions in 5 minutes. {drillsToday} completed today 🔥</p>
+            <p className="text-sm text-[var(--muted)] mt-1">5 questions in 5 minutes. {drillsToday} completed today.</p>
           </div>
           <Link href="/drill" className="btn-primary">Start Speed Drill</Link>
         </div>
@@ -110,8 +109,11 @@ export default async function DashboardPage() {
                       : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
                   }`}
                 >
-                  <span className="shrink-0">
-                    {ins.type === 'weakness' ? '⚠️' : ins.type === 'strength' ? '✅' : ins.type === 'milestone' ? '🏆' : '💡'}
+                  <span className="shrink-0 mt-0.5">
+                    <AppIcon
+                      name={ins.type === 'weakness' ? 'alert' : ins.type === 'strength' ? 'check' : ins.type === 'milestone' ? 'leaderboard' : 'idea'}
+                      className="h-4 w-4"
+                    />
                   </span>
                   <span>{ins.message}</span>
                 </div>
@@ -128,14 +130,14 @@ export default async function DashboardPage() {
         <div className="card p-5">
           <h2 className="text-sm font-semibold text-[var(--text)]">Quick Actions</h2>
           <div className="mt-3 space-y-2">
-            <Link href="/practice" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
-              Practice by subject <span>→</span>
+            <Link href="/practice" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
+              Practice by subject <AppIcon name="arrow-right" className="h-4 w-4" />
             </Link>
-            <Link href="/leaderboard" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
-              Check leaderboard <span>→</span>
+            <Link href="/leaderboard" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
+              Check leaderboard <AppIcon name="arrow-right" className="h-4 w-4" />
             </Link>
-            <Link href="/notes" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
-              Revise notes <span>→</span>
+            <Link href="/notes" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
+              Revise notes <AppIcon name="arrow-right" className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -152,7 +154,7 @@ export default async function DashboardPage() {
             <div className="space-y-2.5">
               {analytics.weak_topics.slice(0, 6).map((topic) => (
                 <div key={topic.subject_id} className="flex items-center gap-3">
-                  <span className="text-red-400 text-sm shrink-0">⚠</span>
+                  <span className="text-red-400 shrink-0"><AppIcon name="alert" className="h-4 w-4" /></span>
                   <span className="text-sm text-[var(--text)] flex-1 truncate">{topic.subject_name}</span>
                   <div className="w-28 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shrink-0">
                     <div className="h-full bg-red-400 rounded-full" style={{ width: `${topic.avg_accuracy}%` }} />
@@ -172,8 +174,8 @@ export default async function DashboardPage() {
             </div>
             <p className="text-base font-semibold text-[var(--text)] mt-3">{(plan as any).exam_id?.name}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-[var(--muted)]">
-              <span className="badge-amber">🔥 {(plan as any).streak_days} day streak</span>
-              <span className="badge-gray">📅 Target: {new Date((plan as any).target_date).toLocaleDateString()}</span>
+              <span className="badge-amber inline-flex items-center gap-1.5"><AppIcon name="drill" className="h-3.5 w-3.5" /> {(plan as any).streak_days} day streak</span>
+              <span className="badge-gray inline-flex items-center gap-1.5"><AppIcon name="planner" className="h-3.5 w-3.5" /> Target: {new Date((plan as any).target_date).toLocaleDateString()}</span>
             </div>
           </div>
         ) : (
@@ -203,7 +205,7 @@ export default async function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-[var(--text)]">{r.test_id?.title ?? 'Practice Session'}</p>
                     <p className="text-xs text-[var(--muted)] mt-0.5">
-                      {new Date(r.created_at).toLocaleDateString()} · {r.correct_count}✓ {r.wrong_count}✗ {r.skipped_count}—
+                      {new Date(r.created_at).toLocaleDateString()} · {r.correct_count} correct · {r.wrong_count} wrong · {r.skipped_count} skipped
                     </p>
                   </div>
                   <div className="text-right">
@@ -217,7 +219,9 @@ export default async function DashboardPage() {
         </section>
       ) : (
         <section className="card p-10 text-center">
-          <div className="text-4xl mb-3">📚</div>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
+            <AppIcon name="notes" className="h-7 w-7" />
+          </div>
           <h3 className="font-semibold text-[var(--text)] mb-1">No attempts yet</h3>
           <p className="text-sm text-[var(--muted)] mb-4">Start a practice set or mock test to unlock analytics and insight tracking.</p>
           <Link href="/exams" className="btn-primary inline-flex">Begin Practice</Link>
