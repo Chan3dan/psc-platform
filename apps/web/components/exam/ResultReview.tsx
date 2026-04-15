@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { AppIcon } from '@/components/icons/AppIcon';
 
-type Filter = 'all' | 'correct' | 'wrong' | 'skipped';
+type Filter = 'all' | 'correct' | 'wrong' | 'skipped' | 'flagged';
 
 export function ResultReview({ answers }: { answers: any[] }) {
   const [filter, setFilter] = useState<Filter>('all');
@@ -13,12 +13,14 @@ export function ResultReview({ answers }: { answers: any[] }) {
     correct: answers.filter(a => a.is_correct).length,
     wrong: answers.filter(a => !a.is_correct && a.selected_option !== null).length,
     skipped: answers.filter(a => a.selected_option === null).length,
+    flagged: answers.filter(a => a.flagged).length,
   };
 
   const filtered = answers.filter(a => {
     if (filter === 'correct') return a.is_correct;
     if (filter === 'wrong') return !a.is_correct && a.selected_option !== null;
     if (filter === 'skipped') return a.selected_option === null;
+    if (filter === 'flagged') return a.flagged;
     return true;
   });
 
@@ -29,7 +31,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <div className="card p-3">
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Accuracy</p>
           <p className="text-xl font-semibold text-[var(--text)] mt-1">{scorePct}%</p>
@@ -46,6 +48,10 @@ export function ResultReview({ answers }: { answers: any[] }) {
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Skipped</p>
           <p className="text-xl font-semibold text-amber-600 mt-1">{counts.skipped}</p>
         </div>
+        <div className="card p-3">
+          <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Flagged</p>
+          <p className="text-xl font-semibold text-blue-600 mt-1">{counts.flagged}</p>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-1 flex-wrap">
@@ -55,6 +61,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
               ${filter === f
                 ? f === 'wrong' ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
                 : f === 'correct' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                : f === 'flagged' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
                 : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}>
@@ -82,6 +89,12 @@ export function ResultReview({ answers }: { answers: any[] }) {
                       <span>{q.subject_id?.name}</span>
                       <span>·</span>
                       <span className="capitalize">{q.difficulty ?? 'mixed'}</span>
+                      {a.flagged && (
+                        <>
+                          <span>·</span>
+                          <span className="text-amber-600 dark:text-amber-400">Flagged for review</span>
+                        </>
+                      )}
                       <span>·</span>
                       <span className={a.marks_awarded > 0 ? 'text-emerald-600' : a.marks_awarded < 0 ? 'text-red-500' : 'text-gray-400'}>
                         {a.marks_awarded > 0 ? '+' : ''}{a.marks_awarded} marks

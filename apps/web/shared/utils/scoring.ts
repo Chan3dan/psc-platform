@@ -13,6 +13,7 @@ export interface ScoringConfig {
 export interface QuestionResult {
   question_id: string;
   selected_option: number | null;
+  flagged?: boolean;
   correct_answer: number;
   subject_id: string;
   subject_name: string;
@@ -71,6 +72,7 @@ export function calculateScore(
     answers.push({
       question_id: new Types.ObjectId(q.question_id),
       selected_option: q.selected_option,
+      flagged: Boolean(q.flagged),
       is_correct,
       marks_awarded,
       time_spent_seconds: q.time_spent_seconds,

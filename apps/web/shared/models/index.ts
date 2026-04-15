@@ -255,6 +255,7 @@ UserSchema.index({ email: 1 });
 export interface IAnswer {
   question_id: Types.ObjectId;
   selected_option: number | null;
+  flagged?: boolean;
   is_correct: boolean;
   marks_awarded: number;
   time_spent_seconds: number;
@@ -294,6 +295,7 @@ const AnswerSchema = new Schema<IAnswer>(
   {
     question_id: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
     selected_option: { type: Number, default: null },
+    flagged: { type: Boolean, default: false },
     is_correct: { type: Boolean, required: true },
     marks_awarded: { type: Number, required: true },
     time_spent_seconds: { type: Number, default: 0 },

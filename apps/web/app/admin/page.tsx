@@ -5,13 +5,41 @@ import { AppIcon } from '@/components/icons/AppIcon';
 
 export default async function AdminPage() {
   await connectDB();
-  const [examCount, questionCount, userCount, resultCount, recentUsers] = await Promise.all([
+  const [examCount, questionCount, userCount, resultCount, recentUsers, flaggedCountAgg, recentFlaggedResults] = await Promise.all([
     Exam.countDocuments({ is_active: true }),
     Question.countDocuments({ is_active: true }),
     User.countDocuments({ is_active: true }),
     Result.countDocuments({}),
     User.find({}).sort({ created_at: -1 }).limit(8).select('name email created_at role').lean(),
+    Result.aggregate([
+      { $unwind: '$answers' },
+      { $match: { 'answers.flagged': true } },
+      { $count: 'total' },
+    ]),
+    Result.find({ 'answers.flagged': true })
+      .sort({ created_at: -1 })
+      .limit(8)
+      .select('answers user_id test_id created_at')
+      .populate('user_id', 'name email')
+      .populate('test_id', 'title')
+      .populate({ path: 'answers.question_id', model: 'Question', select: 'question_text' })
+      .lean(),
   ]);
+  const flaggedCount = flaggedCountAgg[0]?.total ?? 0;
+  const recentFlaggedQuestions = (recentFlaggedResults as any[])
+    .flatMap((result) =>
+      (result.answers ?? [])
+        .filter((answer: any) => answer.flagged && answer.question_id)
+        .map((answer: any) => ({
+          resultId: String(result._id),
+          questionId: String(answer.question_id?._id ?? ''),
+          questionText: answer.question_id?.question_text ?? 'Question text unavailable',
+          userName: result.user_id?.name ?? 'Unknown user',
+          testTitle: result.test_id?.title ?? 'Practice Session',
+          createdAt: result.created_at,
+        }))
+    )
+    .slice(0, 6);
 
   return (
     <div className="page-wrap space-y-8">
@@ -20,12 +48,13 @@ export default async function AdminPage() {
         <p className="text-sm text-[var(--muted)] mt-1">Platform statistics and quick actions.</p>
       </div>
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 md:gap-4">
         {[
           { label: 'Active Exams', value: examCount, href: '/admin/exams', color: 'text-blue-600' },
           { label: 'Questions', value: questionCount.toLocaleString(), href: '/admin/questions', color: 'text-emerald-600' },
           { label: 'Users', value: userCount.toLocaleString(), href: '/admin/users', color: 'text-purple-600' },
           { label: 'Test Attempts', value: resultCount.toLocaleString(), href: '#', color: 'text-orange-600' },
+          { label: 'Flagged Reviews', value: flaggedCount.toLocaleString(), href: '/admin/questions', color: 'text-amber-600' },
         ].map(s => (
           <Link key={s.label} href={s.href} className="card p-4 md:p-5">
             <div className={`text-xl md:text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -49,6 +78,42 @@ export default async function AdminPage() {
             <p className="text-xs text-[var(--muted)] mt-0.5">{a.desc}</p>
           </Link>
         ))}
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="px-4 md:px-6 py-3 border-b border-[var(--line)] flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-[var(--text)] text-sm">Flagged By Users</h2>
+            <p className="text-xs text-[var(--muted)] mt-0.5">Recent questions users marked for review during tests.</p>
+          </div>
+          <Link href="/admin/questions" className="text-xs text-[var(--brand)] hover:underline">
+            Open question bank
+          </Link>
+        </div>
+        {recentFlaggedQuestions.length === 0 ? (
+          <div className="px-4 md:px-6 py-5 text-sm text-[var(--muted)]">
+            No flagged questions yet.
+          </div>
+        ) : (
+          <div className="divide-y divide-[var(--line)]">
+            {recentFlaggedQuestions.map((item) => (
+              <div key={`${item.resultId}-${item.questionId}`} className="px-4 md:px-6 py-3 space-y-1.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[var(--text)] line-clamp-2">{item.questionText}</p>
+                    <p className="text-xs text-[var(--muted)] mt-0.5">
+                      {item.userName} · {item.testTitle}
+                    </p>
+                  </div>
+                  <span className="badge badge-amber text-xs shrink-0">Flagged</span>
+                </div>
+                <p className="text-xs text-[var(--muted)]">
+                  {new Date(item.createdAt).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="card overflow-hidden">

@@ -215,8 +215,14 @@ export function MockTestPageInner() {
   const answeredCount = session.questions.filter((sq: any) => getStatus(sq._id) === 'answered').length;
   const flaggedCount = session.questions.filter((sq: any) => getStatus(sq._id) === 'flagged').length;
   const skippedCount = session.questions.filter((sq: any) => getStatus(sq._id) === 'skipped').length;
-  const pendingCount = session.questions.filter((sq: any) => getStatus(sq._id) === 'not-visited').length;
+  const notVisitedCount = session.questions.filter((sq: any) => getStatus(sq._id) === 'not-visited').length;
   const completionPct = session.questions.length > 0 ? Math.round((answeredCount / session.questions.length) * 100) : 0;
+  const statusLegend = [
+    { label: 'Answered', dot: 'bg-emerald-500' },
+    { label: 'Flagged', dot: 'bg-amber-400' },
+    { label: 'Skipped', dot: 'bg-gray-400 dark:bg-gray-500' },
+    { label: 'Not Visited', dot: 'border border-gray-400 dark:border-gray-500 bg-transparent' },
+  ];
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col overflow-x-hidden">
@@ -254,7 +260,16 @@ export function MockTestPageInner() {
           <span className="badge badge-green text-xs">Answered: {answeredCount}</span>
           <span className="badge badge-amber text-xs">Flagged: {flaggedCount}</span>
           <span className="badge text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">Skipped: {skippedCount}</span>
-          <span className="badge text-xs bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">Pending: {pendingCount}</span>
+          <span className="badge text-xs bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">Not Visited: {notVisitedCount}</span>
+        </div>
+
+        <div className="mt-2 flex items-center gap-x-3 gap-y-1 flex-wrap text-[11px] text-[var(--muted)]">
+          {statusLegend.map((item) => (
+            <span key={item.label} className="inline-flex items-center gap-1.5">
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${item.dot}`} />
+              {item.label}
+            </span>
+          ))}
         </div>
       </header>
 
@@ -390,6 +405,7 @@ export function MockTestPageInner() {
               ['bg-emerald-500', 'Answered'],
               ['bg-amber-400', 'Flagged'],
               ['bg-gray-300 dark:bg-gray-600', 'Skipped'],
+              ['bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600', 'Not Visited'],
             ].map(([c, l]) => (
               <div key={l} className="flex items-center gap-2">
                 <span className={`w-3 h-3 rounded inline-block shrink-0 ${c}`} />
@@ -404,7 +420,7 @@ export function MockTestPageInner() {
               if (s === 'not-visited') {
                 return (
                   <div key={s} className="flex justify-between text-gray-400">
-                    <span>Not visited</span><span>{count}</span>
+                    <span>Not Visited</span><span>{count}</span>
                   </div>
                 );
               }
@@ -488,10 +504,10 @@ export function MockTestPageInner() {
 
       {quickJumpOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px] flex items-end justify-center p-0"
+          className="fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px] flex items-end lg:items-center justify-center p-0 lg:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setQuickJumpOpen(false); }}
         >
-          <div className="w-full max-h-[72vh] rounded-t-3xl bg-[var(--bg-elev)] border border-[var(--line)] shadow-[var(--shadow-strong)] p-4 space-y-4 overflow-y-auto">
+          <div className="w-full max-h-[72vh] lg:max-w-2xl rounded-t-3xl lg:rounded-3xl bg-[var(--bg-elev)] border border-[var(--line)] shadow-[var(--shadow-strong)] p-4 space-y-4 overflow-y-auto">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold text-[var(--text)]">Quick Jump</h3>
@@ -501,6 +517,7 @@ export function MockTestPageInner() {
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
                   <span className="badge badge-green text-xs">Answered: {answeredCount}</span>
                   <span className="badge badge-amber text-xs">Flagged: {flaggedCount}</span>
+                  <span className="badge text-xs bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">Not Visited: {notVisitedCount}</span>
                 </div>
               </div>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setQuickJumpOpen(false)}>
@@ -508,7 +525,7 @@ export function MockTestPageInner() {
               </button>
             </div>
 
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-1.5">
               {session.questions.map((sq: any, i: number) => {
                 const status = getStatus(sq._id);
                 return (

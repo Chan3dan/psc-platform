@@ -6,7 +6,13 @@ export interface QuestionOption { index: number; text: string; image_url?: strin
 export interface SessionQuestion { _id: string; question_text: string; question_image_url?: string | null; options: QuestionOption[]; subject_id: string; difficulty: string; }
 export interface ExamConfig { test_id: string | null; exam_id: string; title: string; duration_minutes: number; total_marks: number; total_questions: number; negative_marking: number; marks_per_question: number; test_type: string; }
 export interface ExamSession { config: ExamConfig; questions: SessionQuestion[]; started_at: string; }
-export interface AnswerRecord { question_id: string; selected_option: number | null; time_spent_seconds: number; flagged: boolean; }
+export interface AnswerRecord {
+  question_id: string;
+  selected_option: number | null;
+  time_spent_seconds: number;
+  flagged: boolean;
+  visited: boolean;
+}
 export interface ExamResult { result_id: string; score: number; max_score: number; accuracy_percent: number; correct_count: number; wrong_count: number; skipped_count: number; subject_breakdown: any[]; percentile: number; correct_answers: Record<string, number>; explanations: Record<string, string>; }
 
 interface ExamStoreState {
@@ -43,7 +49,13 @@ export const useExamStore = create<ExamStoreState>()(
       startSession: (session) => {
         const answers = new Map<string, AnswerRecord>();
         for (const q of session.questions) {
-          answers.set(q._id, { question_id: q._id, selected_option: null, time_spent_seconds: 0, flagged: false });
+          answers.set(q._id, {
+            question_id: q._id,
+            selected_option: null,
+            time_spent_seconds: 0,
+            flagged: false,
+            visited: false,
+          });
         }
         set({ session, answers, currentIndex: 0, timeRemainingSeconds: session.config.duration_minutes * 60, isRunning: true, isSubmitted: false, isSubmitting: false, submitError: null, result: null, questionStartTime: Date.now() });
       },
@@ -54,7 +66,12 @@ export const useExamStore = create<ExamStoreState>()(
         if (!existing) return;
         const timeSpent = Math.round((Date.now() - questionStartTime) / 1000);
         const updated = new Map(answers);
-        updated.set(questionId, { ...existing, selected_option: optionIndex, time_spent_seconds: existing.time_spent_seconds + timeSpent });
+        updated.set(questionId, {
+          ...existing,
+          selected_option: optionIndex,
+          time_spent_seconds: existing.time_spent_seconds + timeSpent,
+          visited: true,
+        });
         set({ answers: updated, questionStartTime: Date.now() });
       },
 
@@ -63,7 +80,7 @@ export const useExamStore = create<ExamStoreState>()(
         const existing = answers.get(questionId);
         if (!existing) return;
         const updated = new Map(answers);
-        updated.set(questionId, { ...existing, selected_option: null });
+        updated.set(questionId, { ...existing, selected_option: null, visited: true });
         set({ answers: updated });
       },
 
@@ -72,24 +89,30 @@ export const useExamStore = create<ExamStoreState>()(
         const existing = answers.get(questionId);
         if (!existing) return;
         const updated = new Map(answers);
-        updated.set(questionId, { ...existing, flagged: !existing.flagged });
+        updated.set(questionId, { ...existing, flagged: !existing.flagged, visited: true });
         set({ answers: updated });
       },
 
       goToQuestion: (index) => {
         const { session, answers, currentIndex, questionStartTime } = get();
         if (!session) return;
+        const nextIndex = Math.max(0, Math.min(index, session.questions.length - 1));
+        if (nextIndex === currentIndex) return;
         const currentQ = session.questions[currentIndex];
         if (currentQ) {
           const timeSpent = Math.round((Date.now() - questionStartTime) / 1000);
           const existing = answers.get(currentQ._id);
           if (existing) {
             const updated = new Map(answers);
-            updated.set(currentQ._id, { ...existing, time_spent_seconds: existing.time_spent_seconds + timeSpent });
+            updated.set(currentQ._id, {
+              ...existing,
+              time_spent_seconds: existing.time_spent_seconds + timeSpent,
+              visited: true,
+            });
             set({ answers: updated });
           }
         }
-        set({ currentIndex: Math.max(0, Math.min(index, session.questions.length - 1)), questionStartTime: Date.now() });
+        set({ currentIndex: nextIndex, questionStartTime: Date.now() });
       },
 
       nextQuestion: () => { const { session, currentIndex } = get(); if (session) get().goToQuestion(Math.min(currentIndex + 1, session.questions.length - 1)); },
@@ -112,6 +135,7 @@ export const useExamStore = create<ExamStoreState>()(
             : String((a as any).question_id ?? ''),
           selected_option: a.selected_option,
           time_spent_seconds: a.time_spent_seconds,
+          flagged: a.flagged,
         }));
         const totalTime = session.config.duration_minutes * 60 - timeRemainingSeconds;
         try {
@@ -144,7 +168,7 @@ export const useExamStore = create<ExamStoreState>()(
 
       getStatus: (questionId) => {
         const a = get().answers.get(questionId);
-        if (!a) return 'not-visited';
+        if (!a || !a.visited) return 'not-visited';
         if (a.flagged) return 'flagged';
         if (a.selected_option !== null) return 'answered';
         return 'skipped';

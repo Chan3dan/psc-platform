@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
           question_id: qid,
         };
       })
-      .filter(Boolean) as Array<{ question_id: string; selected_option: number | null; time_spent_seconds?: number }>;
+      .filter(Boolean) as Array<{ question_id: string; selected_option: number | null; time_spent_seconds?: number; flagged?: boolean }>;
 
     if (normalizedAnswers.length === 0) return err('No valid answers to submit');
 
@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         subject_id: ((q as any).subject_id as any)?._id?.toString() ?? '',
         subject_name: ((q as any).subject_id as any)?.name ?? 'Unknown',
         time_spent_seconds: a.time_spent_seconds ?? 0,
+        flagged: Boolean(a.flagged),
       };
     });
 
