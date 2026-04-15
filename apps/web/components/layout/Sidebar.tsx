@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { SearchModal } from '@/components/layout/SearchModal';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; role?: string };
@@ -50,7 +51,9 @@ export function Sidebar({ user }: SidebarProps) {
                     ? 'bg-[var(--brand-soft)] text-[var(--brand)] font-semibold'
                     : 'text-[var(--muted)] hover:bg-white/60 dark:hover:bg-white/5 hover:text-[var(--text)]'
                   }`}>
-                <span className="text-base w-5 text-center leading-none">{item.icon}</span>
+                <span className="w-5 h-5 flex items-center justify-center">
+                  <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
+                </span>
                 {item.label}
               </Link>
             );
@@ -58,7 +61,9 @@ export function Sidebar({ user }: SidebarProps) {
           {user.role === 'admin' && (
             <Link href="/admin"
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors mt-1">
-              <span className="text-base w-5 text-center leading-none">⚙️</span>
+              <span className="w-5 h-5 flex items-center justify-center">
+                <AppIcon name="admin" className="h-[18px] w-[18px]" />
+              </span>
               Admin Panel
             </Link>
           )}
@@ -74,7 +79,7 @@ export function Sidebar({ user }: SidebarProps) {
             </div>
             <button onClick={() => signOut({ callbackUrl: '/' })}
               className="text-[var(--muted)] hover:text-[var(--text)] transition-colors text-sm" title="Sign out">
-              ↩
+              <AppIcon name="logout" className="h-[18px] w-[18px]" />
             </button>
           </div>
         </div>

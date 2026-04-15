@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 interface AdminMobileHeaderProps {
   user: { name?: string | null; email?: string | null };
@@ -88,7 +89,9 @@ export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
                         : 'text-[var(--muted)] hover:bg-[var(--brand-soft)]/45 hover:text-[var(--text)]'
                     }`}
                   >
-                    <span className="text-base w-5 text-center leading-none">{item.icon}</span>
+                    <span className="w-5 h-5 flex items-center justify-center">
+                      <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
+                    </span>
                     <span>{item.label}</span>
                   </Link>
                 );

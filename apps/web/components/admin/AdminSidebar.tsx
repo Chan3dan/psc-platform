@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 interface AdminSidebarProps {
   user: { name?: string | null; email?: string | null };
@@ -45,7 +46,9 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
                     : 'text-[var(--muted)] hover:bg-white/60 dark:hover:bg-white/5 hover:text-[var(--text)]'
                 }`}
               >
-                <span className="text-base w-5 text-center leading-none">{item.icon}</span>
+                <span className="w-5 h-5 flex items-center justify-center">
+                  <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
+                </span>
                 {item.label}
               </Link>
             );
@@ -66,7 +69,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
               className="text-[var(--muted)] hover:text-[var(--text)] transition-colors text-sm"
               title="Sign out"
             >
-              ↩
+              <AppIcon name="logout" className="h-[18px] w-[18px]" />
             </button>
           </div>
         </div>

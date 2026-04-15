@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 interface MobileHeaderProps {
   user: { name?: string | null; email?: string | null; role?: string };
@@ -79,7 +80,9 @@ export function MobileHeader({ user }: MobileHeaderProps) {
                         : 'text-[var(--muted)] hover:bg-[var(--brand-soft)]/45 hover:text-[var(--text)]'
                     }`}
                   >
-                    <span className="text-base w-5 text-center leading-none">{item.icon}</span>
+                    <span className="w-5 h-5 flex items-center justify-center">
+                      <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
+                    </span>
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -90,7 +93,9 @@ export function MobileHeader({ user }: MobileHeaderProps) {
                   href="/admin"
                   className="group flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 transition-all mt-2"
                 >
-                  <span className="text-base w-5 text-center leading-none">⚙️</span>
+                  <span className="w-5 h-5 flex items-center justify-center">
+                    <AppIcon name="admin" className="h-[18px] w-[18px]" />
+                  </span>
                   <span>Admin Panel</span>
                 </Link>
               )}

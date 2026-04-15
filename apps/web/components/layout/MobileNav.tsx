@@ -1,13 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 const PRIMARY_TABS = [
-  { href: '/dashboard', label: 'Home', icon: '◎' },
-  { href: '/practice', label: 'Practice', icon: '✏️' },
-  { href: '/mock', label: 'Mock', icon: '⏱' },
-  { href: '/planner', label: 'Planner', icon: '📅' },
-  { href: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+  { href: '/dashboard', label: 'Home', icon: 'dashboard' },
+  { href: '/practice', label: 'Practice', icon: 'practice' },
+  { href: '/mock', label: 'Mock', icon: 'mock' },
+  { href: '/planner', label: 'Planner', icon: 'planner' },
+  { href: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
 ];
 
 export function MobileNav() {
@@ -22,7 +23,9 @@ export function MobileNav() {
           <Link key={item.href} href={item.href}
             className={`flex flex-col items-center gap-0.5 px-1 py-2.5 text-[11px] transition-all
               ${active ? 'text-[var(--brand)] font-semibold' : 'text-[var(--muted)]'}`}>
-            <span className="text-lg leading-none">{item.icon}</span>
+            <span className="h-5 w-5 flex items-center justify-center">
+              <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
+            </span>
             {item.label}
           </Link>
         );

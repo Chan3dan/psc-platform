@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 const PRIMARY_ADMIN_TABS = [
-  { href: '/admin', label: 'Overview', icon: '◎' },
-  { href: '/admin/questions', label: 'Questions', icon: '❓' },
-  { href: '/admin/mocks', label: 'Mocks', icon: '⏱' },
-  { href: '/admin/users', label: 'Users', icon: '👥' },
-  { href: '/admin/analytics', label: 'Analytics', icon: '📊' },
+  { href: '/admin', label: 'Overview', icon: 'dashboard' },
+  { href: '/admin/questions', label: 'Questions', icon: 'questions' },
+  { href: '/admin/mocks', label: 'Mocks', icon: 'mock' },
+  { href: '/admin/users', label: 'Users', icon: 'users' },
+  { href: '/admin/analytics', label: 'Analytics', icon: 'analytics' },
 ];
 
 export function AdminMobileNav() {
@@ -27,7 +28,9 @@ export function AdminMobileNav() {
                 active ? 'text-[var(--brand)] font-semibold' : 'text-[var(--muted)]'
               }`}
             >
-              <span className="text-lg leading-none">{item.icon}</span>
+              <span className="h-5 w-5 flex items-center justify-center">
+                <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
+              </span>
               {item.label}
             </Link>
           );

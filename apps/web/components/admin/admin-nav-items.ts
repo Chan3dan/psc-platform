@@ -5,12 +5,12 @@ export interface AdminNavItem {
 }
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { href: '/admin', label: 'Overview', icon: '◎' },
-  { href: '/admin/exams', label: 'Exams', icon: '📋' },
-  { href: '/admin/subjects', label: 'Subjects', icon: '🧩' },
-  { href: '/admin/questions', label: 'Questions', icon: '❓' },
-  { href: '/admin/mocks', label: 'Mocks', icon: '⏱' },
-  { href: '/admin/analytics', label: 'Analytics', icon: '📊' },
-  { href: '/admin/users', label: 'Users', icon: '👥' },
-  { href: '/admin/notes', label: 'Notes', icon: '📚' },
+  { href: '/admin', label: 'Overview', icon: 'dashboard' },
+  { href: '/admin/exams', label: 'Exams', icon: 'exams' },
+  { href: '/admin/subjects', label: 'Subjects', icon: 'subjects' },
+  { href: '/admin/questions', label: 'Questions', icon: 'questions' },
+  { href: '/admin/mocks', label: 'Mocks', icon: 'mock' },
+  { href: '/admin/analytics', label: 'Analytics', icon: 'analytics' },
+  { href: '/admin/users', label: 'Users', icon: 'users' },
+  { href: '/admin/notes', label: 'Notes', icon: 'notes' },
 ];
