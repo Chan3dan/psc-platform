@@ -10,10 +10,12 @@ export interface SiteSettings {
   footerText: string;
 }
 
+export const DEFAULT_LOGO_URL = '/brand/niyukta-logo.jpeg';
+
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   brandName: 'Niyukta',
   tagline: 'Prepare Smart. Get Niyukta.',
-  logoUrl: '/brand/niyukta-logo.jpeg',
+  logoUrl: DEFAULT_LOGO_URL,
   liveLabel: 'Live',
   heroBadge: 'Built for Loksewa Aspirants',
   heroTitlePrefix: 'Modern exam prep that turns',
@@ -28,13 +30,33 @@ function cleanText(value: unknown, fallback: string) {
   return text || fallback;
 }
 
+export function normalizeLogoUrl(value: unknown) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (!text) return DEFAULT_LOGO_URL;
+  if (
+    text.startsWith('/') ||
+    text.startsWith('http://') ||
+    text.startsWith('https://') ||
+    text.startsWith('data:image/')
+  ) {
+    return text;
+  }
+
+  return DEFAULT_LOGO_URL;
+}
+
+export function getMetadataIconUrl(value: unknown) {
+  const normalized = normalizeLogoUrl(value);
+  return normalized.startsWith('data:image/') ? DEFAULT_LOGO_URL : normalized;
+}
+
 export function normalizeSiteSettings(
   input: Partial<SiteSettings> | Record<string, unknown> = {}
 ): SiteSettings {
   return {
     brandName: cleanText(input.brandName, DEFAULT_SITE_SETTINGS.brandName),
     tagline: cleanText(input.tagline, DEFAULT_SITE_SETTINGS.tagline),
-    logoUrl: cleanText(input.logoUrl, DEFAULT_SITE_SETTINGS.logoUrl),
+    logoUrl: normalizeLogoUrl(input.logoUrl),
     liveLabel: cleanText(input.liveLabel, DEFAULT_SITE_SETTINGS.liveLabel),
     heroBadge: cleanText(input.heroBadge, DEFAULT_SITE_SETTINGS.heroBadge),
     heroTitlePrefix: cleanText(input.heroTitlePrefix, DEFAULT_SITE_SETTINGS.heroTitlePrefix),
