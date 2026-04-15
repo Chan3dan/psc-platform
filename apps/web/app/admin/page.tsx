@@ -66,7 +66,7 @@ export default async function AdminPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {[
-          { href: '/admin/exams', label: 'Add New Exam', desc: 'Create a new PSC exam type', icon: 'exams' },
+          { href: '/admin/exams', label: 'Add New Exam', desc: 'Create a new exam type', icon: 'exams' },
           { href: '/admin/questions', label: 'Upload Questions', desc: 'Bulk upload MCQ bank via JSON', icon: 'upload' },
           { href: '/admin/notes', label: 'Upload Notes', desc: 'Add PDFs and study materials', icon: 'notes' },
         ].map(a => (

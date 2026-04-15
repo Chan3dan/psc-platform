@@ -15,6 +15,7 @@ type IconName =
   | 'users'
   | 'results'
   | 'flagged'
+  | 'settings'
   | 'logout'
   | 'check'
   | 'alert'
@@ -174,6 +175,13 @@ export function AppIcon({ name, className = 'h-5 w-5' }: AppIconProps) {
         <svg {...baseProps}>
           <path d="M6.5 20V4.5" />
           <path d="M6.5 5h8.2l-1.8 3 1.8 3H6.5" />
+        </svg>
+      );
+    case 'settings':
+      return (
+        <svg {...baseProps}>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7.8 7.8 0 0 0-1.8-1.1l-.3-2.6H10l-.3 2.6a7.8 7.8 0 0 0-1.8 1.1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7.8 7.8 0 0 0 1.8 1.1l.3 2.6h4.4l.3-2.6a7.8 7.8 0 0 0 1.8-1.1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z" />
         </svg>
       );
     case 'logout':

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Exam } from '@psc/shared/models';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { BrandMark } from '@/components/branding/BrandMark';
+import { getSiteSettings } from '@/lib/site-settings';
 
 async function getExams() {
   await connectDB();
@@ -44,18 +46,14 @@ const FEATURES = [
 ];
 
 export default async function LandingPage() {
+  const settings = await getSiteSettings();
   const exams = await getExams();
 
   return (
     <div className="min-h-screen">
       <div className="page-wrap pb-2">
         <nav className="card glass px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand)]">
-              <AppIcon name="dashboard" className="h-4.5 w-4.5" />
-            </span>
-            <span className="text-lg font-bold text-[var(--text)]">PSC Prep</span>
-          </div>
+          <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} subtitle={settings.tagline} />
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors">
               Sign in
@@ -71,20 +69,20 @@ export default async function LandingPage() {
         <div className="grid lg:grid-cols-[1.15fr,0.85fr] gap-8 items-stretch">
           <div className="card glass p-6 md:p-8">
             <div className="inline-flex items-center gap-2 bg-[var(--brand-soft)] text-[var(--brand)] text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-              Built for Loksewa Aspirants
+              {settings.heroBadge}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight text-[var(--text)]">
-              Modern PSC prep that turns
+              {settings.heroTitlePrefix}
               <span className="block bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 bg-clip-text text-transparent">
-                study time into rank gain
+                {settings.heroTitleHighlight}
               </span>
             </h1>
             <p className="mt-5 text-lg text-[var(--muted)] max-w-2xl">
-              Practice smarter with adaptive MCQs, full mock tests, and advanced analytics designed for Nepal civil service exam success.
+              {settings.heroDescription}
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link href="/register" className="btn-primary text-base px-6 py-3">
-                Start Free Prep
+                Start with {settings.brandName}
               </Link>
               <Link href="#exams" className="btn-secondary text-base px-6 py-3">
                 Browse Exams
@@ -182,7 +180,7 @@ export default async function LandingPage() {
       </section>
 
       <footer className="page-wrap pt-2 pb-8 text-center text-sm text-[var(--muted)]">
-        PSC Prep - Structured for Nepal civil service success
+        {settings.footerText}
       </footer>
     </div>
   );

@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { BrandMark } from '@/components/branding/BrandMark';
+import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 
 interface AdminSidebarProps {
   user: { name?: string | null; email?: string | null };
@@ -12,16 +14,22 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const settings = useSiteSettings();
 
   return (
     <aside className="hidden md:flex w-64 flex-col h-full flex-shrink-0 px-3 py-3">
       <div className="card glass h-full flex flex-col overflow-hidden">
         <div className="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between">
-          <div>
-            <span className="text-base font-bold text-[var(--text)]">PSC Admin</span>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-orange-600 mt-1">Control Center</p>
+          <div className="min-w-0">
+            <BrandMark
+              name={settings.brandName}
+              logoUrl={settings.logoUrl}
+              subtitle="Control Center"
+              compact
+              admin
+            />
           </div>
-          <span className="badge-blue">Live</span>
+          <span className="badge-blue">{settings.liveLabel}</span>
         </div>
 
         <div className="px-3 pt-3">

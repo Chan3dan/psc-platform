@@ -6,6 +6,8 @@ import { signOut } from 'next-auth/react';
 import { SearchModal } from '@/components/layout/SearchModal';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { BrandMark } from '@/components/branding/BrandMark';
+import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; role?: string };
@@ -14,6 +16,7 @@ interface SidebarProps {
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
+  const settings = useSiteSettings();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -30,8 +33,8 @@ export function Sidebar({ user }: SidebarProps) {
     <aside className="hidden md:flex w-64 flex-col h-full flex-shrink-0 px-3 py-3">
       <div className="card glass h-full flex flex-col overflow-hidden">
         <div className="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between">
-          <span className="text-base font-bold text-[var(--text)]">PSC Prep</span>
-          <span className="badge-blue">Live</span>
+          <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} compact />
+          <span className="badge-blue">{settings.liveLabel}</span>
         </div>
         <div className="px-3 pt-3">
           <button

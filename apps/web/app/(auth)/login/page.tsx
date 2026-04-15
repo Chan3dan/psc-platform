@@ -3,12 +3,15 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
+import { BrandMark } from '@/components/branding/BrandMark';
+import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const settings = useSiteSettings();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,7 +34,7 @@ export default function LoginPage() {
     <div className="min-h-screen px-4">
       <nav className="page-wrap pb-0">
         <div className="card glass px-5 py-3 flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-[var(--text)]">PSC Prep</Link>
+          <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} compact />
           <div className="flex items-center gap-3">
             <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">Home</Link>
             <Link href="/register" className="btn-secondary py-2">Sign up</Link>
@@ -41,9 +44,11 @@ export default function LoginPage() {
       <div className="flex items-center justify-center py-8 md:py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link href="/" className="text-xl font-bold text-[var(--text)]">PSC Prep</Link>
+          <div className="flex justify-center">
+            <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} />
+          </div>
           <h1 className="text-2xl font-semibold text-[var(--text)] mt-3">Welcome back</h1>
-          <p className="text-sm text-[var(--muted)] mt-1">Sign in to continue your preparation</p>
+          <p className="text-sm text-[var(--muted)] mt-1">Sign in to continue with {settings.brandName}</p>
         </div>
         <div className="card glass p-6 space-y-4">
           <button

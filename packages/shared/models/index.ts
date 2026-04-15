@@ -354,6 +354,39 @@ const ResultSchema = new Schema<IResult>(
 ResultSchema.index({ user_id: 1, created_at: -1 });
 ResultSchema.index({ test_id: 1 });
 
+export interface ISiteSetting extends Document {
+  key: string;
+  brand_name: string;
+  tagline: string;
+  logo_url: string;
+  live_label: string;
+  hero_badge: string;
+  hero_title_prefix: string;
+  hero_title_highlight: string;
+  hero_description: string;
+  footer_text: string;
+  updated_at: Date;
+}
+
+const SiteSettingSchema = new Schema<ISiteSetting>(
+  {
+    key: { type: String, required: true, unique: true, default: 'site' },
+    brand_name: { type: String, required: true, default: 'Niyukta' },
+    tagline: { type: String, default: 'Prepare Smart. Get Niyukta.' },
+    logo_url: { type: String, default: '/brand/niyukta-logo.jpeg' },
+    live_label: { type: String, default: 'Live' },
+    hero_badge: { type: String, default: 'Built for Loksewa Aspirants' },
+    hero_title_prefix: { type: String, default: 'Modern exam prep that turns' },
+    hero_title_highlight: { type: String, default: 'study time into rank gain' },
+    hero_description: {
+      type: String,
+      default: 'Practice smarter with adaptive MCQs, full mock tests, and advanced analytics designed for Nepal civil service exam success.',
+    },
+    footer_text: { type: String, default: 'Prepare Smart. Get Niyukta.' },
+  },
+  { timestamps: { updatedAt: 'updated_at' } }
+);
+
 // ─────────────────────────────────────────────
 // 7. STUDY PLAN SCHEMA
 // ─────────────────────────────────────────────
@@ -468,6 +501,8 @@ if (mongoose.models.Result) {
 }
 
 export const Result = mongoose.models.Result || mongoose.model<IResult>('Result', ResultSchema);
+export const SiteSetting =
+  mongoose.models.SiteSetting || mongoose.model<ISiteSetting>('SiteSetting', SiteSettingSchema);
 export const StudyPlan = mongoose.models.StudyPlan || mongoose.model<IStudyPlan>('StudyPlan', StudyPlanSchema);
 export const Bookmark = mongoose.models.Bookmark || mongoose.model('Bookmark', BookmarkSchema);
 export const Note = mongoose.models.Note || mongoose.model('Note', NoteSchema);

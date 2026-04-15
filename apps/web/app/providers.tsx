@@ -2,8 +2,16 @@
 import { SessionProvider } from 'next-auth/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { SiteSettingsProvider } from '@/components/branding/SiteSettingsProvider';
+import type { SiteSettings } from '@/lib/site-settings-config';
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  siteSettings,
+}: {
+  children: React.ReactNode;
+  siteSettings: SiteSettings;
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -19,7 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <SiteSettingsProvider settings={siteSettings}>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </SiteSettingsProvider>
     </SessionProvider>
   );
 }

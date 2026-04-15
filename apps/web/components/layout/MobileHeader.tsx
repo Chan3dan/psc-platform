@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { BrandMark } from '@/components/branding/BrandMark';
+import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 
 interface MobileHeaderProps {
   user: { name?: string | null; email?: string | null; role?: string };
@@ -15,6 +17,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const firstName = user.name?.split(' ')[0] ?? 'User';
+  const settings = useSiteSettings();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -35,7 +38,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
         <div className="glass rounded-2xl border border-[var(--line)] shadow-[var(--shadow-soft)] px-3 py-2.5">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">PSC Prep</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{settings.brandName}</p>
               <p className="text-sm font-semibold text-[var(--text)] truncate">Hi, {firstName}</p>
             </div>
             <button
@@ -58,10 +61,11 @@ export function MobileHeader({ user }: MobileHeaderProps) {
           />
           <div className="absolute inset-y-0 left-0 w-[88vw] max-w-sm bg-[var(--bg-elev)] border-r border-[var(--line)] shadow-[var(--shadow-strong)] flex flex-col">
             <div className="px-4 py-4 border-b border-[var(--line)] flex items-center justify-between">
-              <div>
-                <p className="text-lg font-bold text-[var(--text)]">PSC Prep</p>
-                <p className="text-xs text-[var(--muted)] mt-0.5">Everything in one menu</p>
-              </div>
+              <BrandMark
+                name={settings.brandName}
+                logoUrl={settings.logoUrl}
+                subtitle="Everything in one menu"
+              />
               <button onClick={() => setMenuOpen(false)} className="btn-secondary !px-3 !py-2">
                 Close
               </button>
