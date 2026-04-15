@@ -51,20 +51,42 @@ export default async function DashboardPage() {
     <div className="page-wrap space-y-6">
       <section className="card glass p-6 md:p-7">
         <div className="flex flex-col lg:flex-row gap-5 lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Your Command Center</p>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
+              <AppIcon name="dashboard" className="h-3.5 w-3.5" />
+              Your Command Center
+            </div>
             <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mt-1">Hello, {firstName}</h1>
             <p className="text-sm text-[var(--muted)] mt-2">
               {streak > 0
                 ? `You are on a ${streak}-day streak. Stay consistent and keep momentum high.`
                 : 'Start a practice session today to begin your streak and unlock momentum.'}
             </p>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="badge-amber inline-flex items-center gap-1.5">
+                <AppIcon name="leaderboard" className="h-3.5 w-3.5" />
+                {streak} day streak
+              </span>
+              <span className="badge-gray inline-flex items-center gap-1.5">
+                <AppIcon name="analytics" className="h-3.5 w-3.5" />
+                {analytics.total_tests} tests tracked
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Link href="/exams" className="btn-primary">Start Practice</Link>
-            <Link href="/mock" className="btn-secondary">Take Mock Test</Link>
-            <Link href="/planner" className="btn-secondary">Open Planner</Link>
+            <Link href="/exams" className="btn-primary inline-flex items-center gap-2">
+              <AppIcon name="practice" className="h-4 w-4" />
+              Start Practice
+            </Link>
+            <Link href="/mock" className="btn-secondary inline-flex items-center gap-2">
+              <AppIcon name="mock" className="h-4 w-4" />
+              Take Mock Test
+            </Link>
+            <Link href="/planner" className="btn-secondary inline-flex items-center gap-2">
+              <AppIcon name="planner" className="h-4 w-4" />
+              Open Planner
+            </Link>
           </div>
         </div>
       </section>
@@ -80,11 +102,14 @@ export default async function DashboardPage() {
 
       <section className="card p-5">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
+          <div className="space-y-1">
             <h2 className="text-sm font-semibold text-[var(--text)]">Quick Drill</h2>
             <p className="text-sm text-[var(--muted)] mt-1">5 questions in 5 minutes. {drillsToday} completed today.</p>
           </div>
-          <Link href="/drill" className="btn-primary">Start Speed Drill</Link>
+          <Link href="/drill" className="btn-primary inline-flex items-center gap-2">
+            <AppIcon name="drill" className="h-4 w-4" />
+            Start Speed Drill
+          </Link>
         </div>
       </section>
 
@@ -153,13 +178,15 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-semibold text-[var(--text)] mb-3">Priority Weak Topics</h2>
             <div className="space-y-2.5">
               {analytics.weak_topics.slice(0, 6).map((topic) => (
-                <div key={topic.subject_id} className="flex items-center gap-3">
-                  <span className="text-red-400 shrink-0"><AppIcon name="alert" className="h-4 w-4" /></span>
-                  <span className="text-sm text-[var(--text)] flex-1 truncate">{topic.subject_name}</span>
-                  <div className="w-28 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shrink-0">
+                <div key={topic.subject_id} className="rounded-2xl border border-[var(--line)] p-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-red-400 shrink-0"><AppIcon name="alert" className="h-4 w-4" /></span>
+                    <span className="text-sm font-medium text-[var(--text)] flex-1 truncate">{topic.subject_name}</span>
+                    <span className="text-xs text-red-500 font-semibold shrink-0">{topic.avg_accuracy}%</span>
+                  </div>
+                  <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full bg-red-400 rounded-full" style={{ width: `${topic.avg_accuracy}%` }} />
                   </div>
-                  <span className="text-xs text-red-500 font-semibold w-9 text-right shrink-0">{topic.avg_accuracy}%</span>
                 </div>
               ))}
             </div>
@@ -170,7 +197,10 @@ export default async function DashboardPage() {
           <div className="card p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-[var(--text)]">Active Study Plan</h2>
-              <Link href="/planner" className="text-xs text-[var(--brand)] hover:opacity-90">View full plan →</Link>
+              <Link href="/planner" className="inline-flex items-center gap-1 text-xs text-[var(--brand)] hover:opacity-90">
+                View full plan
+                <AppIcon name="arrow-right" className="h-3.5 w-3.5" />
+              </Link>
             </div>
             <p className="text-base font-semibold text-[var(--text)] mt-3">{(plan as any).exam_id?.name}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-[var(--muted)]">

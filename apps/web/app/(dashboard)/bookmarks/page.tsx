@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useExamStore } from '@/store/examStore';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export default function BookmarksPage() {
   const qc = useQueryClient();
@@ -115,7 +116,9 @@ export default function BookmarksPage() {
 
       {emptyState && (
         <div className="card p-10 text-center">
-          <div className="mx-auto w-20 h-20 rounded-full bg-[var(--brand-soft)]/50 flex items-center justify-center text-3xl">🔖</div>
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--brand-soft)]/50 text-[var(--brand)]">
+            <AppIcon name="bookmarks" className="h-9 w-9" />
+          </div>
           <h2 className="mt-4 text-lg font-semibold text-[var(--text)]">No bookmarks yet</h2>
           <p className="text-sm text-[var(--muted)] mt-1">Bookmark questions during practice and they will appear here.</p>
         </div>
@@ -154,7 +157,7 @@ export default function BookmarksPage() {
                 <div key={bm._id} className="card">
                   <button className="w-full text-left p-4" onClick={() => setExpanded(open ? null : bm._id)}>
                     <div className="flex items-start gap-3">
-                      <span className="text-amber-400 shrink-0">🔖</span>
+                      <span className="text-amber-500 shrink-0 mt-0.5"><AppIcon name="bookmarks" className="h-4 w-4" /></span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-[var(--text)] line-clamp-2">{q.question_text}</p>
                         <div className="flex items-center gap-2 mt-1 text-xs text-[var(--muted)]">
@@ -173,7 +176,7 @@ export default function BookmarksPage() {
                           key={opt.index}
                           className={`text-sm ${opt.index === q.correct_answer ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-[var(--muted)]'}`}
                         >
-                          {opt.index === q.correct_answer ? '✓ ' : ''}{String.fromCharCode(65 + opt.index)}. {opt.text}
+                          {opt.index === q.correct_answer ? 'Correct: ' : ''}{String.fromCharCode(65 + opt.index)}. {opt.text}
                         </p>
                       ))}
 

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useExamStore } from '@/store/examStore';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export default function DrillPage() {
   const [examId, setExamId] = useState('');
@@ -179,11 +180,13 @@ export default function DrillPage() {
     return (
       <div className="max-w-md mx-auto px-6 py-12">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">⚡</div>
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--brand-soft)] text-[var(--brand)]">
+            <AppIcon name="drill" className="h-8 w-8" />
+          </div>
           <h1 className="text-2xl font-semibold text-[var(--text)]">Speed Drill</h1>
           <p className="text-sm text-[var(--muted)] mt-2">5 questions · 5 minutes · instant results</p>
           <p className="text-sm text-emerald-600 mt-2">
-            {(drillStats?.drills_today ?? 0)} drills completed today 🔥
+            {(drillStats?.drills_today ?? 0)} drills completed today
           </p>
         </div>
 
@@ -213,7 +216,7 @@ export default function DrillPage() {
 
           {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">{error}</p>}
           <button onClick={startDrill} disabled={!examId || starting} className="btn-primary w-full py-3">
-            {starting ? 'Starting…' : 'Start Drill ⚡'}
+            {starting ? 'Starting…' : 'Start Drill'}
           </button>
         </div>
       </div>
@@ -240,7 +243,7 @@ export default function DrillPage() {
           </p>
           <p className="text-sm text-[var(--muted)] mt-1">{result.accuracy_percent}% accuracy</p>
           <p className="text-sm text-emerald-600 mt-3">
-            {(drillStats?.drills_today ?? 0)} drills completed today 🔥
+            {(drillStats?.drills_today ?? 0)} drills completed today
           </p>
           <div className="flex gap-3 mt-6">
             <button
@@ -266,7 +269,7 @@ export default function DrillPage() {
       <div className={`text-center mb-5 text-4xl font-mono font-bold tabular-nums ${urgent ? 'text-red-500 animate-pulse' : 'text-[var(--text)]'}`}>
         {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
         <p className="text-sm font-normal text-[var(--muted)] mt-1">
-          {urgent ? '⏰ Less than 60s left!' : `Question ${currentIndex + 1} of 5`}
+          {urgent ? 'Less than 60 seconds left' : `Question ${currentIndex + 1} of 5`}
         </p>
       </div>
 
@@ -283,7 +286,10 @@ export default function DrillPage() {
             } disabled:opacity-60`}
             title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
           >
-            {isBookmarked ? '🔖 Bookmarked' : '🔖 Bookmark'}
+            <span className="inline-flex items-center gap-1.5">
+              <AppIcon name="bookmarks" className="h-3.5 w-3.5" />
+              {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+            </span>
           </button>
         </div>
       </div>
@@ -309,7 +315,7 @@ export default function DrillPage() {
             disabled={selected === null || selected === undefined}
             className="btn-primary disabled:opacity-50"
           >
-            Next →
+            Next
           </button>
         ) : (
           <button
@@ -317,7 +323,7 @@ export default function DrillPage() {
             disabled={!allAnswered || isSubmitting}
             className="btn-primary disabled:opacity-50"
           >
-            Finish ✓
+            Finish
           </button>
         )}
       </div>

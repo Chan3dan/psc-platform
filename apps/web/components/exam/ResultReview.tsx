@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 type Filter = 'all' | 'correct' | 'wrong' | 'skipped';
 
@@ -73,7 +74,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
                 <div className="flex items-start gap-3">
                   <span className={`mt-0.5 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
                     ${a.is_correct ? 'bg-emerald-100 text-emerald-700' : a.selected_option === null ? 'bg-gray-100 dark:bg-gray-800 text-gray-500' : 'bg-red-100 text-red-600'}`}>
-                    {a.is_correct ? '✓' : a.selected_option === null ? '—' : '✗'}
+                    {a.is_correct ? <AppIcon name="check" className="h-3 w-3" /> : a.selected_option === null ? '—' : <AppIcon name="alert" className="h-3 w-3" />}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">{q.question_text}</p>
@@ -95,8 +96,8 @@ export function ResultReview({ answers }: { answers: any[] }) {
                   {q.options.map((opt: any) => {
                     let cls = 'text-gray-600 dark:text-gray-400';
                     let prefix = '';
-                    if (opt.index === q.correct_answer) { cls = 'text-emerald-700 dark:text-emerald-400 font-medium'; prefix = '✓ '; }
-                    if (opt.index === a.selected_option && opt.index !== q.correct_answer) { cls = 'text-red-600 dark:text-red-400 line-through'; prefix = '✗ '; }
+                    if (opt.index === q.correct_answer) { cls = 'text-emerald-700 dark:text-emerald-400 font-medium'; prefix = 'Correct: '; }
+                    if (opt.index === a.selected_option && opt.index !== q.correct_answer) { cls = 'text-red-600 dark:text-red-400 line-through'; prefix = 'Selected: '; }
                     return (
                       <p key={opt.index} className={`text-sm ${cls}`}>
                         {prefix}{String.fromCharCode(65 + opt.index)}. {opt.text}

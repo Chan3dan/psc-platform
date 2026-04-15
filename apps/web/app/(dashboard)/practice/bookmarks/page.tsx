@@ -95,8 +95,8 @@ export default function BookmarkPracticePage() {
           })}
         </div>
         <div className="flex items-center justify-between">
-          <button onClick={() => prevQuestion()} disabled={currentIndex === 0} className="btn-secondary text-sm disabled:opacity-50">← Prev</button>
-          <button onClick={() => nextQuestion()} disabled={currentIndex === session.questions.length - 1} className="btn-secondary text-sm disabled:opacity-50">Next →</button>
+          <button onClick={() => prevQuestion()} disabled={currentIndex === 0} className="btn-secondary text-sm disabled:opacity-50">Previous</button>
+          <button onClick={() => nextQuestion()} disabled={currentIndex === session.questions.length - 1} className="btn-secondary text-sm disabled:opacity-50">Next</button>
         </div>
       </div>
       {submitError && (

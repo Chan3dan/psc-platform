@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Exam } from '@psc/shared/models';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 async function getExams() {
   await connectDB();
@@ -11,32 +12,32 @@ async function getExams() {
 
 const FEATURES = [
   {
-    icon: '⚡',
+    icon: 'drill',
     title: 'Adaptive Practice Engine',
     desc: 'Subject-wise MCQs with instant explanation, confidence tracking, and weak-topic suggestions.',
   },
   {
-    icon: '🎯',
+    icon: 'practice',
     title: 'Real Exam Mock Mode',
     desc: 'Time-locked mock tests with negative marking, realistic difficulty mix, and result review.',
   },
   {
-    icon: '📊',
+    icon: 'analytics',
     title: 'Analytics That Guide Action',
     desc: 'Performance trends, subject heatmaps, and insight cards that tell you what to do next.',
   },
   {
-    icon: '📅',
+    icon: 'planner',
     title: 'Smart Study Planner',
     desc: 'Personalized daily plan based on your exam target, available time, and weak areas.',
   },
   {
-    icon: '📚',
+    icon: 'notes',
     title: 'Structured Notes Library',
     desc: 'Subject-focused notes and revision material organized to match Loksewa prep flow.',
   },
   {
-    icon: '🔥',
+    icon: 'leaderboard',
     title: 'Consistency System',
     desc: 'Streak motivation, quick-start actions, and progress loops that improve daily discipline.',
   },
@@ -50,7 +51,9 @@ export default async function LandingPage() {
       <div className="page-wrap pb-2">
         <nav className="card glass px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand)]">◎</span>
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand)]">
+              <AppIcon name="dashboard" className="h-4.5 w-4.5" />
+            </span>
             <span className="text-lg font-bold text-[var(--text)]">PSC Prep</span>
           </div>
           <div className="flex items-center gap-3">
@@ -115,7 +118,9 @@ export default async function LandingPage() {
                 'Retest under exam pressure mode',
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-xl border border-[var(--line)] px-3 py-2.5">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-emerald-500">
+                    <AppIcon name="check" className="h-4 w-4" />
+                  </span>
                   <span className="text-sm text-[var(--text)]">{item}</span>
                 </div>
               ))}
@@ -133,8 +138,8 @@ export default async function LandingPage() {
         <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {FEATURES.map((feature) => (
             <div key={feature.title} className="card p-5">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-xl">
-                {feature.icon}
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand)]">
+                <AppIcon name={feature.icon as any} className="h-5 w-5" />
               </div>
               <h3 className="mt-3 font-semibold text-[var(--text)]">{feature.title}</h3>
               <p className="mt-1.5 text-sm text-[var(--muted)] leading-relaxed">{feature.desc}</p>
@@ -162,8 +167,14 @@ export default async function LandingPage() {
               </div>
               <p className="text-sm text-[var(--muted)] mt-2 line-clamp-2">{exam.description}</p>
               <div className="mt-3 flex items-center gap-3 text-xs text-[var(--muted)]">
-                <span>⏱ {exam.duration_minutes} min</span>
-                <span>📝 {exam.total_questions} questions</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <AppIcon name="mock" className="h-3.5 w-3.5" />
+                  {exam.duration_minutes} min
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <AppIcon name="questions" className="h-3.5 w-3.5" />
+                  {exam.total_questions} questions
+                </span>
               </div>
             </Link>
           ))}

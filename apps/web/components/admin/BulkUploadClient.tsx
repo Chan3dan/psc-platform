@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 const JSON_TEMPLATE = JSON.stringify(
   [
@@ -241,7 +242,7 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
         body: JSON.stringify({ questions: payload }),
       });
       const d = await r.json();
-      setResult(d.success ? `✓ ${d.data.inserted} questions uploaded successfully` : `Error: ${d.error}`);
+      setResult(d.success ? `${d.data.inserted} questions uploaded successfully` : `Error: ${d.error}`);
       if (d.success) {
         setJsonText('');
         setParsed(null);
@@ -276,7 +277,7 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setResult('✓ Export completed');
+      setResult('Export completed');
     } finally {
       setExporting(false);
     }
@@ -375,9 +376,30 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
           Media support: use image URLs in `question_image_url` and `option_*_image_url`.
         </div>
 
-        {parseErr && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">⚠ {parseErr}</p>}
-        {parsed && <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">✓ {parsedCount} valid questions ready to upload</p>}
-        {result && <p className={`text-sm px-3 py-2 rounded-lg ${result.startsWith('✓') ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950 text-red-600'}`}>{result}</p>}
+        {parseErr && (
+          <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">
+            <span className="inline-flex items-center gap-1.5">
+              <AppIcon name="alert" className="h-4 w-4" />
+              {parseErr}
+            </span>
+          </p>
+        )}
+        {parsed && (
+          <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">
+            <span className="inline-flex items-center gap-1.5">
+              <AppIcon name="check" className="h-4 w-4" />
+              {parsedCount} valid questions ready to upload
+            </span>
+          </p>
+        )}
+        {result && (
+          <p className={`text-sm px-3 py-2 rounded-lg ${result.startsWith('Error:') ? 'bg-red-50 dark:bg-red-950 text-red-600' : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}`}>
+            <span className="inline-flex items-center gap-1.5">
+              <AppIcon name={result.startsWith('Error:') ? 'alert' : 'check'} className="h-4 w-4" />
+              {result}
+            </span>
+          </p>
+        )}
 
         <button onClick={upload} disabled={!parsed || uploading || !subjectId} className="btn-primary disabled:opacity-50 w-full sm:w-auto">
           {uploading ? 'Uploading...' : `Upload ${parsedCount} Questions`}

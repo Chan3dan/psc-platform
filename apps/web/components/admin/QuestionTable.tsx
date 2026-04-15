@@ -390,7 +390,7 @@ export function QuestionTable({ questions }: { questions: any[] }) {
                             : 'text-[var(--muted)]'
                         }`}
                       >
-                        {o.index === q.correct_answer ? '✓ ' : ''}
+                        {o.index === q.correct_answer ? 'Correct: ' : ''}
                         {String.fromCharCode(65 + o.index)}. {o.text}
                       </p>
                     ))}

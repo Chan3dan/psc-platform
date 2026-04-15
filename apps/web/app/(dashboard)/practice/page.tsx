@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Exam } from '@psc/shared/models';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export default async function PracticeIndexPage() {
   await connectDB();
@@ -21,7 +22,10 @@ export default async function PracticeIndexPage() {
           <Link key={exam._id} href={`/exams/${exam.slug}`} className="card p-5">
             <h2 className="font-semibold text-[var(--text)]">{exam.name}</h2>
             <p className="text-sm text-[var(--muted)] mt-1 line-clamp-2">{exam.description}</p>
-            <p className="text-sm text-[var(--brand)] mt-4 font-semibold">Choose Subject →</p>
+            <p className="inline-flex items-center gap-1.5 text-sm text-[var(--brand)] mt-4 font-semibold">
+              Choose Subject
+              <AppIcon name="arrow-right" className="h-4 w-4" />
+            </p>
           </Link>
         ))}
       </div>

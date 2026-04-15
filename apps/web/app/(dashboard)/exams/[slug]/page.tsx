@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Exam, Subject, MockTest } from '@psc/shared/models';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 async function getData(slug: string) {
   await connectDB();
@@ -25,14 +26,28 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
   return (
     <div className="page-wrap space-y-8">
       <div>
-        <Link href="/exams" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">← All Exams</Link>
+        <Link href="/exams" className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--text)]">
+          All Exams
+        </Link>
         <h1 className="text-2xl font-semibold text-[var(--text)] mt-2">{exam.name}</h1>
         <p className="text-[var(--muted)] text-sm mt-1">{exam.description}</p>
         <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-[var(--muted)]">
-          <span>⏱ <strong>{exam.duration_minutes}</strong> min</span>
-          <span>📝 <strong>{exam.total_questions}</strong> questions</span>
-          <span>⭐ <strong>{exam.total_marks}</strong> marks</span>
-          <span className="text-red-500">➖ <strong>{negativePercent}%</strong> ({negativePerWrong.toFixed(2)} per wrong)</span>
+          <span className="inline-flex items-center gap-1.5">
+            <AppIcon name="mock" className="h-4 w-4" />
+            <strong>{exam.duration_minutes}</strong> min
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <AppIcon name="questions" className="h-4 w-4" />
+            <strong>{exam.total_questions}</strong> questions
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <AppIcon name="analytics" className="h-4 w-4" />
+            <strong>{exam.total_marks}</strong> marks
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-red-500">
+            <AppIcon name="alert" className="h-4 w-4" />
+            <strong>{negativePercent}%</strong> ({negativePerWrong.toFixed(2)} per wrong)
+          </span>
         </div>
       </div>
 
@@ -65,9 +80,18 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
                 <div>
                   <h3 className="font-medium text-[var(--text)]">{mt.title}</h3>
                   <div className="flex items-center gap-3 mt-1 text-xs text-[var(--muted)]">
-                    <span>⏱ {mt.duration_minutes}min</span>
-                    <span>📝 {mt.total_questions}q</span>
-                    <span>👥 {mt.attempt_count} attempts</span>
+                    <span className="inline-flex items-center gap-1">
+                      <AppIcon name="mock" className="h-3.5 w-3.5" />
+                      {mt.duration_minutes}min
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <AppIcon name="questions" className="h-3.5 w-3.5" />
+                      {mt.total_questions}q
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <AppIcon name="users" className="h-3.5 w-3.5" />
+                      {mt.attempt_count} attempts
+                    </span>
                   </div>
                 </div>
                 <Link href={`/mock/${exam.slug}?test=${mt._id}`} className="btn-primary text-sm">Start Test</Link>

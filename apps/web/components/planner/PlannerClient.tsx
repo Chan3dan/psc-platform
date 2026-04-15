@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 interface Props {
   initialPlan: any | null;
@@ -198,15 +199,21 @@ export function PlannerClient({ initialPlan, exams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="card glass p-5 flex items-start justify-between">
+      <div className="card glass p-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="font-semibold text-[var(--text)]">{plan.title}</h2>
           <p className="text-sm text-[var(--muted)] mt-0.5">
             {plan.exam_id?.name} · Target: {new Date(plan.target_date).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
           <div className="flex items-center gap-4 mt-2 text-sm">
-            <span className="text-orange-500 font-semibold">🔥 {plan.streak_days} day streak</span>
-            <span className="text-[var(--muted)]">{daysLeft} days left</span>
+            <span className="inline-flex items-center gap-1.5 text-orange-500 font-semibold">
+              <AppIcon name="leaderboard" className="h-4 w-4" />
+              {plan.streak_days} day streak
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[var(--muted)]">
+              <AppIcon name="planner" className="h-4 w-4" />
+              {daysLeft} days left
+            </span>
           </div>
         </div>
         <button
@@ -259,7 +266,11 @@ export function PlannerClient({ initialPlan, exams }: Props) {
               >
                 <div className="text-[10px] font-medium">{dt.toLocaleDateString('en', { weekday: 'short' })}</div>
                 <div className="text-sm font-semibold">{dt.getDate()}</div>
-                {d.is_completed && <div className="text-[10px]">✓</div>}
+                {d.is_completed && (
+                  <div className="flex justify-center text-emerald-500">
+                    <AppIcon name="check" className="h-3 w-3" />
+                  </div>
+                )}
               </button>
             );
           })}
@@ -286,7 +297,7 @@ export function PlannerClient({ initialPlan, exams }: Props) {
                 className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors
                   ${task.is_completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-blue-500'}`}
               >
-                {task.is_completed && <span className="text-[10px]">✓</span>}
+                {task.is_completed && <AppIcon name="check" className="h-3 w-3" />}
               </button>
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${task.is_completed ? 'line-through text-[var(--muted)]' : 'text-[var(--text)]'}`}>

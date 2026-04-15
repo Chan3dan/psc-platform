@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db';
 import { Result } from '@psc/shared/models';
 import Link from 'next/link';
 import { ResultReview } from '@/components/exam/ResultReview';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 async function getResult(id: string, userId: string) {
   await connectDB();
@@ -36,7 +37,7 @@ export default async function ResultPage({ params }: { params: { id: string } })
   return (
     <div className="page-wrap max-w-4xl space-y-8">
       <div>
-        <Link href="/dashboard" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">← Dashboard</Link>
+        <Link href="/dashboard" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">Dashboard</Link>
         <h1 className="text-2xl font-semibold text-[var(--text)] mt-2">Test Result</h1>
         <p className="text-sm text-[var(--muted)]">{result.test_id?.title ?? 'Practice Session'}</p>
       </div>
@@ -46,7 +47,10 @@ export default async function ResultPage({ params }: { params: { id: string } })
           {result.score}<span className="text-2xl text-[var(--muted)] font-normal">/{result.max_score}</span>
         </div>
         <div className={`text-lg font-medium mb-1 ${pass ? 'text-emerald-600' : 'text-red-500'}`}>
-          {pass ? '✓ Passed' : '✗ Below passing mark'}
+          <span className="inline-flex items-center gap-2 justify-center">
+            <AppIcon name={pass ? 'check' : 'alert'} className="h-5 w-5" />
+            {pass ? 'Passed' : 'Below passing mark'}
+          </span>
         </div>
         <p className="text-[var(--muted)] text-sm">Score: {pct}% · Percentile: Top {result.percentile ? (100 - result.percentile).toFixed(0) : '—'}%</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mt-6 md:mt-8">
@@ -89,9 +93,9 @@ export default async function ResultPage({ params }: { params: { id: string } })
                   style={{ width: `${sb.accuracy_percent}%` }} />
               </div>
               <div className="flex flex-wrap gap-4 text-xs text-[var(--muted)]">
-                <span className="text-emerald-600">✓ {sb.correct}</span>
-                <span className="text-red-500">✗ {sb.wrong}</span>
-                <span>— {sb.skipped}</span>
+                <span className="text-emerald-600">Correct {sb.correct}</span>
+                <span className="text-red-500">Wrong {sb.wrong}</span>
+                <span>Skipped {sb.skipped}</span>
                 <span>{sb.avg_time_per_question}s avg</span>
               </div>
             </div>

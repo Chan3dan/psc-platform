@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 type RoleFilter = 'all' | 'admin' | 'user';
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -185,7 +186,10 @@ export function UsersTable({ users }: { users: any[] }) {
               </div>
               <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
                 <p className="text-[var(--muted)]">Streak</p>
-                <p className="text-orange-500 font-semibold mt-1">{u.stats?.current_streak ?? 0}🔥</p>
+                <p className="inline-flex items-center gap-1.5 text-orange-500 font-semibold mt-1">
+                  <AppIcon name="leaderboard" className="h-3.5 w-3.5" />
+                  {u.stats?.current_streak ?? 0} days
+                </p>
               </div>
               <div className="rounded-xl bg-[var(--brand-soft)]/30 px-3 py-2">
                 <p className="text-[var(--muted)]">Joined</p>
@@ -232,7 +236,12 @@ export function UsersTable({ users }: { users: any[] }) {
                 <td className="px-4 py-2.5 text-xs text-[var(--muted)]">{u.auth_provider ?? 'email'}</td>
                 <td className="px-4 py-2.5 text-xs text-[var(--muted)]">{u.stats?.total_tests ?? 0}</td>
                 <td className="px-4 py-2.5 text-xs text-[var(--muted)]">{Math.round(u.stats?.average_accuracy ?? 0)}%</td>
-                <td className="px-4 py-2.5 text-xs text-orange-500">{u.stats?.current_streak ?? 0}🔥</td>
+                <td className="px-4 py-2.5 text-xs text-orange-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <AppIcon name="leaderboard" className="h-3.5 w-3.5" />
+                    {u.stats?.current_streak ?? 0} days
+                  </span>
+                </td>
                 <td className="px-4 py-2.5 text-xs text-[var(--muted)]">{new Date(u.created_at).toLocaleDateString()}</td>
               </tr>
             ))}

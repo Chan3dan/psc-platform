@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 type Mode = 'setup' | 'practice';
 
@@ -139,7 +140,7 @@ export default function PracticePage() {
   if (mode === 'setup') return (
     <div className="max-w-md mx-auto px-6 py-12">
       <div className="mb-6">
-        <Link href={`/exams/${params.exam}`} className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">← Back to exam</Link>
+        <Link href={`/exams/${params.exam}`} className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Back to exam</Link>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{subjectInfo?.name ?? 'Practice'}</h1>
         <p className="text-sm text-gray-500 mt-1">{subjectInfo?.question_count ?? 0} questions available</p>
         {focusQuestionId && (
@@ -171,7 +172,7 @@ export default function PracticePage() {
         </div>
         {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">{error}</p>}
         <button onClick={() => start(focusQuestionId || undefined)} disabled={!subjectInfo || loadingStart} className="btn-primary w-full py-3 disabled:opacity-50">
-          {loadingStart ? 'Loading questions…' : 'Start Practice →'}
+          {loadingStart ? 'Loading questions…' : 'Start Practice'}
         </button>
       </div>
     </div>
@@ -201,7 +202,10 @@ export default function PracticePage() {
           } disabled:opacity-60`}
           title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
         >
-          {isBookmarked ? '🔖 Bookmarked' : '🔖 Bookmark'}
+          <span className="inline-flex items-center gap-1.5">
+            <AppIcon name="bookmarks" className="h-3.5 w-3.5" />
+            {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+          </span>
         </button>
       </div>
 
@@ -225,8 +229,8 @@ export default function PracticePage() {
               className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm disabled:cursor-default ${cls} ${!rev && sel !== opt.index ? 'hover:border-gray-300 dark:hover:border-gray-600' : ''}`}>
               <span className="font-medium mr-3">{String.fromCharCode(65 + opt.index)}.</span>
               {opt.text}
-              {rev && opt.index === rev.correct_answer && <span className="float-right text-emerald-600">✓</span>}
-              {rev && opt.index === sel && opt.index !== rev.correct_answer && <span className="float-right text-red-500">✗</span>}
+              {rev && opt.index === rev.correct_answer && <span className="float-right text-emerald-600"><AppIcon name="check" className="h-4 w-4 inline-block" /></span>}
+              {rev && opt.index === sel && opt.index !== rev.correct_answer && <span className="float-right text-red-500"><AppIcon name="alert" className="h-4 w-4 inline-block" /></span>}
             </button>
           );
         })}
@@ -240,11 +244,11 @@ export default function PracticePage() {
       )}
 
       <div className="flex items-center justify-between">
-        <button onClick={() => setIdx(i => Math.max(0, i - 1))} disabled={idx === 0} className="btn-secondary disabled:opacity-40">← Prev</button>
+        <button onClick={() => setIdx(i => Math.max(0, i - 1))} disabled={idx === 0} className="btn-secondary disabled:opacity-40">Previous</button>
         {!rev
           ? <button onClick={() => reveal(q._id)} disabled={sel === undefined || sel === null} className="btn-primary disabled:opacity-40">Check Answer</button>
           : <button onClick={() => { if (idx === questions.length - 1) setMode('setup'); else setIdx(i => i + 1); }} className="btn-primary">
-              {idx === questions.length - 1 ? 'Finish ✓' : 'Next →'}
+              {idx === questions.length - 1 ? 'Finish' : 'Next'}
             </button>
         }
       </div>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useExamStore } from '@/store/examStore';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 const STATUS_COLOR: Record<string, string> = {
   answered: 'bg-emerald-500 text-white',
@@ -118,7 +119,7 @@ export function MockTestPageInner() {
           {!testId ? (
             <>
               <p className="text-red-500 font-medium">No test selected.</p>
-              <a href="/exams" className="text-sm text-blue-600 mt-2 inline-block">← Browse Exams</a>
+              <a href="/exams" className="text-sm text-blue-600 mt-2 inline-block">Browse Exams</a>
             </>
           ) : (
             <>
@@ -269,7 +270,10 @@ export function MockTestPageInner() {
                       : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
                   } disabled:opacity-50`}
                 >
-                  {isBookmarked ? '🔖 Bookmarked' : '🔖 Bookmark'}
+                  <span className="inline-flex items-center gap-1.5">
+                    <AppIcon name="bookmarks" className="h-3.5 w-3.5" />
+                    {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                  </span>
                 </button>
                 <button
                   onClick={() => clearAnswer(q._id)}
@@ -287,9 +291,9 @@ export function MockTestPageInner() {
               </div>
               <div className="flex gap-2">
                 <button onClick={prevQuestion} disabled={currentIndex === 0}
-                  className="btn-secondary text-sm disabled:opacity-40 py-1.5">← Prev</button>
+                  className="btn-secondary text-sm disabled:opacity-40 py-1.5">Previous</button>
                 <button onClick={nextQuestion} disabled={currentIndex === session.questions.length - 1}
-                  className="btn-secondary text-sm disabled:opacity-40 py-1.5">Next →</button>
+                  className="btn-secondary text-sm disabled:opacity-40 py-1.5">Next</button>
               </div>
             </div>
             {bookmarkError && (

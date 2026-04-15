@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -693,10 +694,10 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {editing && (
         <div
-          className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[90] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
-          <div className="w-full max-w-5xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto card glass rounded-none md:rounded-2xl p-4 md:p-5 space-y-4">
+          <div className="w-full max-w-5xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Edit Mock Test</h3>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setEditing(null)}>Close</button>
@@ -775,10 +776,10 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {existingModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[90] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setExistingModalOpen(false); }}
         >
-          <div className="w-full max-w-6xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto card glass rounded-none md:rounded-2xl p-4 md:p-5">
+          <div className="w-full max-w-6xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Existing Mock Tests</h3>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setExistingModalOpen(false)}>Close</button>
@@ -843,7 +844,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[95] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}
         >
           <div className="w-full max-w-md card glass p-5 space-y-4">
@@ -875,10 +876,10 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
       {importModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[90] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setImportModalOpen(false); }}
         >
-          <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto card glass rounded-none md:rounded-2xl p-4 md:p-5 space-y-4">
+          <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-5 pb-24 md:pb-5 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-[var(--text)]">Import Past Questions as Mock Test</h3>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setImportModalOpen(false)}>Close</button>
@@ -986,8 +987,22 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
               />
             )}
 
-            {importErr && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">⚠ {importErr}</p>}
-            {importQuestions && <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">✓ {importQuestions.length} questions ready to import</p>}
+            {importErr && (
+              <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">
+                <span className="inline-flex items-center gap-1.5">
+                  <AppIcon name="alert" className="h-4 w-4" />
+                  {importErr}
+                </span>
+              </p>
+            )}
+            {importQuestions && (
+              <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">
+                <span className="inline-flex items-center gap-1.5">
+                  <AppIcon name="check" className="h-4 w-4" />
+                  {importQuestions.length} questions ready to import
+                </span>
+              </p>
+            )}
 
             <div className="flex justify-end">
               <button className="btn-primary w-full sm:w-auto" onClick={createPastMockFromImport} disabled={importing || !importQuestions?.length}>

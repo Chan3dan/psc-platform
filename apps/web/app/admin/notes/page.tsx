@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 export default function AdminNotesPage() {
   const [examId, setExamId] = useState('');
@@ -36,7 +37,7 @@ export default function AdminNotesPage() {
     if (type === 'richtext') fd.append('content_html', html);
     const r = await fetch('/api/notes', { method: 'POST', body: fd });
     const d = await r.json();
-    setMsg(d.success ? '✓ Note uploaded successfully' : `Error: ${d.error}`);
+    setMsg(d.success ? 'Note uploaded successfully' : `Error: ${d.error}`);
     if (d.success) { setTitle(''); setFile(null); setHtml(''); }
     setUploading(false);
   }
@@ -101,7 +102,12 @@ export default function AdminNotesPage() {
             </div>
           )}
 
-          {msg && <p className={`text-sm px-3 py-2 rounded-lg ${msg.startsWith('✓') ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950 text-red-600'}`}>{msg}</p>}
+          {msg && (
+            <p className={`text-sm px-3 py-2 rounded-lg ${msg.startsWith('Error:') ? 'bg-red-50 dark:bg-red-950 text-red-600' : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}`}>
+              {!msg.startsWith('Error:') && <span className="inline-flex items-center gap-1.5 mr-1"><AppIcon name="check" className="h-4 w-4" /></span>}
+              {msg}
+            </p>
+          )}
 
           <button onClick={upload} disabled={uploading || !examId || !title} className="btn-primary w-full disabled:opacity-50">
             {uploading ? 'Uploading…' : 'Upload Note'}
