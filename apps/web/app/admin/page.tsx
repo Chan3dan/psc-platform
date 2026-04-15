@@ -19,28 +19,28 @@ export default async function AdminPage() {
         <p className="text-sm text-[var(--muted)] mt-1">Platform statistics and quick actions.</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
         {[
           { label: 'Active Exams', value: examCount, href: '/admin/exams', color: 'text-blue-600' },
           { label: 'Questions', value: questionCount.toLocaleString(), href: '/admin/questions', color: 'text-emerald-600' },
           { label: 'Users', value: userCount.toLocaleString(), href: '/admin/users', color: 'text-purple-600' },
           { label: 'Test Attempts', value: resultCount.toLocaleString(), href: '#', color: 'text-orange-600' },
         ].map(s => (
-          <Link key={s.label} href={s.href} className="card p-5">
-            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-sm text-[var(--muted)] mt-1">{s.label}</div>
+          <Link key={s.label} href={s.href} className="card p-4 md:p-5">
+            <div className={`text-xl md:text-2xl font-bold ${s.color}`}>{s.value}</div>
+            <div className="text-xs md:text-sm text-[var(--muted)] mt-1">{s.label}</div>
           </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {[
           { href: '/admin/exams', label: 'Add New Exam', desc: 'Create a new PSC exam type', icon: '📋' },
           { href: '/admin/questions', label: 'Upload Questions', desc: 'Bulk upload MCQ bank via JSON', icon: '⬆️' },
           { href: '/admin/notes', label: 'Upload Notes', desc: 'Add PDFs and study materials', icon: '📚' },
         ].map(a => (
           <Link key={a.href} href={a.href}
-            className="card p-5">
+            className="card p-4 md:p-5">
             <div className="text-2xl mb-2">{a.icon}</div>
             <h3 className="font-medium text-[var(--text)] text-sm">{a.label}</h3>
             <p className="text-xs text-[var(--muted)] mt-0.5">{a.desc}</p>
@@ -49,32 +49,50 @@ export default async function AdminPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="px-6 py-3 border-b border-[var(--line)]">
+        <div className="px-4 md:px-6 py-3 border-b border-[var(--line)]">
           <h2 className="font-semibold text-[var(--text)] text-sm">Recent Registrations</h2>
         </div>
-        <table className="w-full text-sm">
-          <thead className="bg-[var(--brand-soft)]/35">
-            <tr>
-              {['Name', 'Email', 'Role', 'Joined'].map(h => (
-                <th key={h} className="text-left px-6 py-2 text-xs font-medium text-[var(--muted)] uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--line)]">
-            {(recentUsers as any[]).map(u => (
-              <tr key={u._id} className="hover:bg-[var(--brand-soft)]/25">
-                <td className="px-6 py-2.5 font-medium text-[var(--text)]">{u.name}</td>
-                <td className="px-6 py-2.5 text-[var(--muted)]">{u.email}</td>
-                <td className="px-6 py-2.5">
-                  <span className={`badge ${u.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300' : 'badge-gray'}`}>
-                    {u.role}
-                  </span>
-                </td>
-                <td className="px-6 py-2.5 text-[var(--muted)]">{new Date(u.created_at).toLocaleDateString()}</td>
+        <div className="md:hidden divide-y divide-[var(--line)]">
+          {(recentUsers as any[]).map((u) => (
+            <div key={u._id} className="px-4 py-3 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-[var(--text)] truncate">{u.name}</p>
+                  <p className="text-xs text-[var(--muted)] truncate mt-0.5">{u.email}</p>
+                </div>
+                <span className={`badge text-xs ${u.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300' : 'badge-gray'}`}>
+                  {u.role}
+                </span>
+              </div>
+              <p className="text-xs text-[var(--muted)]">Joined {new Date(u.created_at).toLocaleDateString()}</p>
+            </div>
+          ))}
+        </div>
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
+            <thead className="bg-[var(--brand-soft)]/35">
+              <tr>
+                {['Name', 'Email', 'Role', 'Joined'].map(h => (
+                  <th key={h} className="text-left px-6 py-2 text-xs font-medium text-[var(--muted)] uppercase tracking-wide">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[var(--line)]">
+              {(recentUsers as any[]).map(u => (
+                <tr key={u._id} className="hover:bg-[var(--brand-soft)]/25">
+                  <td className="px-6 py-2.5 font-medium text-[var(--text)]">{u.name}</td>
+                  <td className="px-6 py-2.5 text-[var(--muted)]">{u.email}</td>
+                  <td className="px-6 py-2.5">
+                    <span className={`badge ${u.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300' : 'badge-gray'}`}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-2.5 text-[var(--muted)]">{new Date(u.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
