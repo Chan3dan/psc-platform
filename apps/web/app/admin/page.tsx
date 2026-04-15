@@ -53,8 +53,8 @@ export default async function AdminPage() {
           { label: 'Active Exams', value: examCount, href: '/admin/exams', color: 'text-blue-600' },
           { label: 'Questions', value: questionCount.toLocaleString(), href: '/admin/questions', color: 'text-emerald-600' },
           { label: 'Users', value: userCount.toLocaleString(), href: '/admin/users', color: 'text-purple-600' },
-          { label: 'Test Attempts', value: resultCount.toLocaleString(), href: '#', color: 'text-orange-600' },
-          { label: 'Flagged Reviews', value: flaggedCount.toLocaleString(), href: '/admin/questions', color: 'text-amber-600' },
+          { label: 'Test Attempts', value: resultCount.toLocaleString(), href: '/admin/results', color: 'text-orange-600' },
+          { label: 'Flagged Reviews', value: flaggedCount.toLocaleString(), href: '/admin/flagged', color: 'text-amber-600' },
         ].map(s => (
           <Link key={s.label} href={s.href} className="card p-4 md:p-5">
             <div className={`text-xl md:text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -86,8 +86,8 @@ export default async function AdminPage() {
             <h2 className="font-semibold text-[var(--text)] text-sm">Flagged By Users</h2>
             <p className="text-xs text-[var(--muted)] mt-0.5">Recent questions users marked for review during tests.</p>
           </div>
-          <Link href="/admin/questions" className="text-xs text-[var(--brand)] hover:underline">
-            Open question bank
+          <Link href="/admin/flagged" className="text-xs text-[var(--brand)] hover:underline">
+            Open flagged queue
           </Link>
         </div>
         {recentFlaggedQuestions.length === 0 ? (

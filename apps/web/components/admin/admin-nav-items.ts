@@ -9,6 +9,8 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/admin/exams', label: 'Exams', icon: 'exams' },
   { href: '/admin/subjects', label: 'Subjects', icon: 'subjects' },
   { href: '/admin/questions', label: 'Questions', icon: 'questions' },
+  { href: '/admin/flagged', label: 'Flagged', icon: 'flagged' },
+  { href: '/admin/results', label: 'Results', icon: 'results' },
   { href: '/admin/mocks', label: 'Mocks', icon: 'mock' },
   { href: '/admin/analytics', label: 'Analytics', icon: 'analytics' },
   { href: '/admin/users', label: 'Users', icon: 'users' },
