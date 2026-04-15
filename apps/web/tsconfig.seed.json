@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "lib": ["es2017"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "outDir": "./.seed-dist",
+    "baseUrl": "../../",
+    "paths": {
+      "@psc/shared": ["packages/shared/index.ts"],
+      "@psc/shared/*": ["packages/shared/*"]
+    }
+  },
+  "include": [
+    "../../scripts/**/*.ts",
+    "../../packages/shared/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

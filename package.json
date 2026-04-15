@@ -1,0 +1,26 @@
+{
+  "name": "psc-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PSC Nepal Exam Preparation Platform",
+  "workspaces": ["apps/web", "packages/shared"],
+  "scripts": {
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build",
+    "start": "cd apps/web && npm run start",
+    "lint": "cd apps/web && npm run lint",
+    "type-check": "cd apps/web && npx tsc --noEmit",
+    "seed": "cd apps/web && npx ts-node --transpile-only --project tsconfig.seed.json ../../scripts/seed-computer-operator.ts",
+    "seed:co-topup": "cd apps/web && npx ts-node --transpile-only --project tsconfig.seed.json ../../scripts/seed-computer-operator-topup.ts",
+    "seed:co-clean-prefix": "cd apps/web && npx ts-node --transpile-only --project tsconfig.seed.json ../../scripts/clean-co-question-prefix.ts",
+    "seed:co-clean-sampled": "cd apps/web && npx ts-node --transpile-only --project tsconfig.seed.json ../../scripts/clean-co-sampled-questions.ts",
+    "db:sync-question-bank": "cd apps/web && npx ts-node --transpile-only --project tsconfig.seed.json ../../scripts/sync-question-subject-integrity.ts",
+    "seed:nasu-kharidar": "cd apps/web && npx ts-node --transpile-only --project tsconfig.seed.json ../../scripts/seed-nasu-kharidar.ts",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

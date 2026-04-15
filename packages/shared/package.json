@@ -1,0 +1,18 @@
+{
+  "name": "@psc/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./models": "./models/index.ts",
+    "./utils/scoring": "./utils/scoring.ts",
+    "./utils/analytics": "./utils/analytics.ts",
+    "./utils/planner": "./utils/planner.ts",
+    "./types": "./types/index.ts"
+  },
+  "dependencies": {
+    "mongoose": "^8.4.0"
+  }
+}
