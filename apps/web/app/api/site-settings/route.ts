@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
 import { forbidden, ok, serverError, unauthorized } from '@/lib/apiResponse';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const settings = await getSiteSettings();
@@ -13,7 +15,7 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: Request) {
+async function handleSave(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return unauthorized();
@@ -33,4 +35,12 @@ export async function PUT(req: Request) {
   } catch (error) {
     return serverError(error);
   }
+}
+
+export async function PUT(req: Request) {
+  return handleSave(req);
+}
+
+export async function POST(req: Request) {
+  return handleSave(req);
 }

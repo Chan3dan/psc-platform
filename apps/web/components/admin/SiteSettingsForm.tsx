@@ -99,7 +99,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
 
     try {
       const res = await fetch('/api/site-settings', {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });

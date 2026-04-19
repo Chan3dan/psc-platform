@@ -22,6 +22,8 @@ export default withAuth(
         const PUBLIC = ['/', '/login', '/register', '/auth/error'];
         if (PUBLIC.includes(pathname)) return true;
         if (pathname.startsWith('/api/auth')) return true;
+        if (pathname.startsWith('/api/site-logo')) return true;
+        if (pathname === '/api/site-settings' && req.method === 'GET') return true;
         if (pathname.startsWith('/api/exams') && req.method === 'GET') return true;
         if (pathname.startsWith('/_next')) return true;
         if (pathname.startsWith('/favicon')) return true;
