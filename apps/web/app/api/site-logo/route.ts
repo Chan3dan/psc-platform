@@ -61,6 +61,12 @@ export async function GET(req: Request) {
     }
   }
 
-  const fallback = record?.logo_url || DEFAULT_LOGO_URL;
+  const fallback =
+    typeof record?.logo_url === 'string' &&
+    record.logo_url &&
+    !record.logo_url.startsWith('/api/site-logo') &&
+    !record.logo_url.startsWith('data:image/')
+      ? record.logo_url
+      : DEFAULT_LOGO_URL;
   return Response.redirect(new URL(fallback, req.url), 307);
 }

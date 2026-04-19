@@ -5,8 +5,17 @@ import {
   DEFAULT_SITE_SETTINGS,
   DEFAULT_LOGO_URL,
   type SiteSettings,
+  normalizeLogoUrl,
   normalizeSiteSettings,
 } from '@/lib/site-settings-config';
+
+function getStoredLogoUrl(value: unknown) {
+  const normalized = normalizeLogoUrl(value);
+  if (normalized.startsWith('data:image/') || normalized.startsWith('/api/site-logo')) {
+    return DEFAULT_LOGO_URL;
+  }
+  return normalized;
+}
 
 function mapSettings(record: any): SiteSettings {
   if (!record) return DEFAULT_SITE_SETTINGS;
@@ -24,7 +33,7 @@ function mapSettings(record: any): SiteSettings {
   return normalizeSiteSettings({
     brandName: record.brand_name,
     tagline: record.tagline,
-    logoUrl: hasUploadedLogo ? `/api/site-logo?v=${updatedAt}` : record.logo_url,
+    logoUrl: hasUploadedLogo ? `/api/site-logo?v=${updatedAt}` : getStoredLogoUrl(record.logo_url),
     liveLabel: record.live_label,
     heroBadge: record.hero_badge,
     heroTitlePrefix: record.hero_title_prefix,
@@ -55,18 +64,13 @@ export async function saveSiteSettings(input: Record<string, unknown>) {
   let nextLogoDataUrl = '';
 
   if (rawLogoUrl.startsWith('data:image/')) {
-    nextLogoUrl =
-      existing?.logo_url && !String(existing.logo_url).startsWith('data:image/')
-        ? existing.logo_url
-        : DEFAULT_LOGO_URL;
+    nextLogoUrl = getStoredLogoUrl(existing?.logo_url);
     nextLogoDataUrl = rawLogoUrl;
   } else if (rawLogoUrl.startsWith('/api/site-logo')) {
-    nextLogoUrl =
-      existing?.logo_url && !String(existing.logo_url).startsWith('data:image/')
-        ? existing.logo_url
-        : DEFAULT_LOGO_URL;
+    nextLogoUrl = getStoredLogoUrl(existing?.logo_url);
     nextLogoDataUrl = existingLogoDataUrl;
   } else {
+    nextLogoUrl = getStoredLogoUrl(rawLogoUrl);
     nextLogoDataUrl = '';
   }
 
