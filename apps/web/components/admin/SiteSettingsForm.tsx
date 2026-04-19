@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useUpdateSiteSettings } from '@/components/branding/SiteSettingsProvider';
 import {
@@ -11,14 +11,27 @@ import {
 
 export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSettings }) {
   const [form, setForm] = useState(initialSettings);
+  const [logoInput, setLogoInput] = useState(
+    initialSettings.logoUrl.startsWith('/api/site-logo') ? '' : initialSettings.logoUrl
+  );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const updateSiteSettings = useUpdateSiteSettings();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    setForm(initialSettings);
+    setLogoInput(initialSettings.logoUrl.startsWith('/api/site-logo') ? '' : initialSettings.logoUrl);
+  }, [initialSettings]);
+
   function updateField<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateLogoValue(value: string) {
+    setLogoInput(value);
+    updateField('logoUrl', value as SiteSettings['logoUrl']);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,6 +53,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
 
       startTransition(() => {
         setForm(data.data);
+        setLogoInput(data.data.logoUrl.startsWith('/api/site-logo') ? '' : data.data.logoUrl);
         updateSiteSettings(data.data);
         setMessage('Site settings saved. Branding updates are live across the app.');
       });
@@ -52,6 +66,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
 
   function handleReset() {
     setForm(DEFAULT_SITE_SETTINGS);
+    setLogoInput(DEFAULT_SITE_SETTINGS.logoUrl);
     setMessage('');
     setError('');
   }
@@ -76,7 +91,8 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
       }
       updateField('logoUrl', result);
       setError('');
-      setMessage('Logo loaded into settings. Save settings to publish it.');
+      setLogoInput('');
+      setMessage('Logo loaded into settings. Save settings to publish the uploaded image.');
     };
     reader.onerror = () => setError('Could not read that logo file.');
     reader.readAsDataURL(file);
@@ -114,11 +130,11 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
         </div>
 
         <div>
-          <label className="label">Logo URL</label>
+          <label className="label">Logo source</label>
           <input
             className="input"
-            value={form.logoUrl}
-            onChange={(e) => updateField('logoUrl', e.target.value)}
+            value={logoInput}
+            onChange={(e) => updateLogoValue(e.target.value)}
             placeholder="/brand/niyukta-logo.jpeg"
           />
           <div className="mt-2 flex flex-wrap gap-2">
@@ -132,7 +148,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
             <button
               type="button"
               className="btn-secondary"
-              onClick={() => updateField('logoUrl', DEFAULT_SITE_SETTINGS.logoUrl)}
+              onClick={() => updateLogoValue(DEFAULT_SITE_SETTINGS.logoUrl)}
             >
               Use default logo
             </button>
@@ -145,8 +161,13 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
             onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
           />
           <p className="text-xs text-[var(--muted)] mt-1">
-            Paste a public path like `/brand/niyukta-logo.jpeg` or upload a small logo image directly.
+            Paste a public path like `/brand/niyukta-logo.jpeg`, or upload a small logo image directly.
           </p>
+          {form.logoUrl.startsWith('/api/site-logo') ? (
+            <p className="text-xs text-emerald-600 mt-1">
+              Uploaded logo is active right now.
+            </p>
+          ) : null}
         </div>
 
         <div>
