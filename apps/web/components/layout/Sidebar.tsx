@@ -33,7 +33,7 @@ export function Sidebar({ user }: SidebarProps) {
     <aside className="hidden md:flex w-64 flex-col h-full flex-shrink-0 px-3 py-3">
       <div className="card glass h-full flex flex-col overflow-hidden">
         <div className="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between">
-          <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} compact />
+          <BrandMark href="/dashboard" name={settings.brandName} logoUrl={settings.logoUrl} compact />
           <span className="badge-blue">{settings.liveLabel}</span>
         </div>
         <div className="px-3 pt-3">

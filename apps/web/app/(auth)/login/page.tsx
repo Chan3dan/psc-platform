@@ -1,17 +1,25 @@
 'use client';
 import { signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const settings = useSiteSettings();
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard');
+    }
+  }, [router, status]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +36,18 @@ export default function LoginPage() {
       setError('Invalid email or password');
       setLoading(false);
     }
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen px-4">
+        <nav className="page-wrap pb-0">
+          <div className="card glass px-5 py-3 flex items-center justify-between">
+            <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} compact />
+          </div>
+        </nav>
+      </div>
+    );
   }
 
   return (

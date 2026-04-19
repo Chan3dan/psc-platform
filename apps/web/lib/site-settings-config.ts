@@ -47,9 +47,7 @@ export function normalizeLogoUrl(value: unknown) {
 
 export function getMetadataIconUrl(value: unknown) {
   const normalized = normalizeLogoUrl(value);
-  return normalized.startsWith('data:image/') || normalized.startsWith('/api/site-logo')
-    ? DEFAULT_LOGO_URL
-    : normalized;
+  return normalized.startsWith('data:image/') ? DEFAULT_LOGO_URL : normalized;
 }
 
 export function normalizeSiteSettings(

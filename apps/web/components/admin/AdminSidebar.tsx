@@ -22,6 +22,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
         <div className="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between">
           <div className="min-w-0">
             <BrandMark
+              href="/admin"
               name={settings.brandName}
               logoUrl={settings.logoUrl}
               subtitle="Control Center"

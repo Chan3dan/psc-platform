@@ -21,6 +21,7 @@ export default withAuth(
         // Always allow public routes
         const PUBLIC = ['/', '/login', '/register', '/auth/error'];
         if (PUBLIC.includes(pathname)) return true;
+        if (pathname.startsWith('/brand')) return true;
         if (pathname.startsWith('/api/auth')) return true;
         if (pathname.startsWith('/api/site-logo')) return true;
         if (pathname === '/api/site-settings' && req.method === 'GET') return true;
@@ -37,6 +38,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icons|images).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons|images|brand).*)',
   ],
 };

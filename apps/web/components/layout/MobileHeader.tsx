@@ -39,6 +39,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <BrandMark
+                href="/dashboard"
                 name={settings.brandName}
                 logoUrl={settings.logoUrl}
                 subtitle={`Hi, ${firstName}`}
@@ -67,6 +68,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
           <div className="absolute inset-y-0 left-0 w-[88vw] max-w-sm bg-[var(--bg-elev)] border-r border-[var(--line)] shadow-[var(--shadow-strong)] flex flex-col">
             <div className="px-4 py-4 border-b border-[var(--line)] flex items-center justify-between">
               <BrandMark
+                href="/dashboard"
                 name={settings.brandName}
                 logoUrl={settings.logoUrl}
                 subtitle="Everything in one menu"
