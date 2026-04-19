@@ -3,17 +3,28 @@ import { connectDB } from '@/lib/db';
 import { SiteSetting } from '@psc/shared/models';
 import {
   DEFAULT_SITE_SETTINGS,
+  DEFAULT_LOGO_URL,
   type SiteSettings,
   normalizeSiteSettings,
 } from '@/lib/site-settings-config';
 
 function mapSettings(record: any): SiteSettings {
   if (!record) return DEFAULT_SITE_SETTINGS;
+  const legacyDataLogo = typeof record.logo_url === 'string' && record.logo_url.startsWith('data:image/');
+  const uploadedDataLogo =
+    typeof record.logo_data_url === 'string' && record.logo_data_url.startsWith('data:image/');
+  const hasUploadedLogo = uploadedDataLogo || legacyDataLogo;
+  const updatedAt =
+    record.updated_at instanceof Date
+      ? record.updated_at.getTime()
+      : record.updated_at
+        ? new Date(record.updated_at).getTime()
+        : Date.now();
 
   return normalizeSiteSettings({
     brandName: record.brand_name,
     tagline: record.tagline,
-    logoUrl: record.logo_url,
+    logoUrl: hasUploadedLogo ? `/api/site-logo?v=${updatedAt}` : record.logo_url,
     liveLabel: record.live_label,
     heroBadge: record.hero_badge,
     heroTitlePrefix: record.hero_title_prefix,
@@ -32,6 +43,32 @@ export const getSiteSettings = cache(async () => {
 export async function saveSiteSettings(input: Record<string, unknown>) {
   await connectDB();
   const normalized = normalizeSiteSettings(input);
+  const existing: any = await SiteSetting.findOne({ key: 'site' }).lean();
+  const rawLogoUrl = typeof input.logoUrl === 'string' ? input.logoUrl.trim() : '';
+  const existingLogoDataUrl =
+    existing?.logo_data_url ||
+    (typeof existing?.logo_url === 'string' && existing.logo_url.startsWith('data:image/')
+      ? existing.logo_url
+      : '');
+
+  let nextLogoUrl = normalized.logoUrl;
+  let nextLogoDataUrl = '';
+
+  if (rawLogoUrl.startsWith('data:image/')) {
+    nextLogoUrl =
+      existing?.logo_url && !String(existing.logo_url).startsWith('data:image/')
+        ? existing.logo_url
+        : DEFAULT_LOGO_URL;
+    nextLogoDataUrl = rawLogoUrl;
+  } else if (rawLogoUrl.startsWith('/api/site-logo')) {
+    nextLogoUrl =
+      existing?.logo_url && !String(existing.logo_url).startsWith('data:image/')
+        ? existing.logo_url
+        : DEFAULT_LOGO_URL;
+    nextLogoDataUrl = existingLogoDataUrl;
+  } else {
+    nextLogoDataUrl = '';
+  }
 
   const updated = await SiteSetting.findOneAndUpdate(
     { key: 'site' },
@@ -39,7 +76,8 @@ export async function saveSiteSettings(input: Record<string, unknown>) {
       $set: {
         brand_name: normalized.brandName,
         tagline: normalized.tagline,
-        logo_url: normalized.logoUrl,
+        logo_url: nextLogoUrl,
+        logo_data_url: nextLogoDataUrl,
         live_label: normalized.liveLabel,
         hero_badge: normalized.heroBadge,
         hero_title_prefix: normalized.heroTitlePrefix,

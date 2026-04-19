@@ -342,6 +342,7 @@ export interface ISiteSetting extends Document {
   brand_name: string;
   tagline: string;
   logo_url: string;
+  logo_data_url?: string;
   live_label: string;
   hero_badge: string;
   hero_title_prefix: string;
@@ -357,6 +358,7 @@ const SiteSettingSchema = new Schema<ISiteSetting>(
     brand_name: { type: String, required: true, default: 'Niyukta' },
     tagline: { type: String, default: 'Prepare Smart. Get Niyukta.' },
     logo_url: { type: String, default: '/brand/niyukta-logo.jpeg' },
+    logo_data_url: { type: String, default: '' },
     live_label: { type: String, default: 'Live' },
     hero_badge: { type: String, default: 'Built for Loksewa Aspirants' },
     hero_title_prefix: { type: String, default: 'Modern exam prep that turns' },
