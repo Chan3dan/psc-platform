@@ -34,6 +34,63 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
     updateField('logoUrl', value as SiteSettings['logoUrl']);
   }
 
+  async function parseApiResponse(res: Response) {
+    const raw = await res.text();
+    if (!raw.trim()) {
+      throw new Error(`Settings save returned an empty response (${res.status}).`);
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error(raw.slice(0, 180) || 'Settings save returned an invalid response.');
+    }
+  }
+
+  async function compressLogo(file: File) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') resolve(reader.result);
+        else reject(new Error('Could not read that logo file.'));
+      };
+      reader.onerror = () => reject(new Error('Could not read that logo file.'));
+      reader.readAsDataURL(file);
+    });
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Could not load that logo image.'));
+      img.src = dataUrl;
+    });
+
+    const maxDimension = 512;
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not prepare that logo image.');
+    }
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(image, 0, 0, width, height);
+
+    const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const quality = mimeType === 'image/jpeg' ? 0.86 : undefined;
+    const compressed = canvas.toDataURL(mimeType, quality);
+
+    if (compressed.length > 900_000) {
+      throw new Error('Logo is still too large after compression. Please use a smaller image.');
+    }
+
+    return compressed;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -46,7 +103,7 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (!data.success) {
         throw new Error(data.error ?? 'Failed to save settings');
       }
@@ -77,25 +134,24 @@ export function SiteSettingsForm({ initialSettings }: { initialSettings: SiteSet
       setError('Please upload an image file for the logo.');
       return;
     }
-    if (file.size > 1_500_000) {
-      setError('Logo file is too large. Please use an image under 1.5 MB.');
+    if (file.size > 4_000_000) {
+      setError('Logo file is too large. Please use an image under 4 MB.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      if (!result) {
-        setError('Could not read that logo file.');
-        return;
-      }
-      updateField('logoUrl', result);
-      setError('');
-      setLogoInput('');
-      setMessage('Logo loaded into settings. Save settings to publish the uploaded image.');
-    };
-    reader.onerror = () => setError('Could not read that logo file.');
-    reader.readAsDataURL(file);
+    setError('');
+    setMessage('Preparing logo for upload...');
+
+    compressLogo(file)
+      .then((result) => {
+        updateField('logoUrl', result as SiteSettings['logoUrl']);
+        setLogoInput('');
+        setMessage('Logo loaded into settings. Save settings to publish the uploaded image.');
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Could not prepare that logo file.');
+        setMessage('');
+      });
   }
 
   return (
