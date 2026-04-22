@@ -34,19 +34,18 @@ export function extractRawPublicIdFromUrl(url: string) {
     remainder = remainder.replace(/^v\d+\//, '');
     if (!remainder) return null;
 
-    return remainder.replace(/\.pdf$/i, '');
+    return remainder;
   } catch {
     return null;
   }
 }
 
 export function getSignedPdfDownloadUrl(publicId: string) {
-  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 10;
-  return cloudinary.utils.private_download_url(publicId, 'pdf', {
+  return cloudinary.utils.url(publicId, {
     resource_type: 'raw',
     type: 'upload',
-    attachment: false,
-    expires_at: expiresAt,
+    secure: true,
+    sign_url: true,
   });
 }
 
