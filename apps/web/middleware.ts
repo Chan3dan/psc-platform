@@ -1,5 +1,14 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
+import { PUBLIC_TOPIC_ROUTES } from '@/lib/seo-landing-pages';
+
+const PUBLIC_EXACT_ROUTES = new Set([
+  '/',
+  '/login',
+  '/register',
+  '/auth/error',
+  ...PUBLIC_TOPIC_ROUTES,
+]);
 
 export default withAuth(
   function middleware(req) {
@@ -19,8 +28,8 @@ export default withAuth(
         const pathname = req.nextUrl.pathname;
 
         // Always allow public routes
-        const PUBLIC = ['/', '/login', '/register', '/auth/error'];
-        if (PUBLIC.includes(pathname)) return true;
+        if (PUBLIC_EXACT_ROUTES.has(pathname)) return true;
+        if (pathname.startsWith('/exam/')) return true;
         if (pathname.startsWith('/brand')) return true;
         if (pathname.startsWith('/api/auth')) return true;
         if (pathname.startsWith('/api/site-logo')) return true;
