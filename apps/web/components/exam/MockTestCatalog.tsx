@@ -1,11 +1,20 @@
 'use client';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppIcon } from '@/components/icons/AppIcon';
 
 export function MockTestCatalog({ tests }: { tests: any[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [exam, setExam] = useState('all');
+
+  useEffect(() => {
+    for (const test of tests.slice(0, 6)) {
+      if (!test?.exam_id?.slug || !test?._id) continue;
+      router.prefetch(`/mock/${test.exam_id.slug}?test=${test._id}`);
+    }
+  }, [router, tests]);
 
   const exams = useMemo(() => {
     const map = new Map<string, string>();
@@ -62,7 +71,11 @@ export function MockTestCatalog({ tests }: { tests: any[] }) {
                   <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 inline-flex items-center gap-1.5"><AppIcon name="users" className="h-3.5 w-3.5" /> {test.attempt_count ?? 0} attempts</span>
                 </div>
               </div>
-              <Link href={`/mock/${test.exam_id?.slug}?test=${test._id}`} className="btn-primary shrink-0">
+              <Link
+                href={`/mock/${test.exam_id?.slug}?test=${test._id}`}
+                prefetch
+                className="btn-primary shrink-0"
+              >
                 Start Test
               </Link>
             </div>

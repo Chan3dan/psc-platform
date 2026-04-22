@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useExamStore } from '@/store/examStore';
+import { type ExamSession, useExamStore } from '@/store/examStore';
 import { AppIcon } from '@/components/icons/AppIcon';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -11,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
   'not-visited': 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400',
 };
 
-export function MockTestPageInner() {
+export function MockTestPageInner({ initialSession }: { initialSession?: ExamSession | null }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const testId = searchParams.get('test');
@@ -28,12 +28,22 @@ export function MockTestPageInner() {
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   const [quickJumpOpen, setQuickJumpOpen] = useState(false);
   const [swipeFeedback, setSwipeFeedback] = useState<'prev' | 'next' | null>(null);
+  const [bootstrapError, setBootstrapError] = useState('');
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
+    if (initialSession) {
+      useExamStore.getState().reset();
+      startSession(initialSession);
+    }
+  }, [initialSession, startSession]);
+
+  useEffect(() => {
     if (!testId) return;
+    if (initialSession) return;
     useExamStore.getState().reset();
+    setBootstrapError('');
 
     fetch('/api/tests/start', {
       method: 'POST',
@@ -41,13 +51,16 @@ export function MockTestPageInner() {
       body: JSON.stringify({ test_id: testId, test_type: 'mock' }),
     })
       .then((r) => r.json())
-      .then((d) => { if (d.success) startSession(d.data); })
-      .catch(console.error);
+      .then((d) => {
+        if (d.success) startSession(d.data);
+        else setBootstrapError(d?.error ?? 'Could not load this mock test.');
+      })
+      .catch(() => setBootstrapError('Could not load this mock test.'));
 
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [testId]);
+  }, [initialSession, startSession, testId]);
 
   useEffect(() => {
     let mounted = true;
@@ -175,7 +188,7 @@ export function MockTestPageInner() {
           ) : (
             <>
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-gray-500">Preparing your test…</p>
+              <p className="text-sm text-gray-500">{bootstrapError || 'Preparing your test…'}</p>
             </>
           )}
         </div>
