@@ -23,6 +23,33 @@ export async function uploadPDF(
   });
 }
 
+export function extractRawPublicIdFromUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    const marker = '/raw/upload/';
+    const markerIndex = parsed.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
+
+    let remainder = parsed.pathname.slice(markerIndex + marker.length);
+    remainder = remainder.replace(/^v\d+\//, '');
+    if (!remainder) return null;
+
+    return remainder.replace(/\.pdf$/i, '');
+  } catch {
+    return null;
+  }
+}
+
+export function getSignedPdfDownloadUrl(publicId: string) {
+  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 10;
+  return cloudinary.utils.private_download_url(publicId, 'pdf', {
+    resource_type: 'raw',
+    type: 'upload',
+    attachment: false,
+    expires_at: expiresAt,
+  });
+}
+
 export async function uploadImage(
   buffer: Buffer,
   folder = 'psc-images'

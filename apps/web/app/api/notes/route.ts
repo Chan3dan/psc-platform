@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db';
 import { Note } from '@psc/shared/models';
 import { ok, created, err, unauthorized, forbidden, serverError } from '@/lib/apiResponse';
 import { uploadPDF } from '@/lib/cloudinary';
+import { Types } from 'mongoose';
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,7 +24,15 @@ export async function GET(req: NextRequest) {
       .sort({ created_at: -1 })
       .lean();
 
-    return ok(notes);
+    const normalized = (notes as any[]).map((note) => ({
+      ...note,
+      content_url:
+        note.content_type === 'pdf' && Types.ObjectId.isValid(String(note._id))
+          ? `/api/notes/${note._id}/file`
+          : note.content_url,
+    }));
+
+    return ok(normalized);
   } catch (e) {
     return serverError(e);
   }
