@@ -6,23 +6,14 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
 import { getSiteSettings } from '@/lib/site-settings';
-import { getMetadataIconUrl } from '@/lib/site-settings-config';
+import { buildDefaultMetadata } from '@/lib/seo';
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500'] });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const iconUrl = getMetadataIconUrl(settings.logoUrl);
-  return {
-    title: { template: `%s | ${settings.brandName}`, default: `${settings.brandName} — ${settings.tagline}` },
-    description: settings.heroDescription,
-    icons: {
-      icon: [{ url: iconUrl }, { url: '/brand/niyukta-logo.jpeg' }],
-      shortcut: iconUrl,
-      apple: iconUrl,
-    },
-  };
+  return buildDefaultMetadata(settings);
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

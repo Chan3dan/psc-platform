@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { getSiteSettings } from '@/lib/site-settings';
 import { getActiveExams } from '@/lib/catalog-data';
+import { joinSiteUrl, SEO_KEYWORDS } from '@/lib/seo';
 
 const FEATURES = [
   {
@@ -37,12 +39,80 @@ const FEATURES = [
   },
 ];
 
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const title = `${settings.brandName} | Loksewa, Computer Operator & PSC Exam Preparation in Nepal`;
+  const description = `${settings.heroDescription} Prepare for Loksewa, Computer Operator, and Nepal civil service exams with mock tests, notes, analytics, and study plans on ${settings.brandName}.`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      ...SEO_KEYWORDS,
+      `${settings.brandName} Loksewa`,
+      `${settings.brandName} Computer Operator`,
+      'PSC preparation Nepal',
+      'Computer Operator Loksewa Nepal',
+    ],
+    alternates: {
+      canonical: '/',
+    },
+    openGraph: {
+      title,
+      description,
+      url: '/',
+    },
+    twitter: {
+      title,
+      description,
+    },
+  };
+}
+
 export default async function LandingPage() {
   const settings = await getSiteSettings();
   const exams = (await getActiveExams()) as any[];
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        name: settings.brandName,
+        url: joinSiteUrl('/'),
+        logo: joinSiteUrl(settings.logoUrl),
+        description: settings.tagline,
+      },
+      {
+        '@type': 'WebSite',
+        name: settings.brandName,
+        url: joinSiteUrl('/'),
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${joinSiteUrl('/')}?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'SoftwareApplication',
+        name: settings.brandName,
+        applicationCategory: 'EducationalApplication',
+        operatingSystem: 'Web',
+        description: settings.heroDescription,
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'NPR',
+        },
+      },
+    ],
+  };
 
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="page-wrap pb-2">
         <nav className="card glass px-4 sm:px-5 py-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -78,6 +148,9 @@ export default async function LandingPage() {
             </h1>
             <p className="mt-5 text-lg text-[var(--muted)] max-w-2xl">
               {settings.heroDescription}
+            </p>
+            <p className="mt-3 text-sm text-[var(--muted)] max-w-2xl">
+              Built for aspirants targeting Loksewa, Computer Operator, and other Nepal civil service exams.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link href="/register" className="btn-primary text-base px-6 py-3">
@@ -175,6 +248,33 @@ export default async function LandingPage() {
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="page-wrap pt-2">
+        <div className="card p-6 md:p-7">
+          <h2 className="text-2xl font-semibold text-[var(--text)]">Who Niyukta is for</h2>
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              {
+                title: 'Computer Operator Aspirants',
+                desc: 'Practice topic-wise MCQs, timed mocks, and revision notes tuned for Computer Operator recruitment exams.',
+              },
+              {
+                title: 'Loksewa Candidates',
+                desc: 'Use mock tests, analytics, and study plans designed around Loksewa preparation flow and common weak areas.',
+              },
+              {
+                title: 'Nepal PSC Learners',
+                desc: 'Track streaks, improve subject accuracy, and prepare with a focused system instead of scattered resources.',
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-2xl border border-[var(--line)] p-4">
+                <h3 className="font-semibold text-[var(--text)]">{item.title}</h3>
+                <p className="mt-2 text-sm text-[var(--muted)]">{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
