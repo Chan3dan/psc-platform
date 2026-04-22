@@ -17,6 +17,8 @@ export function LeaderboardClient() {
       const d = await r.json();
       return d.data ?? [];
     },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 
   async function loadTests(eid: string) {
@@ -44,6 +46,8 @@ export function LeaderboardClient() {
       return d.success ? d.data : null;
     },
     enabled: !!(testId || examId),
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 
   const medals = ['🥇', '🥈', '🥉'];

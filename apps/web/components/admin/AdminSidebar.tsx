@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
+import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
 interface AdminSidebarProps {
   user: { name?: string | null; email?: string | null };
@@ -14,7 +16,13 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const settings = useSiteSettings();
+
+  useEffect(() => {
+    prefetchRoutes(router, ADMIN_PREFETCH_ROUTES, pathname);
+    prefetchRoutes(router, USER_PREFETCH_ROUTES, pathname);
+  }, [pathname, router]);
 
   return (
     <aside className="hidden md:flex w-64 flex-col h-full flex-shrink-0 px-3 py-3">

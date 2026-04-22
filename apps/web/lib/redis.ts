@@ -98,9 +98,15 @@ export const CacheKeys = {
   subjects: (examId: string) => `subjects:${examId}`,
   performance: (userId: string, examId?: string) =>
     `perf:${userId}:${examId ?? 'all'}`,
+  dashboardSummary: (userId: string) => `dashboard:${userId}:summary`,
+  resultsHistory: (userId: string) => `results:${userId}:history`,
   leaderboard: (
     id: string,
     period: 'all' | 'week' | 'month' = 'all',
     scope: 'test' | 'exam' = 'test'
   ) => `lb:${scope}:${id}:${period}`,
+  adminOverview: () => 'admin:overview',
+  adminResults: () => 'admin:results',
+  adminUsers: () => 'admin:users',
+  adminFlagged: () => 'admin:flagged',
 };

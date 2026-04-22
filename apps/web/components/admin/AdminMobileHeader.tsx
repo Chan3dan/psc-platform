@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
+import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
 interface AdminMobileHeaderProps {
   user: { name?: string | null; email?: string | null };
@@ -15,9 +16,15 @@ interface AdminMobileHeaderProps {
 
 export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const firstName = user.name?.split(' ')[0] ?? 'Admin';
   const settings = useSiteSettings();
+
+  useEffect(() => {
+    prefetchRoutes(router, ADMIN_PREFETCH_ROUTES, pathname);
+    prefetchRoutes(router, USER_PREFETCH_ROUTES, pathname);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (!menuOpen) return;

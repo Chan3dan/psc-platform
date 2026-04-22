@@ -31,6 +31,22 @@ function pickRandom<T>(arr: T[], count: number) {
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
+function buildQuestionBuckets(questions: any[]) {
+  const buckets = new Map<string, { all: any[]; easy: any[]; medium: any[]; hard: any[] }>();
+
+  for (const question of questions) {
+    const subjectId = String(question.subject_id);
+    const bucket = buckets.get(subjectId) ?? { all: [], easy: [], medium: [], hard: [] };
+    bucket.all.push(question);
+    if (question.difficulty === 'easy') bucket.easy.push(question);
+    else if (question.difficulty === 'medium') bucket.medium.push(question);
+    else bucket.hard.push(question);
+    buckets.set(subjectId, bucket);
+  }
+
+  return buckets;
+}
+
 export type TestSessionInput = {
   test_id?: string | null;
   test_type?: 'mock' | 'practice';
@@ -87,23 +103,38 @@ export async function buildTestSession(input: TestSessionInput) {
     };
 
     if (mockTest.config.auto_generate) {
-      for (const dist of mockTest.config.subject_distribution) {
+      const distribution = Array.isArray(mockTest.config.subject_distribution)
+        ? mockTest.config.subject_distribution.filter((entry: any) => Number(entry?.count ?? 0) > 0)
+        : [];
+
+      const subjectIds = distribution
+        .map((entry: any) => String(entry.subject_id ?? ''))
+        .filter((value: string) => Types.ObjectId.isValid(value))
+        .map((value: string) => new Types.ObjectId(value));
+
+      const pooledQuestions = subjectIds.length
+        ? await Question.find({
+            subject_id: { $in: subjectIds },
+            is_active: true,
+          })
+            .select('question_text question_image_url options subject_id difficulty')
+            .lean()
+        : [];
+
+      const questionBuckets = buildQuestionBuckets(pooledQuestions as any[]);
+
+      for (const dist of distribution) {
         const total = Math.max(0, Number(dist.count ?? 0));
         if (!total) continue;
 
-        const baseMatch: Record<string, unknown> = { is_active: true };
-        if (Types.ObjectId.isValid(String(dist.subject_id))) {
-          baseMatch.subject_id = new Types.ObjectId(String(dist.subject_id));
-        } else {
-          baseMatch.subject_id = dist.subject_id;
-        }
+        const subjectPool = questionBuckets.get(String(dist.subject_id)) ?? {
+          all: [],
+          easy: [],
+          medium: [],
+          hard: [],
+        };
 
-        const subjectPool = await Question.find(baseMatch).lean();
-        if (subjectPool.length === 0) continue;
-
-        const easyPool = subjectPool.filter((q: any) => q.difficulty === 'easy');
-        const mediumPool = subjectPool.filter((q: any) => q.difficulty === 'medium');
-        const hardPool = subjectPool.filter((q: any) => q.difficulty === 'hard');
+        if (subjectPool.all.length === 0) continue;
 
         const easyPct = Number(dist.difficulty_split?.easy ?? 0);
         const mediumPct = Number(dist.difficulty_split?.medium ?? 0);
@@ -113,14 +144,14 @@ export async function buildTestSession(input: TestSessionInput) {
         let hardTarget = total - easyTarget - mediumTarget;
         if (hardTarget < 0) hardTarget = 0;
 
-        const selectedEasy = pickRandom(easyPool, easyTarget);
-        const selectedMedium = pickRandom(mediumPool, mediumTarget);
-        const selectedHard = pickRandom(hardPool, hardTarget);
+        const selectedEasy = pickRandom(subjectPool.easy, easyTarget);
+        const selectedMedium = pickRandom(subjectPool.medium, mediumTarget);
+        const selectedHard = pickRandom(subjectPool.hard, hardTarget);
 
         const chosen = [...selectedEasy, ...selectedMedium, ...selectedHard];
         const chosenIds = new Set(chosen.map((q: any) => String(q._id)));
         if (chosen.length < total) {
-          const remainderPool = subjectPool.filter((q: any) => !chosenIds.has(String(q._id)));
+          const remainderPool = subjectPool.all.filter((q: any) => !chosenIds.has(String(q._id)));
           const remainder = pickRandom(remainderPool, total - chosen.length);
           chosen.push(...remainder);
         }

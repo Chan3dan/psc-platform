@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { SearchModal } from '@/components/layout/SearchModal';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
+import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; role?: string };
@@ -15,8 +16,16 @@ interface SidebarProps {
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const settings = useSiteSettings();
+
+  useEffect(() => {
+    prefetchRoutes(router, USER_PREFETCH_ROUTES, pathname);
+    if (user.role === 'admin') {
+      prefetchRoutes(router, ADMIN_PREFETCH_ROUTES, pathname);
+    }
+  }, [pathname, router, user.role]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

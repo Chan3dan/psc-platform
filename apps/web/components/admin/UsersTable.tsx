@@ -5,7 +5,15 @@ import { AppIcon } from '@/components/icons/AppIcon';
 type RoleFilter = 'all' | 'admin' | 'user';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
-export function UsersTable({ users, initialQuery = '' }: { users: any[]; initialQuery?: string }) {
+export function UsersTable({
+  users,
+  initialQuery = '',
+  isLoading = false,
+}: {
+  users: any[];
+  initialQuery?: string;
+  isLoading?: boolean;
+}) {
   const [query, setQuery] = useState(initialQuery);
   const [role, setRole] = useState<RoleFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -150,7 +158,7 @@ export function UsersTable({ users, initialQuery = '' }: { users: any[]; initial
       <div className="md:hidden divide-y divide-[var(--line)]">
         {paged.length === 0 && (
           <div className="px-4 py-8 text-center text-sm text-[var(--muted)]">
-            No users match your filters.
+            {isLoading ? 'Loading users…' : 'No users match your filters.'}
           </div>
         )}
         {paged.map((u) => (
@@ -215,7 +223,7 @@ export function UsersTable({ users, initialQuery = '' }: { users: any[]; initial
             {paged.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-4 py-8 text-center text-sm text-[var(--muted)]">
-                  No users match your filters.
+                  {isLoading ? 'Loading users…' : 'No users match your filters.'}
                 </td>
               </tr>
             )}

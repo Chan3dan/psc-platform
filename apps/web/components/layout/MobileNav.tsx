@@ -1,7 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
 const PRIMARY_TABS = [
   { href: '/dashboard', label: 'Home', icon: 'dashboard' },
@@ -13,6 +15,11 @@ const PRIMARY_TABS = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    prefetchRoutes(router, USER_PREFETCH_ROUTES, pathname);
+  }, [pathname, router]);
 
   return (
     <nav className="md:hidden fixed bottom-2 left-3 right-3 z-50 glass rounded-2xl shadow-2xl border border-[var(--line)] safe-bottom">

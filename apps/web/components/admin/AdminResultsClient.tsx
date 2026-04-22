@@ -6,12 +6,12 @@ import { formatDuration, formatResultDate } from '@/lib/results';
 
 type AdminResultFilter = 'all' | 'flagged' | 'mock' | 'practice';
 
-export function AdminResultsClient({ results }: { results: any[] }) {
+export function AdminResultsClient({ results, isLoading = false }: { results: any[]; isLoading?: boolean }) {
   const [filter, setFilter] = useState<AdminResultFilter>('all');
 
   const filteredResults = useMemo(() => {
     if (filter === 'flagged') {
-      return results.filter((result) => (result.answers ?? []).some((answer: any) => answer.flagged));
+      return results.filter((result) => Number(result.flagged_count ?? 0) > 0);
     }
     if (filter === 'mock' || filter === 'practice') {
       return results.filter((result) => result.test_type === filter);
@@ -21,7 +21,7 @@ export function AdminResultsClient({ results }: { results: any[] }) {
 
   const filterCards = [
     { key: 'all' as const, label: 'Recent Attempts', value: results.length, tone: 'text-blue-600' },
-    { key: 'flagged' as const, label: 'Flagged Attempts', value: results.filter((result) => (result.answers ?? []).some((answer: any) => answer.flagged)).length, tone: 'text-amber-600' },
+    { key: 'flagged' as const, label: 'Flagged Attempts', value: results.filter((result) => Number(result.flagged_count ?? 0) > 0).length, tone: 'text-amber-600' },
     { key: 'mock' as const, label: 'Mock Attempts', value: results.filter((result) => result.test_type === 'mock').length, tone: 'text-emerald-600' },
     { key: 'practice' as const, label: 'Practice Attempts', value: results.filter((result) => result.test_type === 'practice').length, tone: 'text-purple-600' },
   ];
@@ -61,12 +61,14 @@ export function AdminResultsClient({ results }: { results: any[] }) {
         </div>
 
         {filteredResults.length === 0 ? (
-          <div className="px-4 md:px-6 py-8 text-sm text-[var(--muted)]">No attempts match the current filter.</div>
+          <div className="px-4 md:px-6 py-8 text-sm text-[var(--muted)]">
+            {isLoading ? 'Loading attempt queue…' : 'No attempts match the current filter.'}
+          </div>
         ) : (
           <>
             <div className="md:hidden divide-y divide-[var(--line)]">
               {filteredResults.map((result: any) => {
-                const flaggedCount = (result.answers ?? []).filter((answer: any) => answer.flagged).length;
+                const flaggedCount = Number(result.flagged_count ?? 0);
                 return (
                   <Link key={result._id} href={`/admin/results/${result._id}`} className="block px-4 py-3 space-y-2 hover:bg-[var(--brand-soft)]/30 transition-colors">
                     <div className="flex items-start justify-between gap-3">
@@ -100,7 +102,7 @@ export function AdminResultsClient({ results }: { results: any[] }) {
                 </thead>
                 <tbody className="divide-y divide-[var(--line)]">
                   {filteredResults.map((result: any) => {
-                    const flaggedCount = (result.answers ?? []).filter((answer: any) => answer.flagged).length;
+                    const flaggedCount = Number(result.flagged_count ?? 0);
                     return (
                       <tr key={result._id} className="hover:bg-[var(--brand-soft)]/25">
                         <td className="px-6 py-3 font-medium text-[var(--text)]">{result.test_id?.title ?? 'Practice Session'}</td>

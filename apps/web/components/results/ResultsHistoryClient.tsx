@@ -6,17 +6,17 @@ import { formatDuration, formatResultDate } from '@/lib/results';
 
 type ResultFilter = 'all' | 'flagged' | 'mock' | 'practice';
 
-export function ResultsHistoryClient({ results }: { results: any[] }) {
+export function ResultsHistoryClient({ results, isLoading = false }: { results: any[]; isLoading?: boolean }) {
   const [filter, setFilter] = useState<ResultFilter>('all');
 
   const avgAccuracy = results.length > 0
     ? Math.round(results.reduce((sum, result) => sum + Number(result.accuracy_percent ?? 0), 0) / results.length)
     : 0;
-  const flaggedAttempts = results.filter((result) => (result.answers ?? []).some((answer: any) => answer.flagged)).length;
+  const flaggedAttempts = results.filter((result) => Number(result.flagged_count ?? 0) > 0).length;
 
   const filteredResults = useMemo(() => {
     if (filter === 'flagged') {
-      return results.filter((result) => (result.answers ?? []).some((answer: any) => answer.flagged));
+      return results.filter((result) => Number(result.flagged_count ?? 0) > 0);
     }
     if (filter === 'mock' || filter === 'practice') {
       return results.filter((result) => result.test_type === filter);
@@ -70,14 +70,16 @@ export function ResultsHistoryClient({ results }: { results: any[] }) {
           <p className="text-xs text-[var(--muted)] mt-0.5">Click any attempt to open its full review page.</p>
         </div>
 
-        {filteredResults.length === 0 ? (
+        {isLoading && filteredResults.length === 0 ? (
+          <div className="px-4 md:px-6 py-8 text-sm text-[var(--muted)]">Loading your recent attempts…</div>
+        ) : filteredResults.length === 0 ? (
           <div className="px-4 md:px-6 py-8 text-sm text-[var(--muted)]">
             No attempts match the current filter.
           </div>
         ) : (
           <div className="divide-y divide-[var(--line)]">
             {filteredResults.map((result: any) => {
-              const flaggedCount = (result.answers ?? []).filter((answer: any) => answer.flagged).length;
+              const flaggedCount = Number(result.flagged_count ?? 0);
               const pct = result.max_score > 0 ? Math.round((result.score / result.max_score) * 100) : 0;
               return (
                 <Link

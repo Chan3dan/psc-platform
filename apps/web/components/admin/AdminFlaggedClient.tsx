@@ -6,7 +6,7 @@ import { formatResultDateTime } from '@/lib/results';
 
 type FlaggedFilter = 'all' | 'attempts' | 'questions' | 'recent';
 
-export function AdminFlaggedClient({ flaggedItems }: { flaggedItems: any[] }) {
+export function AdminFlaggedClient({ flaggedItems, isLoading = false }: { flaggedItems: any[]; isLoading?: boolean }) {
   const [filter, setFilter] = useState<FlaggedFilter>('all');
 
   const filteredItems = useMemo(() => {
@@ -74,7 +74,9 @@ export function AdminFlaggedClient({ flaggedItems }: { flaggedItems: any[] }) {
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="px-4 md:px-6 py-6 text-sm text-[var(--muted)]">No flagged questions match the current filter.</div>
+          <div className="px-4 md:px-6 py-6 text-sm text-[var(--muted)]">
+            {isLoading ? 'Loading flagged review queue…' : 'No flagged questions match the current filter.'}
+          </div>
         ) : (
           <div className="divide-y divide-[var(--line)]">
             {filteredItems.map((item) => (

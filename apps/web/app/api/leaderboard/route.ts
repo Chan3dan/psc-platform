@@ -7,6 +7,8 @@ import { ok, err, unauthorized, serverError } from '@/lib/apiResponse';
 import { cacheGet, cacheSet, CacheKeys } from '@/lib/redis';
 import mongoose from 'mongoose';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
