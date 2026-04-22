@@ -1,22 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { connectDB } from '@/lib/db';
-import { Exam, Subject, MockTest } from '@psc/shared/models';
 import { AppIcon } from '@/components/icons/AppIcon';
-
-async function getData(slug: string) {
-  await connectDB();
-  const exam = await Exam.findOne({ slug, is_active: true }).lean() as any;
-  if (!exam) return null;
-  const [subjects, mockTests] = await Promise.all([
-    Subject.find({ exam_id: exam._id, is_active: true }).select('name slug weightage_percent question_count description').lean(),
-    MockTest.find({ exam_id: exam._id, is_active: true }).select('_id title slug duration_minutes total_questions attempt_count').lean(),
-  ]);
-  return { exam, subjects, mockTests };
-}
+import { getExamCatalogBySlug } from '@/lib/catalog-data';
 
 export default async function ExamDetailPage({ params }: { params: { slug: string } }) {
-  const data = await getData(params.slug);
+  const data = await getExamCatalogBySlug(params.slug);
   if (!data) notFound();
   const { exam, subjects, mockTests } = data as any;
   const marksPerQuestion = exam.total_questions ? exam.total_marks / exam.total_questions : 1;

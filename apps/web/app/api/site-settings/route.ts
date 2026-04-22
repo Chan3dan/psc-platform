@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
 import { forbidden, ok, serverError, unauthorized } from '@/lib/apiResponse';
@@ -30,6 +30,7 @@ async function handleSave(req: Request) {
     revalidatePath('/register');
     revalidatePath('/dashboard', 'layout');
     revalidatePath('/admin', 'layout');
+    revalidateTag('site-settings');
 
     return ok(settings);
   } catch (error) {

@@ -1,4 +1,5 @@
 import { connectDB } from '@/lib/db';
+import { unstable_cache } from 'next/cache';
 import { SiteSetting } from '@psc/shared/models';
 import { DEFAULT_LOGO_URL } from '@/lib/site-settings-config';
 
@@ -41,8 +42,14 @@ function isLikelyImagePayload(contentType: string, buffer: Buffer) {
 }
 
 export async function GET(req: Request) {
-  await connectDB();
-  const record: any = await SiteSetting.findOne({ key: 'site' }).select('logo_data_url logo_url').lean();
+  const record: any = await unstable_cache(
+    async () => {
+      await connectDB();
+      return SiteSetting.findOne({ key: 'site' }).select('logo_data_url logo_url').lean();
+    },
+    ['site-settings:logo-record'],
+    { revalidate: 300, tags: ['site-settings'] }
+  )();
   const rawLogoDataUrl =
     record?.logo_data_url ||
     (typeof record?.logo_url === 'string' && record.logo_url.startsWith('data:image/')

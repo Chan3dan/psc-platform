@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { connectDB } from '@/lib/db';
 import { SiteSetting } from '@psc/shared/models';
 import {
@@ -44,8 +45,14 @@ function mapSettings(record: any): SiteSettings {
 }
 
 export const getSiteSettings = cache(async () => {
-  await connectDB();
-  const record = await SiteSetting.findOne({ key: 'site' }).lean();
+  const record = await unstable_cache(
+    async () => {
+      await connectDB();
+      return SiteSetting.findOne({ key: 'site' }).lean();
+    },
+    ['site-settings:record'],
+    { revalidate: 300, tags: ['site-settings'] }
+  )();
   return mapSettings(record);
 });
 

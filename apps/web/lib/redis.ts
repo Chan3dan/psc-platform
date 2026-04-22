@@ -1,35 +1,47 @@
-// Redis client — works with local Redis (redis://) or Upstash (rediss://)
-// Falls back gracefully if Redis is unavailable (cache miss, not crash)
+// Redis client — supports node-redis and Upstash REST.
+// Falls back gracefully if Redis is unavailable (cache miss, not crash).
 
 let redisClient: any = null;
+let redisMode: 'upstash' | 'node' | null = null;
 
 async function getClient() {
   if (redisClient) return redisClient;
 
-  const url = process.env.REDIS_URL;
-  if (!url) return null;
+  const url = process.env.REDIS_URL?.trim();
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  const hasUpstash = Boolean(upstashUrl && upstashToken);
+
+  if (!url && !hasUpstash) return null;
 
   try {
-    if (url.includes('upstash')) {
-      // Upstash HTTP client (edge-compatible)
+    const shouldUseUpstash =
+      hasUpstash &&
+      (!url || url.includes('upstash') || url.startsWith('http://') || url.startsWith('https://'));
+
+    if (shouldUseUpstash) {
       const { Redis } = await import('@upstash/redis');
       redisClient = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL || url,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+        url: upstashUrl!,
+        token: upstashToken!,
       });
+      redisMode = 'upstash';
     } else {
-      // Standard Redis (local / Render / Railway)
       const { createClient } = await import('redis');
-      redisClient = createClient({ url });
+      redisClient = createClient({ url: url! });
       redisClient.on('error', (err: Error) => {
         console.warn('Redis error (non-fatal):', err.message);
         redisClient = null;
+        redisMode = null;
       });
       await redisClient.connect();
+      redisMode = 'node';
     }
     return redisClient;
-  } catch (err) {
+  } catch {
     console.warn('Redis unavailable — continuing without cache');
+    redisClient = null;
+    redisMode = null;
     return null;
   }
 }
@@ -54,10 +66,17 @@ export async function cacheSet(
   try {
     const client = await getClient();
     if (!client) return;
+    if (ttlSeconds <= 0 || value === null || typeof value === 'undefined') {
+      await client.del(key);
+      return;
+    }
     const serialized = JSON.stringify(value);
-    // Works for both node-redis and @upstash/redis
     if (typeof client.set === 'function') {
-      await client.set(key, serialized, { EX: ttlSeconds });
+      if (redisMode === 'upstash') {
+        await client.set(key, serialized, { ex: ttlSeconds });
+      } else {
+        await client.set(key, serialized, { EX: ttlSeconds });
+      }
     }
   } catch {
     // Cache write failure is non-fatal

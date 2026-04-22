@@ -1,16 +1,8 @@
 import Link from 'next/link';
-import { connectDB } from '@/lib/db';
-import { Exam } from '@psc/shared/models';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { getSiteSettings } from '@/lib/site-settings';
-
-async function getExams() {
-  await connectDB();
-  return Exam.find({ is_active: true })
-    .select('name slug description duration_minutes total_questions')
-    .lean();
-}
+import { getActiveExams } from '@/lib/catalog-data';
 
 const FEATURES = [
   {
@@ -47,7 +39,7 @@ const FEATURES = [
 
 export default async function LandingPage() {
   const settings = await getSiteSettings();
-  const exams = await getExams();
+  const exams = (await getActiveExams()) as any[];
 
   return (
     <div className="min-h-screen">

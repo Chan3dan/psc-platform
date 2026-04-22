@@ -15,19 +15,19 @@ async function getData(userId: string) {
   start.setHours(0, 0, 0, 0);
   const end = new Date();
   end.setHours(23, 59, 59, 999);
-  const [results, user, plan] = await Promise.all([
+  const [results, user, plan, drillsToday] = await Promise.all([
     Result.find({ user_id: userId }).sort({ created_at: -1 }).limit(20)
       .populate('test_id', 'title').lean(),
     User.findById(userId).select('name stats').lean(),
     StudyPlan.findOne({ user_id: userId, is_active: true })
       .populate('exam_id', 'name').lean(),
+    Result.countDocuments({
+      user_id: userId,
+      test_type: 'practice',
+      created_at: { $gte: start, $lte: end },
+      total_time_seconds: { $lte: 300 },
+    }),
   ]);
-  const drillsToday = await Result.countDocuments({
-    user_id: userId,
-    test_type: 'practice',
-    created_at: { $gte: start, $lte: end },
-    total_time_seconds: { $lte: 300 },
-  });
   return { results, user, plan, drillsToday };
 }
 

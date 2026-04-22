@@ -1,13 +1,9 @@
-import { connectDB } from '@/lib/db';
-import { Exam } from '@psc/shared/models';
 import Link from 'next/link';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { getActiveExams } from '@/lib/catalog-data';
 
 export default async function ExamsPage() {
-  await connectDB();
-  const exams = await Exam.find({ is_active: true })
-    .select('name slug description duration_minutes total_marks total_questions negative_marking thumbnail_url')
-    .lean() as any[];
+  const exams = (await getActiveExams()) as any[];
 
   return (
     <div className="page-wrap">

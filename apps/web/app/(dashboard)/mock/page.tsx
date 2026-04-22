@@ -1,14 +1,8 @@
-import { connectDB } from '@/lib/db';
-import { MockTest } from '@psc/shared/models';
 import { MockTestCatalog } from '@/components/exam/MockTestCatalog';
+import { getActiveMockTests } from '@/lib/catalog-data';
 
 export default async function MockIndexPage() {
-  await connectDB();
-  const tests = await MockTest.find({ is_active: true })
-    .select('_id title slug duration_minutes total_questions attempt_count exam_id')
-    .populate('exam_id', 'name slug')
-    .sort({ created_at: -1 })
-    .lean() as any[];
+  const tests = (await getActiveMockTests()) as any[];
 
   return (
     <div className="page-wrap space-y-6">
