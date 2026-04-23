@@ -98,7 +98,11 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
                   Open the syllabus inside the same reader used for study notes, with page controls and fullscreen support.
                 </p>
               </div>
-              <SyllabusPdfViewer title={exam.name} url={exam.syllabus_pdf_url} />
+              <SyllabusPdfViewer
+                title={exam.name}
+                url={exam.syllabus_pdf_url}
+                proxyUrl={`/api/exams/${exam.slug}/syllabus`}
+              />
             </div>
           </div>
         )}

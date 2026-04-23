@@ -11,9 +11,17 @@ type PdfReaderProps = {
   url: string;
   title: string;
   onBack: () => void;
+  backLabel?: string;
+  errorHint?: string;
 };
 
-export function PdfReader({ url, title, onBack }: PdfReaderProps) {
+export function PdfReader({
+  url,
+  title,
+  onBack,
+  backLabel = 'Back',
+  errorHint = 'The file may be missing, private, or uploaded with an invalid PDF format.',
+}: PdfReaderProps) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -180,7 +188,7 @@ export function PdfReader({ url, title, onBack }: PdfReaderProps) {
     <div ref={shellRef} className="flex min-h-0 flex-1 flex-col bg-slate-950 text-white">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-slate-900 px-3 py-2">
         <button type="button" onClick={onBack} className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-950">
-          Back to notes
+          {backLabel}
         </button>
         <div className="min-w-0 flex-1 text-center">
           <p className="truncate text-sm font-semibold">{title}</p>
@@ -207,9 +215,7 @@ export function PdfReader({ url, title, onBack }: PdfReaderProps) {
               <AppIcon name="alert" className="h-6 w-6" />
             </div>
             <h4 className="font-semibold">PDF could not be opened</h4>
-            <p className="mt-2 text-sm text-slate-300">
-              The file may be missing, private, or uploaded with an invalid PDF format. Re-upload it from admin notes.
-            </p>
+            <p className="mt-2 text-sm text-slate-300">{errorHint}</p>
             {message && <p className="mt-3 rounded-xl bg-slate-950 p-3 text-xs text-slate-400">{message}</p>}
           </div>
         </div>

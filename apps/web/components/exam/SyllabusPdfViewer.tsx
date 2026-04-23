@@ -6,9 +6,10 @@ import { PdfReader } from '@/components/notes/PdfReader';
 type SyllabusPdfViewerProps = {
   title: string;
   url: string;
+  proxyUrl?: string;
 };
 
-export function SyllabusPdfViewer({ title, url }: SyllabusPdfViewerProps) {
+export function SyllabusPdfViewer({ title, url, proxyUrl }: SyllabusPdfViewerProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -38,7 +39,13 @@ export function SyllabusPdfViewer({ title, url }: SyllabusPdfViewerProps) {
                 Close
               </button>
             </header>
-            <PdfReader url={url} title={`${title} syllabus`} onBack={() => setOpen(false)} />
+            <PdfReader
+              url={proxyUrl ?? url}
+              title={`${title} syllabus`}
+              onBack={() => setOpen(false)}
+              backLabel="Back to exam"
+              errorHint="The syllabus PDF may be missing, private, or uploaded with an invalid format. Re-upload it from admin exams."
+            />
           </section>
         </div>
       )}
