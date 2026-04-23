@@ -17,11 +17,13 @@ function PdfNoteViewer({ note }: { note: any }) {
 
     async function loadPdf() {
       try {
-        const response = await fetch(note.content_url, { cache: 'no-store' });
+        const response = await fetch(note.content_url, {
+          cache: 'no-store',
+          headers: { Accept: 'application/pdf,*/*;q=0.8' },
+        });
         const contentType = response.headers.get('content-type') ?? '';
         if (!response.ok || contentType.includes('application/json') || contentType.includes('text/html')) {
-          const text = await response.text().catch(() => '');
-          throw new Error(text || 'PDF could not be loaded.');
+          throw new Error('The PDF source returned an error instead of a readable PDF.');
         }
         const blob = await response.blob();
         if (!blob.type.includes('pdf') && blob.size < 100) {
@@ -69,11 +71,7 @@ function PdfNoteViewer({ note }: { note: any }) {
           <p className="mt-2 text-sm text-slate-300">
             This usually means the PDF file on Cloudinary is missing, private, or saved with an older broken URL.
           </p>
-          {message && (
-            <p className="mt-3 rounded-xl bg-slate-950 p-3 text-left text-xs text-slate-400 line-clamp-4">
-              {message}
-            </p>
-          )}
+          {message && <p className="mt-3 rounded-xl bg-slate-950 p-3 text-xs text-slate-400">{message}</p>}
           <a href={note.content_url} className="btn-primary mt-4 inline-flex" download>
             Try download
           </a>

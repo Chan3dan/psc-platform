@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Note } from '@psc/shared/models';
 import { err, notFound, serverError, unauthorized } from '@/lib/apiResponse';
-import { extractRawPublicIdFromUrl, getSignedPdfDownloadUrl } from '@/lib/cloudinary';
+import { extractRawPublicIdFromUrl, getSignedPdfUrlCandidates } from '@/lib/cloudinary';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,18 +39,20 @@ function htmlError(message: string, status = 502) {
   );
 }
 
-function getPublicIdCandidates(publicId: string) {
-  const decoded = decodeURIComponent(publicId);
-  const noPdf = decoded.toLowerCase().endsWith('.pdf') ? decoded.slice(0, -4) : decoded;
-  return Array.from(new Set([decoded, noPdf, `${noPdf}.pdf`].filter(Boolean)));
-}
-
 async function fetchFirstPdf(urls: string[]) {
   for (const url of urls) {
     try {
-      const response = await fetch(url, { cache: 'no-store' });
+      const response = await fetch(url, {
+        cache: 'no-store',
+        headers: { Accept: 'application/pdf,*/*;q=0.8' },
+      });
       const contentType = response.headers.get('content-type') ?? '';
-      if (response.ok && response.body && !contentType.includes('application/json')) {
+      if (
+        response.ok &&
+        response.body &&
+        !contentType.includes('application/json') &&
+        !contentType.includes('text/html')
+      ) {
         return response;
       }
     } catch {
@@ -83,7 +85,7 @@ export async function GET(
       return err('Could not resolve the PDF asset path.', 400);
     }
 
-    const candidateUrls = getPublicIdCandidates(publicId).map(getSignedPdfDownloadUrl);
+    const candidateUrls = getSignedPdfUrlCandidates(publicId);
     if (note.content_url) candidateUrls.push(note.content_url);
     const upstream = await fetchFirstPdf(candidateUrls);
     if (!upstream?.body) {

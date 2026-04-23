@@ -12,14 +12,26 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const exam_id = searchParams.get('exam_id');
     const subject_id = searchParams.get('subject_id');
-    if (!exam_id) return err('exam_id is required');
+    const admin = searchParams.get('admin') === '1';
+
+    let isAdmin = false;
+    if (admin) {
+      const session = await getServerSession(authOptions);
+      if (!session) return unauthorized();
+      if (session.user.role !== 'admin') return forbidden();
+      isAdmin = true;
+    }
+
+    if (!exam_id && !isAdmin) return err('exam_id is required');
 
     await connectDB();
-    const filter: Record<string, unknown> = { exam_id, is_active: true };
+    const filter: Record<string, unknown> = isAdmin ? {} : { is_active: true };
+    if (exam_id) filter.exam_id = exam_id;
     if (subject_id) filter.subject_id = subject_id;
 
     const notes = await Note.find(filter)
-      .select('title content_type content_url content_html subject_id created_at')
+      .select('title content_type content_url content_html subject_id exam_id is_active created_at updatedAt')
+      .populate('exam_id', 'name slug')
       .populate('subject_id', 'name')
       .sort({ created_at: -1 })
       .lean();
@@ -51,8 +63,11 @@ export async function POST(req: NextRequest) {
     const subject_id = formData.get('subject_id') as string | null;
     const title = formData.get('title') as string;
     const content_html = formData.get('content_html') as string | null;
+    const content_type = (formData.get('content_type') as string | null) ?? (file ? 'pdf' : 'richtext');
 
     if (!exam_id || !title) return err('exam_id and title are required');
+    if (content_type === 'pdf' && !file) return err('PDF file is required for PDF notes');
+    if (content_type === 'richtext' && !content_html?.trim()) return err('Rich text content is required');
 
     let content_url = '';
     if (file) {
@@ -65,7 +80,7 @@ export async function POST(req: NextRequest) {
       exam_id,
       subject_id: subject_id || undefined,
       title: title.trim(),
-      content_type: file ? 'pdf' : 'richtext',
+      content_type: content_type === 'pdf' ? 'pdf' : 'richtext',
       content_url,
       content_html: content_html || '',
       uploaded_by: session.user.id,

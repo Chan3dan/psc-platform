@@ -49,6 +49,41 @@ export function getSignedPdfDownloadUrl(publicId: string) {
   });
 }
 
+export function getSignedPdfUrlCandidates(publicId: string) {
+  const decoded = decodeURIComponent(publicId);
+  const noPdf = decoded.toLowerCase().endsWith('.pdf') ? decoded.slice(0, -4) : decoded;
+
+  return Array.from(new Set([
+    cloudinary.utils.url(decoded, {
+      resource_type: 'raw',
+      type: 'upload',
+      secure: true,
+      sign_url: true,
+    }),
+    cloudinary.utils.url(noPdf, {
+      resource_type: 'raw',
+      type: 'upload',
+      secure: true,
+      sign_url: true,
+      format: 'pdf',
+    }),
+    cloudinary.utils.url(`${noPdf}.pdf`, {
+      resource_type: 'raw',
+      type: 'upload',
+      secure: true,
+      sign_url: true,
+    }),
+    cloudinary.utils.private_download_url(noPdf, 'pdf', {
+      resource_type: 'raw',
+      type: 'upload',
+    }),
+    cloudinary.utils.private_download_url(`${noPdf}.pdf`, 'pdf', {
+      resource_type: 'raw',
+      type: 'upload',
+    }),
+  ]));
+}
+
 export async function uploadImage(
   buffer: Buffer,
   folder = 'psc-images'
