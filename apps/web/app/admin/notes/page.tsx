@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
 
@@ -39,9 +40,14 @@ export default function AdminNotesPage() {
   const queryClient = useQueryClient();
   const [filterExamId, setFilterExamId] = useState('');
   const [form, setForm] = useState(emptyForm);
+  const [editing, setEditing] = useState<typeof emptyForm | null>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [editSubjects, setEditSubjects] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [editMsg, setEditMsg] = useState('');
 
   const { data: exams = [] } = useQuery({
     queryKey: ['admin-exams'],
@@ -74,6 +80,10 @@ export default function AdminNotesPage() {
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     async function loadSubjects() {
       if (!form.examId) {
         setSubjects([]);
@@ -86,13 +96,26 @@ export default function AdminNotesPage() {
     loadSubjects();
   }, [form.examId]);
 
+  useEffect(() => {
+    async function loadEditSubjects() {
+      if (!editing?.examId) {
+        setEditSubjects([]);
+        return;
+      }
+      const r = await fetch(`/api/subjects?exam_id=${editing.examId}`);
+      const d = await r.json();
+      setEditSubjects(d.success ? d.data : []);
+    }
+    loadEditSubjects();
+  }, [editing?.examId]);
+
   function resetForm(examId = filterExamId) {
     setForm({ ...emptyForm, examId });
     setMsg('');
   }
 
   function editNote(note: any) {
-    setForm({
+    setEditing({
       id: String(note._id),
       examId: noteExamId(note),
       subjectId: noteSubjectId(note),
@@ -102,41 +125,41 @@ export default function AdminNotesPage() {
       file: null,
       isActive: Boolean(note.is_active),
     });
-    setMsg('Editing note. Upload a new PDF only if you want to replace the current file.');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setEditMsg('Upload a new PDF only if you want to replace the current file.');
+  }
+
+  async function saveDraft(draft: typeof emptyForm, mode: 'create' | 'edit') {
+    if (!draft.examId || !draft.title.trim()) {
+      return { success: false, error: 'Exam and title are required.' };
+    }
+    if (mode === 'create' && draft.type === 'pdf' && !draft.file) {
+      return { success: false, error: 'Choose a PDF file for new PDF notes.' };
+    }
+    if (draft.type === 'richtext' && !draft.html.trim()) {
+      return { success: false, error: 'Rich text content is required.' };
+    }
+
+    const fd = new FormData();
+    fd.append('exam_id', draft.examId);
+    fd.append('subject_id', draft.subjectId);
+    fd.append('title', draft.title.trim());
+    fd.append('content_type', draft.type);
+    fd.append('content_html', draft.type === 'richtext' ? draft.html : '');
+    fd.append('is_active', String(draft.isActive));
+    if (draft.file) fd.append('file', draft.file);
+
+    const res = await fetch(mode === 'edit' ? `/api/notes/${draft.id}` : '/api/notes', {
+      method: mode === 'edit' ? 'PATCH' : 'POST',
+      body: fd,
+    });
+    return readJson(res);
   }
 
   async function saveNote() {
-    if (!form.examId || !form.title.trim()) {
-      setMsg('Error: Exam and title are required.');
-      return;
-    }
-    if (!form.id && form.type === 'pdf' && !form.file) {
-      setMsg('Error: Choose a PDF file for new PDF notes.');
-      return;
-    }
-    if (form.type === 'richtext' && !form.html.trim()) {
-      setMsg('Error: Rich text content is required.');
-      return;
-    }
-
     setSaving(true);
     setMsg('');
     try {
-      const fd = new FormData();
-      fd.append('exam_id', form.examId);
-      fd.append('subject_id', form.subjectId);
-      fd.append('title', form.title.trim());
-      fd.append('content_type', form.type);
-      fd.append('content_html', form.type === 'richtext' ? form.html : '');
-      fd.append('is_active', String(form.isActive));
-      if (form.file) fd.append('file', form.file);
-
-      const res = await fetch(form.id ? `/api/notes/${form.id}` : '/api/notes', {
-        method: form.id ? 'PATCH' : 'POST',
-        body: fd,
-      });
-      const d = await readJson(res);
+      const d = await saveDraft(form, 'create');
       if (!d.success) {
         setMsg(`Error: ${d.error ?? 'Failed to save note.'}`);
         return;
@@ -144,9 +167,28 @@ export default function AdminNotesPage() {
       await queryClient.invalidateQueries({ queryKey: ['admin-notes'] });
       await queryClient.invalidateQueries({ queryKey: ['notes'] });
       resetForm(form.examId);
-      setMsg(form.id ? 'Note updated successfully.' : 'Note created successfully.');
+      setMsg('Note created successfully.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    setEditSaving(true);
+    setEditMsg('');
+    try {
+      const d = await saveDraft(editing, 'edit');
+      if (!d.success) {
+        setEditMsg(`Error: ${d.error ?? 'Failed to update note.'}`);
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ['admin-notes'] });
+      await queryClient.invalidateQueries({ queryKey: ['notes'] });
+      setEditing(null);
+      setMsg('Note updated successfully.');
+    } finally {
+      setEditSaving(false);
     }
   }
 
@@ -173,7 +215,7 @@ export default function AdminNotesPage() {
     }
     await queryClient.invalidateQueries({ queryKey: ['admin-notes'] });
     await queryClient.invalidateQueries({ queryKey: ['notes'] });
-    if (form.id === note._id) resetForm();
+    if (editing?.id === note._id) setEditing(null);
   }
 
   return (
@@ -198,8 +240,8 @@ export default function AdminNotesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)] gap-5">
         <div className="card glass p-5 space-y-5 h-fit">
           <div>
-            <h2 className="font-semibold text-[var(--text)]">{form.id ? 'Edit note' : 'Create note'}</h2>
-            <p className="text-xs text-[var(--muted)] mt-1">Replacing a PDF creates a fresh Cloudinary file and repairs broken links.</p>
+            <h2 className="font-semibold text-[var(--text)]">Create note</h2>
+            <p className="text-xs text-[var(--muted)] mt-1">Use the note list to edit or replace existing PDFs in a modal.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -242,14 +284,13 @@ export default function AdminNotesPage() {
 
           {form.type === 'pdf' ? (
             <div>
-              <label className="label">{form.id ? 'Replace PDF file' : 'PDF file'}</label>
+              <label className="label">PDF file</label>
               <input
                 type="file"
                 accept="application/pdf,.pdf"
                 onChange={(e) => setForm((p) => ({ ...p, file: e.target.files?.[0] ?? null }))}
                 className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
               />
-              {form.id && <p className="mt-2 text-xs text-[var(--muted)]">Leave empty to keep the current PDF.</p>}
             </div>
           ) : (
             <div>
@@ -271,9 +312,8 @@ export default function AdminNotesPage() {
 
           <div className="flex flex-col sm:flex-row gap-2">
             <button onClick={saveNote} disabled={saving} className="btn-primary flex-1 disabled:opacity-50">
-              {saving ? 'Saving...' : form.id ? 'Save changes' : 'Create note'}
+              {saving ? 'Saving...' : 'Create note'}
             </button>
-            {form.id && <button onClick={() => resetForm()} className="btn-secondary">Cancel</button>}
           </div>
         </div>
 
@@ -328,6 +368,121 @@ export default function AdminNotesPage() {
           )}
         </div>
       </div>
+
+      {mounted && editing && createPortal(
+        <div
+          className="fixed inset-0 z-[120] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
+        >
+          <div className="bg-[var(--card)] w-full h-full md:h-auto md:max-h-[92vh] md:max-w-3xl md:rounded-2xl border border-[var(--line)] shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text)]">Edit Note</h3>
+                <p className="mt-1 text-xs text-[var(--muted)]">Repair metadata, visibility, rich text, or replace a broken PDF.</p>
+              </div>
+              <button onClick={() => setEditing(null)} className="btn-secondary text-xs px-3 py-1.5">Close</button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Exam</label>
+                  <select
+                    value={editing.examId}
+                    onChange={(e) => setEditing((p) => p ? { ...p, examId: e.target.value, subjectId: '' } : p)}
+                    className="input"
+                  >
+                    <option value="">Select exam</option>
+                    {exams.map((e: any) => <option key={e._id} value={e._id}>{e.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Subject</label>
+                  <select
+                    value={editing.subjectId}
+                    onChange={(e) => setEditing((p) => p ? { ...p, subjectId: e.target.value } : p)}
+                    className="input"
+                    disabled={!editSubjects.length}
+                  >
+                    <option value="">All subjects</option>
+                    {editSubjects.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Title</label>
+                <input
+                  className="input"
+                  value={editing.title}
+                  onChange={(e) => setEditing((p) => p ? { ...p, title: e.target.value } : p)}
+                />
+              </div>
+
+              <div>
+                <label className="label">Content type</label>
+                <div className="flex flex-wrap gap-2">
+                  {(['pdf', 'richtext'] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setEditing((p) => p ? { ...p, type } : p)}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${editing.type === type ? 'bg-blue-600 text-white' : 'btn-secondary'}`}
+                    >
+                      {type === 'pdf' ? 'PDF' : 'Rich text'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {editing.type === 'pdf' ? (
+                <div>
+                  <label className="label">Replace PDF file</label>
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={(e) => setEditing((p) => p ? { ...p, file: e.target.files?.[0] ?? null } : p)}
+                    className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="mt-2 text-xs text-[var(--muted)]">Leave empty to keep the current PDF. Upload a new file to repair broken notes.</p>
+                </div>
+              ) : (
+                <div>
+                  <label className="label">HTML content</label>
+                  <textarea
+                    className="input min-h-56 font-mono text-xs"
+                    value={editing.html}
+                    onChange={(e) => setEditing((p) => p ? { ...p, html: e.target.value } : p)}
+                  />
+                </div>
+              )}
+
+              <label className="flex items-center gap-2 text-sm text-[var(--text)]">
+                <input
+                  type="checkbox"
+                  checked={editing.isActive}
+                  onChange={(e) => setEditing((p) => p ? { ...p, isActive: e.target.checked } : p)}
+                />
+                Active and visible to users
+              </label>
+
+              {editMsg && (
+                <p className={`rounded-xl px-3 py-2 text-sm ${editMsg.startsWith('Error:') ? 'bg-red-50 text-red-600 dark:bg-red-950' : 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'}`}>
+                  {editMsg}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 border-t border-[var(--line)] p-4 sm:flex-row sm:justify-end">
+              <button onClick={() => setEditing(null)} className="btn-secondary">Cancel</button>
+              <button onClick={saveEdit} disabled={editSaving} className="btn-primary disabled:opacity-50">
+                {editSaving ? 'Saving...' : 'Save changes'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
