@@ -34,14 +34,14 @@ export function extractRawPublicIdFromUrl(url: string) {
     remainder = remainder.replace(/^v\d+\//, '');
     if (!remainder) return null;
 
-    return remainder;
+    return decodeURIComponent(remainder);
   } catch {
     return null;
   }
 }
 
 export function getSignedPdfDownloadUrl(publicId: string) {
-  return cloudinary.utils.url(publicId, {
+  return cloudinary.utils.url(decodeURIComponent(publicId), {
     resource_type: 'raw',
     type: 'upload',
     secure: true,

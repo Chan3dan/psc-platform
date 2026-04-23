@@ -51,11 +51,9 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
               Use this as your preparation map before choosing subjects, mocks, or notes.
             </p>
           </div>
-          {exam.syllabus_pdf_url && (
-            <a href="#syllabus-pdf" className="btn-secondary text-sm inline-flex">
-              View syllabus PDF
-            </a>
-          )}
+          <Link href="/notes" className="btn-secondary text-sm inline-flex">
+            Open notes
+          </Link>
         </div>
 
         {syllabusLines.length > 0 ? (
@@ -69,7 +67,7 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
               </div>
             ))}
           </div>
-        ) : (
+        ) : (subjects as any[]).length > 0 ? (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {(subjects as any[]).map((sub) => (
               <Link key={sub._id} href={`/practice/${exam.slug}/${sub.slug}`} className="rounded-xl border border-[var(--line)] px-3 py-2.5 hover:bg-[var(--brand-soft)]/35">
@@ -81,15 +79,28 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
               </Link>
             ))}
           </div>
+        ) : (
+          <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/25 p-4">
+            <p className="text-sm font-medium text-[var(--text)]">Syllabus content is not configured yet.</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              Add syllabus outline or active subjects from the admin exam settings to show a useful syllabus here.
+            </p>
+          </div>
         )}
 
         {exam.syllabus_pdf_url && (
-          <div id="syllabus-pdf" className="mt-5 overflow-hidden rounded-2xl border border-[var(--line)] bg-white">
-            <iframe
-              title={`${exam.name} syllabus`}
-              src={exam.syllabus_pdf_url}
-              className="h-[70vh] w-full"
-            />
+          <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/25 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-[var(--text)]">Official syllabus PDF available</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  PDF previews can be unreliable on mobile browsers, so use this only when you need the original file.
+                </p>
+              </div>
+              <a href={exam.syllabus_pdf_url} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">
+                Open PDF
+              </a>
+            </div>
           </div>
         )}
       </section>

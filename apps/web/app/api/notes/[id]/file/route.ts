@@ -8,6 +8,58 @@ import { extractRawPublicIdFromUrl, getSignedPdfDownloadUrl } from '@/lib/cloudi
 
 export const dynamic = 'force-dynamic';
 
+function htmlError(message: string, status = 502) {
+  return new NextResponse(
+    `<!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <style>
+            body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b1220; color: #e5edff; font-family: system-ui, sans-serif; }
+            main { max-width: 520px; padding: 24px; text-align: center; }
+            h1 { font-size: 22px; margin: 0 0 10px; }
+            p { color: #aebad1; line-height: 1.5; }
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>PDF could not be opened</h1>
+            <p>${message}</p>
+            <p>Please close this viewer and try again, or ask the admin to re-upload this PDF.</p>
+          </main>
+        </body>
+      </html>`,
+    {
+      status,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      },
+    }
+  );
+}
+
+function getPublicIdCandidates(publicId: string) {
+  const decoded = decodeURIComponent(publicId);
+  const noPdf = decoded.toLowerCase().endsWith('.pdf') ? decoded.slice(0, -4) : decoded;
+  return Array.from(new Set([decoded, noPdf, `${noPdf}.pdf`].filter(Boolean)));
+}
+
+async function fetchFirstPdf(urls: string[]) {
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      const contentType = response.headers.get('content-type') ?? '';
+      if (response.ok && response.body && !contentType.includes('application/json')) {
+        return response;
+      }
+    } catch {
+      // Try the next candidate URL.
+    }
+  }
+  return null;
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -31,10 +83,11 @@ export async function GET(
       return err('Could not resolve the PDF asset path.', 400);
     }
 
-    const signedUrl = getSignedPdfDownloadUrl(publicId);
-    const upstream = await fetch(signedUrl, { cache: 'no-store' });
-    if (!upstream.ok || !upstream.body) {
-      return err('Could not load the PDF file. Please try again later.', upstream.status || 502);
+    const candidateUrls = getPublicIdCandidates(publicId).map(getSignedPdfDownloadUrl);
+    if (note.content_url) candidateUrls.push(note.content_url);
+    const upstream = await fetchFirstPdf(candidateUrls);
+    if (!upstream?.body) {
+      return htmlError('The stored PDF file could not be reached from the file provider.', 502);
     }
 
     return new NextResponse(upstream.body, {

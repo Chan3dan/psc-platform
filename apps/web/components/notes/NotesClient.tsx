@@ -1,7 +1,99 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
+
+function PdfNoteViewer({ note }: { note: any }) {
+  const [blobUrl, setBlobUrl] = useState('');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl = '';
+    setStatus('loading');
+    setMessage('');
+    setBlobUrl('');
+
+    async function loadPdf() {
+      try {
+        const response = await fetch(note.content_url, { cache: 'no-store' });
+        const contentType = response.headers.get('content-type') ?? '';
+        if (!response.ok || contentType.includes('application/json') || contentType.includes('text/html')) {
+          const text = await response.text().catch(() => '');
+          throw new Error(text || 'PDF could not be loaded.');
+        }
+        const blob = await response.blob();
+        if (!blob.type.includes('pdf') && blob.size < 100) {
+          throw new Error('The file provider returned an invalid PDF response.');
+        }
+        objectUrl = URL.createObjectURL(blob);
+        if (!cancelled) {
+          setBlobUrl(objectUrl);
+          setStatus('ready');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setStatus('error');
+          setMessage(error instanceof Error ? error.message : 'PDF could not be loaded.');
+        }
+      }
+    }
+
+    loadPdf();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [note]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-950 text-white">
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+          <p className="text-sm text-slate-300">Opening PDF inside Niyukta...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-950 px-5 text-white">
+        <div className="max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-950 text-red-300">
+            <AppIcon name="alert" className="h-6 w-6" />
+          </div>
+          <h4 className="font-semibold">PDF could not be opened</h4>
+          <p className="mt-2 text-sm text-slate-300">
+            This usually means the PDF file on Cloudinary is missing, private, or saved with an older broken URL.
+          </p>
+          {message && (
+            <p className="mt-3 rounded-xl bg-slate-950 p-3 text-left text-xs text-slate-400 line-clamp-4">
+              {message}
+            </p>
+          )}
+          <a href={note.content_url} className="btn-primary mt-4 inline-flex" download>
+            Try download
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <object data={blobUrl} type="application/pdf" className="min-h-0 flex-1 w-full bg-white">
+      <iframe title={note.title} src={blobUrl} className="min-h-0 flex-1 w-full bg-white" />
+      <div className="p-5 text-center">
+        <p className="text-sm text-[var(--muted)]">Your browser cannot preview this PDF.</p>
+        <a href={blobUrl} className="btn-primary mt-3 inline-flex" download={`${note.title}.pdf`}>
+          Download PDF
+        </a>
+      </div>
+    </object>
+  );
+}
 
 // ── NOTES CLIENT ─────────────────────────────────────────────
 export function NotesClient({ exams }: { exams: any[] }) {
@@ -189,11 +281,7 @@ export function NotesClient({ exams }: { exams: any[] }) {
             </header>
 
             {activeNote.content_type === 'pdf' ? (
-              <iframe
-                title={activeNote.title}
-                src={activeNote.content_url}
-                className="min-h-0 flex-1 w-full bg-white"
-              />
+              <PdfNoteViewer note={activeNote} />
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto p-5 text-sm leading-relaxed text-[var(--text)]">
                 <div dangerouslySetInnerHTML={{ __html: activeNote.content_html ?? '' }} />
