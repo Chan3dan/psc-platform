@@ -6,6 +6,7 @@ import { Exam, Question, Result, User } from '@psc/shared/models';
 import { ok, err, unauthorized, serverError } from '@/lib/apiResponse';
 import { calculateScore, calculatePercentile } from '@psc/shared/utils/scoring';
 import { Types } from 'mongoose';
+import { CacheKeys, cacheDel } from '@/lib/redis';
 
 function normalizeNegativePercent(value: number | undefined) {
   if (typeof value !== 'number' || Number.isNaN(value)) return 25;
@@ -142,6 +143,10 @@ export async function POST(req: NextRequest) {
       },
     }));
     Question.bulkWrite(bulkOps).catch(console.error);
+    Promise.all([
+      cacheDel(CacheKeys.dashboardSummary(session.user.id)),
+      cacheDel(CacheKeys.resultsHistory(session.user.id)),
+    ]).catch(console.error);
 
     // Build correct answers and explanations map for result display
     const correctAnswers: Record<string, number> = {};

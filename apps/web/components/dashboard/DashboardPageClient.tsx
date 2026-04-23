@@ -46,8 +46,10 @@ export function DashboardPageClient() {
   }
 
   const analytics = data.analytics;
+  const engagement = data.engagement ?? {};
   const firstName = data.user?.name?.split?.(' ')?.[0] ?? 'there';
   const streak = data.user?.stats?.current_streak ?? 0;
+  const readinessScore = Number(engagement.readinessScore ?? 0);
 
   const statCards = [
     { label: 'Tests Taken', value: analytics.total_tests, tone: 'text-blue-600' },
@@ -100,6 +102,66 @@ export function DashboardPageClient() {
         </div>
       </section>
 
+      <section className="grid grid-cols-1 xl:grid-cols-[0.85fr,1.15fr] gap-4">
+        <div className="card p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide font-semibold text-[var(--muted)]">Exam Readiness</p>
+              <h2 className="mt-1 text-3xl font-bold text-[var(--text)]">{readinessScore}%</h2>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Based on accuracy, mock attempts, consistency, and review backlog.
+              </p>
+            </div>
+            <span className={`badge ${readinessScore >= 70 ? 'badge-green' : readinessScore >= 45 ? 'badge-amber' : 'badge-red'}`}>
+              {readinessScore >= 70 ? 'Ready' : readinessScore >= 45 ? 'Building' : 'Needs focus'}
+            </span>
+          </div>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500"
+              style={{ width: `${readinessScore}%` }}
+            />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            <Link href="/review" className="rounded-xl border border-[var(--line)] px-3 py-2 hover:bg-[var(--brand-soft)]/45">
+              {engagement.reviewQueueCount ?? 0} review items
+            </Link>
+            <Link href="/mock" className="rounded-xl border border-[var(--line)] px-3 py-2 hover:bg-[var(--brand-soft)]/45">
+              {engagement.weeklyMockCount ?? 0} mocks this week
+            </Link>
+          </div>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--text)]">Today’s Learning Missions</h2>
+              <p className="text-xs text-[var(--muted)] mt-0.5">Small daily actions that compound into exam confidence.</p>
+            </div>
+            <Link href="/review" className="hidden sm:inline-flex text-xs text-[var(--brand)] hover:underline">Smart review</Link>
+          </div>
+          <div className="space-y-3">
+            {(engagement.dailyMissions ?? []).map((mission: any) => (
+              <Link key={mission.id} href={mission.href} className="block rounded-2xl border border-[var(--line)] p-3 hover:border-[var(--brand)]/50 hover:bg-[var(--brand-soft)]/25 transition-colors">
+                <div className="flex items-start gap-3">
+                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl ${mission.completed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>
+                    <AppIcon name={mission.completed ? 'check' : mission.type === 'mock' ? 'mock' : mission.type === 'review' ? 'bookmarks' : 'drill'} className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-[var(--text)]">{mission.title}</span>
+                    <span className="mt-0.5 block text-xs text-[var(--muted)]">{mission.description}</span>
+                    <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                      <span className={`block h-full rounded-full ${mission.completed ? 'bg-emerald-500' : 'bg-[var(--brand)]'}`} style={{ width: `${mission.progress ?? 0}%` }} />
+                    </span>
+                  </span>
+                  <span className={`badge shrink-0 ${mission.completed ? 'badge-green' : 'badge-blue'}`}>{mission.cta}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {statCards.map((stat) => (
           <div key={stat.label} className="card p-4">
@@ -121,6 +183,30 @@ export function DashboardPageClient() {
           </Link>
         </div>
       </section>
+
+      <section className="card p-5">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--text)]">Milestone Rewards</h2>
+            <p className="text-xs text-[var(--muted)] mt-0.5">Achievement signals that keep preparation motivating.</p>
+          </div>
+          <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">View progress</Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {(engagement.milestones ?? []).map((milestone: any) => (
+            <div key={milestone.label} className="rounded-2xl border border-[var(--line)] p-3">
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${milestone.completed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950' : 'bg-gray-100 text-gray-500 dark:bg-gray-800'}`}>
+                  <AppIcon name={milestone.completed ? 'check' : 'leaderboard'} className="h-3.5 w-3.5" />
+                </span>
+                <p className="text-sm font-medium text-[var(--text)]">{milestone.label}</p>
+              </div>
+              <p className="mt-2 text-xs text-[var(--muted)]">{milestone.completed ? 'Unlocked' : `${Math.round(milestone.progress ?? 0)}% progress`}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
 
       <section className="grid grid-cols-1 xl:grid-cols-[1.25fr,0.75fr] gap-4">
         {analytics.insights.length > 0 ? (

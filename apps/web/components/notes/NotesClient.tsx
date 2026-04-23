@@ -1,12 +1,14 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AppIcon } from '@/components/icons/AppIcon';
 
 // ── NOTES CLIENT ─────────────────────────────────────────────
 export function NotesClient({ exams }: { exams: any[] }) {
   const [examId, setExamId] = useState(exams[0]?._id ?? '');
   const [query, setQuery] = useState('');
   const [type, setType] = useState<'all' | 'pdf' | 'richtext'>('all');
+  const [activeNote, setActiveNote] = useState<any | null>(null);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['notes', examId],
@@ -110,7 +112,9 @@ export function NotesClient({ exams }: { exams: any[] }) {
 
       {!isLoading && notes.length === 0 && (
         <div className="card p-10 text-center">
-          <div className="text-3xl mb-2">📭</div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
+            <AppIcon name="notes" className="h-6 w-6" />
+          </div>
           <p className="text-sm text-gray-400">No notes available for this exam yet.</p>
         </div>
       )}
@@ -136,18 +140,68 @@ export function NotesClient({ exams }: { exams: any[] }) {
               </span>
             </div>
             {note.content_type === 'pdf' && note.content_url && (
-              <a href={note.content_url} target="_blank" rel="noopener noreferrer"
-                className="mt-3 btn-secondary text-sm w-full text-center inline-block">
-                Open PDF ↗
-              </a>
+              <button
+                type="button"
+                onClick={() => setActiveNote(note)}
+                className="mt-3 btn-secondary text-sm w-full text-center inline-flex items-center justify-center gap-2"
+              >
+                <AppIcon name="notes" className="h-4 w-4" />
+                View PDF
+              </button>
             )}
             {note.content_type === 'richtext' && note.content_html && (
-              <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 line-clamp-3"
-                dangerouslySetInnerHTML={{ __html: note.content_html }} />
+              <>
+                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 line-clamp-3"
+                  dangerouslySetInnerHTML={{ __html: note.content_html }} />
+                <button
+                  type="button"
+                  onClick={() => setActiveNote(note)}
+                  className="mt-3 btn-secondary text-sm w-full text-center inline-flex items-center justify-center gap-2"
+                >
+                  Read note
+                </button>
+              </>
             )}
           </div>
         ))}
       </div>
+
+      {activeNote && (
+        <div
+          className="fixed inset-0 z-[90] bg-slate-950/70 backdrop-blur-sm p-0 md:p-4 flex items-stretch md:items-center justify-center"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setActiveNote(null);
+          }}
+        >
+          <section className="w-full md:max-w-5xl h-full md:h-[88vh] bg-[var(--bg-elev)] border border-[var(--line)] md:rounded-3xl shadow-[var(--shadow-strong)] overflow-hidden flex flex-col">
+            <header className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-[var(--text)] truncate">{activeNote.title}</h3>
+                <p className="text-xs text-[var(--muted)]">{activeNote.subject_id?.name ?? 'Study resource'} · {activeNote.content_type}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveNote(null)}
+                className="btn-secondary px-3 py-2 text-xs shrink-0"
+              >
+                Close
+              </button>
+            </header>
+
+            {activeNote.content_type === 'pdf' ? (
+              <iframe
+                title={activeNote.title}
+                src={activeNote.content_url}
+                className="min-h-0 flex-1 w-full bg-white"
+              />
+            ) : (
+              <div className="min-h-0 flex-1 overflow-y-auto p-5 text-sm leading-relaxed text-[var(--text)]">
+                <div dangerouslySetInnerHTML={{ __html: activeNote.content_html ?? '' }} />
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

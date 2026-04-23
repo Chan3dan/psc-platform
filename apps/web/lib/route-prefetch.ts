@@ -8,6 +8,7 @@ export const USER_PREFETCH_ROUTES = [
   '/practice',
   '/mock',
   '/drill',
+  '/review',
   '/planner',
   '/results',
   '/leaderboard',

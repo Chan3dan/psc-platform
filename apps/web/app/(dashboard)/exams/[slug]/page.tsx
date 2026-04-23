@@ -10,6 +10,10 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
   const marksPerQuestion = exam.total_questions ? exam.total_marks / exam.total_questions : 1;
   const negativePercent = exam.negative_marking <= 1 ? exam.negative_marking * 100 : exam.negative_marking;
   const negativePerWrong = (marksPerQuestion * negativePercent) / 100;
+  const syllabusLines = String(exam.syllabus_outline ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 
   return (
     <div className="page-wrap space-y-8">
@@ -38,6 +42,57 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
           </span>
         </div>
       </div>
+
+      <section className="card p-5 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text)]">Syllabus Overview</h2>
+            <p className="text-sm text-[var(--muted)] mt-1">
+              Use this as your preparation map before choosing subjects, mocks, or notes.
+            </p>
+          </div>
+          {exam.syllabus_pdf_url && (
+            <a href="#syllabus-pdf" className="btn-secondary text-sm inline-flex">
+              View syllabus PDF
+            </a>
+          )}
+        </div>
+
+        {syllabusLines.length > 0 ? (
+          <div className="mt-4 grid gap-2">
+            {syllabusLines.map((line, index) => (
+              <div key={`${line}-${index}`} className="flex items-start gap-3 rounded-xl border border-[var(--line)] px-3 py-2.5">
+                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-xs font-semibold text-[var(--brand)]">
+                  {index + 1}
+                </span>
+                <p className="text-sm text-[var(--text)]">{line.replace(/^[-*]\s*/, '')}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(subjects as any[]).map((sub) => (
+              <Link key={sub._id} href={`/practice/${exam.slug}/${sub.slug}`} className="rounded-xl border border-[var(--line)] px-3 py-2.5 hover:bg-[var(--brand-soft)]/35">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-[var(--text)]">{sub.name}</span>
+                  <span className="badge-blue">{sub.weightage_percent}%</span>
+                </div>
+                <p className="mt-1 text-xs text-[var(--muted)]">{sub.question_count} questions available</p>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {exam.syllabus_pdf_url && (
+          <div id="syllabus-pdf" className="mt-5 overflow-hidden rounded-2xl border border-[var(--line)] bg-white">
+            <iframe
+              title={`${exam.name} syllabus`}
+              src={exam.syllabus_pdf_url}
+              className="h-[70vh] w-full"
+            />
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="text-base font-semibold text-[var(--text)] mb-3">Practice by Subject</h2>

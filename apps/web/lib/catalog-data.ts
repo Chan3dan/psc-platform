@@ -3,7 +3,7 @@ import { connectDB } from '@/lib/db';
 import { Exam, MockTest, Subject } from '@psc/shared/models';
 
 const EXAM_SELECT =
-  'name slug description duration_minutes total_marks total_questions negative_marking thumbnail_url';
+  'name slug description duration_minutes total_marks total_questions negative_marking thumbnail_url syllabus_outline syllabus_pdf_url pattern_config';
 
 export const getActiveExams = unstable_cache(
   async () => {

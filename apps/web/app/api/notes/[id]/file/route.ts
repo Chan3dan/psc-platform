@@ -32,7 +32,19 @@ export async function GET(
     }
 
     const signedUrl = getSignedPdfDownloadUrl(publicId);
-    return NextResponse.redirect(signedUrl);
+    const upstream = await fetch(signedUrl, { cache: 'no-store' });
+    if (!upstream.ok || !upstream.body) {
+      return err('Could not load the PDF file. Please try again later.', upstream.status || 502);
+    }
+
+    return new NextResponse(upstream.body, {
+      status: 200,
+      headers: {
+        'Content-Type': upstream.headers.get('content-type') || 'application/pdf',
+        'Content-Disposition': 'inline',
+        'Cache-Control': 'private, max-age=300',
+      },
+    });
   } catch (error) {
     return serverError(error);
   }
