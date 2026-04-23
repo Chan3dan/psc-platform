@@ -87,7 +87,7 @@ export function buildDefaultMetadata(settings: SiteSettings): Metadata {
       shortcut: iconUrl,
       apple: iconUrl,
     },
-    manifest: '/manifest.webmanifest',
+    manifest: '/manifest.json',
     robots: {
       index: true,
       follow: true,

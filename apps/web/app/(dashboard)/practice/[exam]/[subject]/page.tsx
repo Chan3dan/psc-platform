@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { cachePracticeQuestions, readCachedPracticeQuestions } from '@/lib/offline-question-cache';
 
 type Mode = 'setup' | 'practice';
 
@@ -21,9 +22,22 @@ export default function PracticePage() {
   const [bookmarkBusy, setBookmarkBusy] = useState(false);
   const [loadingStart, setLoadingStart] = useState(false);
   const [deepLinkConsumed, setDeepLinkConsumed] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const examSlug = String(params.exam ?? '');
   const subjectSlug = String(params.subject ?? '');
   const focusQuestionId = searchParams.get('question_id') ?? '';
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const update = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
 
   const { data: subjectInfo } = useQuery({
     queryKey: ['subject-info', examSlug, subjectSlug],
@@ -85,13 +99,39 @@ export default function PracticePage() {
   }
 
   async function start(firstQuestionId?: string) {
-    if (!subjectInfo) return;
     setError('');
     setLoadingStart(true);
+    setOfflineMode(false);
+    const cacheSuffix = `${settings.count}:${settings.difficulty || 'all'}:${firstQuestionId || 'regular'}`;
+
+    async function startFromCache(message?: string) {
+      const cached = await readCachedPracticeQuestions({ examSlug, subjectSlug, suffix: cacheSuffix });
+      if (!cached?.questions?.length) {
+        setError(
+          message ??
+            'You are offline and this practice set is not cached on this device yet. Load it once while online.'
+        );
+        return false;
+      }
+      setQuestions(cached.questions);
+      setIdx(0);
+      setAnswers({});
+      setRevealed({});
+      setOfflineMode(true);
+      setMode('practice');
+      return true;
+    }
+
     try {
+      if (!subjectInfo) {
+        await startFromCache('Subject details are unavailable offline. Cached questions will appear after you load this practice once online.');
+        return;
+      }
+
       let qs: any[] = [];
       if (firstQuestionId) {
         const firstRes = await fetch(`/api/questions?subject_id=${subjectInfo._id}&question_id=${encodeURIComponent(firstQuestionId)}&limit=1`);
+        if (!firstRes.ok) throw new Error('Could not load the requested question.');
         const firstData = await firstRes.json();
         const firstList = firstData.data?.data ?? firstData.data ?? [];
         const first = Array.isArray(firstList) ? firstList[0] : null;
@@ -104,6 +144,7 @@ export default function PracticePage() {
         if (settings.difficulty) p.set('difficulty', settings.difficulty);
         if (qs.length) p.set('exclude_ids', qs.map((x) => x._id).join(','));
         const res = await fetch(`/api/questions?subject_id=${subjectInfo._id}&${p}`);
+        if (!res.ok) throw new Error('Could not load questions.');
         const d = await res.json();
         const randomQs = d.data?.data ?? d.data ?? [];
         if (Array.isArray(randomQs)) qs = [...qs, ...randomQs];
@@ -113,9 +154,22 @@ export default function PracticePage() {
         setError('No questions found for this subject/difficulty. Try Mixed difficulty or add more questions.');
         return;
       }
+      await cachePracticeQuestions({
+        examSlug,
+        subjectSlug,
+        suffix: cacheSuffix,
+        label: subjectInfo?.name ?? subjectSlug,
+        questions: qs,
+      }).catch(() => undefined);
       setQuestions(qs);
       setIdx(0); setAnswers({}); setRevealed({});
       setMode('practice');
+    } catch {
+      await startFromCache(
+        navigator.onLine
+          ? 'Could not load fresh questions. Showing cached questions if available.'
+          : 'You are offline. Showing cached questions if available.'
+      );
     } finally { setLoadingStart(false); }
   }
 
@@ -143,6 +197,9 @@ export default function PracticePage() {
         <Link href={`/exams/${params.exam}`} className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Back to exam</Link>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{subjectInfo?.name ?? 'Practice'}</h1>
         <p className="text-sm text-gray-500 mt-1">{subjectInfo?.question_count ?? 0} questions available</p>
+        {!isOnline && (
+          <p className="text-xs text-amber-600 mt-1">Offline mode is available for practice sets loaded before.</p>
+        )}
         {focusQuestionId && (
           <p className="text-xs text-blue-600 mt-1">Opened from search. Matching question will be shown first.</p>
         )}
@@ -192,6 +249,9 @@ export default function PracticePage() {
           <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${((idx + 1) / questions.length) * 100}%` }} />
         </div>
         <span className={`badge text-xs shrink-0 ${q.difficulty === 'easy' ? 'badge-green' : q.difficulty === 'medium' ? 'badge-amber' : 'badge-red'}`}>{q.difficulty}</span>
+        {offlineMode && (
+          <span className="badge badge-amber text-xs shrink-0">Offline mode</span>
+        )}
         <button
           onClick={() => toggleBookmark(q._id)}
           disabled={bookmarkBusy}

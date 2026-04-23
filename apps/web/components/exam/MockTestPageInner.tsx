@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { type ExamSession, useExamStore } from '@/store/examStore';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { cacheMockSession, readCachedMockSession } from '@/lib/offline-question-cache';
 
 const STATUS_COLOR: Record<string, string> = {
   answered: 'bg-emerald-500 text-white',
@@ -17,7 +18,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
   const testId = searchParams.get('test');
 
   const {
-    session, currentIndex, answers, isSubmitted, isSubmitting, result,
+    session, currentIndex, answers, isSubmitted, isSubmitting, submitError, result,
     isRunning, timeRemainingSeconds,
     startSession, selectAnswer, clearAnswer, flagQuestion,
     goToQuestion, nextQuestion, prevQuestion, submitExam, tick, getStatus,
@@ -29,6 +30,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
   const [quickJumpOpen, setQuickJumpOpen] = useState(false);
   const [swipeFeedback, setSwipeFeedback] = useState<'prev' | 'next' | null>(null);
   const [bootstrapError, setBootstrapError] = useState('');
+  const [offlineMode, setOfflineMode] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
@@ -36,26 +38,51 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
     if (initialSession) {
       useExamStore.getState().reset();
       startSession(initialSession);
+      if (testId) {
+        cacheMockSession(testId, initialSession).catch(() => undefined);
+      }
     }
-  }, [initialSession, startSession]);
+  }, [initialSession, startSession, testId]);
 
   useEffect(() => {
     if (!testId) return;
     if (initialSession) return;
     useExamStore.getState().reset();
     setBootstrapError('');
+    setOfflineMode(false);
 
     fetch('/api/tests/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ test_id: testId, test_type: 'mock' }),
     })
-      .then((r) => r.json())
+      .then(async (r) => {
+        const payload = await r.json().catch(() => null);
+        if (!r.ok) {
+          throw new Error(payload?.error ?? 'Could not load this mock test.');
+        }
+        return payload;
+      })
       .then((d) => {
-        if (d.success) startSession(d.data);
+        if (d.success) {
+          startSession(d.data);
+          cacheMockSession(testId, d.data).catch(() => undefined);
+        }
         else setBootstrapError(d?.error ?? 'Could not load this mock test.');
       })
-      .catch(() => setBootstrapError('Could not load this mock test.'));
+      .catch(async () => {
+        const cached = await readCachedMockSession(testId);
+        if (cached?.session) {
+          setOfflineMode(true);
+          startSession(cached.session);
+          return;
+        }
+        setBootstrapError(
+          navigator.onLine
+            ? 'Could not load this mock test. Please refresh and try again.'
+            : 'You are offline and this mock test is not cached on this device yet.'
+        );
+      });
 
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', warn);
@@ -189,6 +216,15 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
             <>
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-sm text-gray-500">{bootstrapError || 'Preparing your test…'}</p>
+              {bootstrapError && (
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="btn-secondary mt-4"
+                >
+                  Retry
+                </button>
+              )}
             </>
           )}
         </div>
@@ -239,13 +275,18 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col overflow-x-hidden">
-      <header className="sticky top-0 z-10 bg-[var(--surface)]/95 backdrop-blur border-b border-[var(--border)] px-3 sm:px-4 md:px-6 py-3">
+      <header className="sticky top-0 z-10 bg-[var(--bg-elev)]/95 backdrop-blur border-b border-[var(--line)] px-3 sm:px-4 md:px-6 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <h1 className="font-semibold text-sm text-[var(--text)] truncate">{session.config.title}</h1>
             <p className="text-xs text-[var(--muted)] mt-0.5">
               Question {currentIndex + 1} of {session.questions.length} · {completionPct}% answered
             </p>
+            {offlineMode && (
+              <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                Offline mode
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-3 sm:gap-2">
@@ -284,6 +325,11 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
             </span>
           ))}
         </div>
+        {submitError && (
+          <div className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-300">
+            {submitError}
+          </div>
+        )}
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -453,7 +499,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
       </div>
 
       <div className="lg:hidden fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[35] px-3">
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)]/96 backdrop-blur-md shadow-[var(--shadow-strong)] p-2">
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/96 backdrop-blur-md shadow-[var(--shadow-strong)] p-2">
           <div className="grid grid-cols-4 gap-2">
             <button
               onClick={prevQuestion}
@@ -565,7 +611,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
 
       {swipeFeedback && (
         <div className="lg:hidden pointer-events-none fixed left-1/2 top-1/2 z-[85] -translate-x-1/2 -translate-y-1/2">
-          <div className="rounded-full bg-[var(--surface)]/96 px-4 py-2 text-sm font-medium text-[var(--text)] shadow-[var(--shadow-strong)] border border-[var(--line)]">
+          <div className="rounded-full bg-[var(--bg-elev)]/96 px-4 py-2 text-sm font-medium text-[var(--text)] shadow-[var(--shadow-strong)] border border-[var(--line)]">
             {swipeFeedback === 'next' ? 'Next question' : 'Previous question'}
           </div>
         </div>

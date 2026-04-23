@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
+import { InstallAppButton } from '@/components/marketing/InstallAppButton';
 import { getSiteSettings } from '@/lib/site-settings';
 import { getActiveExams } from '@/lib/catalog-data';
 import { joinSiteUrl, SEO_KEYWORDS } from '@/lib/seo';
@@ -124,6 +125,7 @@ export default async function LandingPage() {
             />
           </div>
           <div className="flex items-center justify-end gap-2 sm:gap-3 shrink-0">
+            <InstallAppButton className="hidden md:inline-flex" />
             <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-2">
               Sign in
             </Link>
@@ -159,6 +161,7 @@ export default async function LandingPage() {
               <Link href="#exams" className="btn-secondary text-base px-6 py-3">
                 Browse Exams
               </Link>
+              <InstallAppButton className="text-base px-6 py-3" />
             </div>
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
