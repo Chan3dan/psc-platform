@@ -7,6 +7,22 @@ import { ok, created, unauthorized, forbidden, serverError } from '@/lib/apiResp
 import { cacheGet, cacheSet, CacheKeys } from '@/lib/redis';
 import { uploadPDF } from '@/lib/cloudinary';
 
+function normalizeExamPayload(body: Record<string, any>) {
+  if (typeof body.pattern_config === 'string' && body.pattern_config.trim()) {
+    try {
+      body.pattern_config = JSON.parse(body.pattern_config);
+    } catch {
+      throw new Error('Invalid pattern_config JSON');
+    }
+  }
+
+  for (const key of ['duration_minutes', 'total_questions', 'total_marks', 'passing_marks', 'negative_marking']) {
+    if (body[key] !== undefined && body[key] !== '') body[key] = Number(body[key]);
+  }
+  if (body.is_active !== undefined) body.is_active = body.is_active === true || body.is_active === 'true';
+  return body;
+}
+
 export async function GET() {
   try {
     const cached = await cacheGet(CacheKeys.exams());
@@ -52,10 +68,7 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     }
 
-    for (const key of ['duration_minutes', 'total_questions', 'total_marks', 'passing_marks', 'negative_marking']) {
-      if (body[key] !== undefined && body[key] !== '') body[key] = Number(body[key]);
-    }
-    if (body.is_active !== undefined) body.is_active = body.is_active === true || body.is_active === 'true';
+    body = normalizeExamPayload(body);
 
     const exam = await Exam.create(body);
     await cacheSet(CacheKeys.exams(), null, 0); // invalidate cache

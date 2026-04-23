@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { getExamCatalogBySlug } from '@/lib/catalog-data';
+import { SyllabusPdfViewer } from '@/components/exam/SyllabusPdfViewer';
 
 export default async function ExamDetailPage({ params }: { params: { slug: string } }) {
   const data = await getExamCatalogBySlug(params.slug);
@@ -94,12 +95,10 @@ export default async function ExamDetailPage({ params }: { params: { slug: strin
               <div>
                 <p className="text-sm font-semibold text-[var(--text)]">Official syllabus PDF available</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  PDF previews can be unreliable on mobile browsers, so use this only when you need the original file.
+                  Open the syllabus inside the same reader used for study notes, with page controls and fullscreen support.
                 </p>
               </div>
-              <a href={exam.syllabus_pdf_url} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">
-                Open PDF
-              </a>
+              <SyllabusPdfViewer title={exam.name} url={exam.syllabus_pdf_url} />
             </div>
           </div>
         )}

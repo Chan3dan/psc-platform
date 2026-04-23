@@ -7,6 +7,22 @@ import { ok, notFound, unauthorized, forbidden, serverError } from '@/lib/apiRes
 import { cacheGet, cacheSet, cacheDel, CacheKeys } from '@/lib/redis';
 import { uploadPDF } from '@/lib/cloudinary';
 
+function normalizeExamPayload(body: Record<string, any>) {
+  if (typeof body.pattern_config === 'string' && body.pattern_config.trim()) {
+    try {
+      body.pattern_config = JSON.parse(body.pattern_config);
+    } catch {
+      throw new Error('Invalid pattern_config JSON');
+    }
+  }
+
+  for (const key of ['duration_minutes', 'total_questions', 'total_marks', 'passing_marks', 'negative_marking']) {
+    if (body[key] !== undefined && body[key] !== '') body[key] = Number(body[key]);
+  }
+  if (body.is_active !== undefined) body.is_active = body.is_active === true || body.is_active === 'true';
+  return body;
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { slug: string } }
@@ -67,10 +83,7 @@ export async function PUT(
       body = await req.json();
     }
 
-    for (const key of ['duration_minutes', 'total_questions', 'total_marks', 'passing_marks', 'negative_marking']) {
-      if (body[key] !== undefined && body[key] !== '') body[key] = Number(body[key]);
-    }
-    if (body.is_active !== undefined) body.is_active = body.is_active === true || body.is_active === 'true';
+    body = normalizeExamPayload(body);
 
     const exam = await Exam.findOneAndUpdate(
       { slug: params.slug },
