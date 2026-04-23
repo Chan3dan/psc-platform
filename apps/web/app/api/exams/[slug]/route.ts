@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db';
 import { Exam, Subject, MockTest } from '@psc/shared/models';
 import { ok, notFound, unauthorized, forbidden, serverError } from '@/lib/apiResponse';
 import { cacheGet, cacheSet, cacheDel, CacheKeys } from '@/lib/redis';
+import { uploadPDF } from '@/lib/cloudinary';
 
 export async function GET(
   _req: NextRequest,
@@ -45,7 +46,32 @@ export async function PUT(
     if (session.user.role !== 'admin') return forbidden();
 
     await connectDB();
-    const body = await req.json();
+    const contentType = req.headers.get('content-type') ?? '';
+    let body: Record<string, any>;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      body = {};
+      for (const [key, value] of formData.entries()) {
+        if (key === 'syllabus_pdf') continue;
+        body[key] = typeof value === 'string' ? value : '';
+      }
+
+      const file = formData.get('syllabus_pdf') as File | null;
+      if (file && file.size > 0) {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const result = await uploadPDF(buffer, 'psc-syllabus');
+        body.syllabus_pdf_url = result.url;
+      }
+    } else {
+      body = await req.json();
+    }
+
+    for (const key of ['duration_minutes', 'total_questions', 'total_marks', 'passing_marks', 'negative_marking']) {
+      if (body[key] !== undefined && body[key] !== '') body[key] = Number(body[key]);
+    }
+    if (body.is_active !== undefined) body.is_active = body.is_active === true || body.is_active === 'true';
+
     const exam = await Exam.findOneAndUpdate(
       { slug: params.slug },
       body,

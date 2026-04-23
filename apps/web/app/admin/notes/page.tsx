@@ -374,7 +374,7 @@ export default function AdminNotesPage() {
           className="fixed inset-0 z-[120] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
-          <div className="bg-[var(--card)] w-full h-full md:h-auto md:max-h-[92vh] md:max-w-3xl md:rounded-2xl border border-[var(--line)] shadow-2xl overflow-hidden flex flex-col">
+          <div className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-3xl md:rounded-2xl border border-[var(--line)] bg-white shadow-2xl overflow-hidden flex flex-col dark:bg-slate-950">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
               <div>
                 <h3 className="text-lg font-semibold text-[var(--text)]">Edit Note</h3>

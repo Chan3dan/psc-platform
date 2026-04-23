@@ -22,6 +22,7 @@ function normalizePercent(value: number) {
 export function ExamManager({ initialExams }: { initialExams: any[] }) {
   const [exams, setExams] = useState(initialExams);
   const [editing, setEditing] = useState<any | null>(null);
+  const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -38,15 +39,23 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
     setSaving(true); setError('');
     try {
       const isNew = !editing._id;
+      const payload = new FormData();
+      Object.entries(editing).forEach(([key, value]) => {
+        if (value === undefined || value === null || key === '_id' || key === 'created_at' || key === 'updated_at' || key === '__v') return;
+        if (typeof value === 'object') payload.append(key, JSON.stringify(value));
+        else payload.append(key, String(value));
+      });
+      if (syllabusFile) payload.append('syllabus_pdf', syllabusFile);
+
       const res = await fetch(isNew ? '/api/exams' : `/api/exams/${editing.slug}`, {
         method: isNew ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editing),
+        body: payload,
       });
       const d = await res.json();
       if (d.success) {
         setExams(prev => isNew ? [d.data, ...prev] : prev.map(e => e._id === d.data._id ? d.data : e));
         setEditing(null);
+        setSyllabusFile(null);
       } else setError(d.error);
     } finally { setSaving(false); }
   }
@@ -76,7 +85,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <button onClick={() => setEditing(EMPTY)} className="btn-primary">+ New Exam</button>
+        <button onClick={() => { setEditing(EMPTY); setSyllabusFile(null); }} className="btn-primary">+ New Exam</button>
         <div className="w-full md:w-auto md:min-w-[320px]">
           <input
             className="input text-sm"
@@ -114,12 +123,12 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
       {mounted && editing && createPortal(
         <div
           className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setEditing(null); setSyllabusFile(null); } }}
         >
-          <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-6 pb-24 md:pb-6 space-y-4">
+          <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain rounded-none md:rounded-2xl border border-[var(--line)] bg-white p-4 pb-24 shadow-2xl dark:bg-slate-950 md:p-6 md:pb-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editing._id ? 'Edit Exam' : 'New Exam'}</h3>
-              <button onClick={() => setEditing(null)} className="btn-secondary text-xs px-3 py-1.5">Close</button>
+              <button onClick={() => { setEditing(null); setSyllabusFile(null); }} className="btn-secondary text-xs px-3 py-1.5">Close</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -150,13 +159,23 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
                 />
               </div>
               <div>
-                <label className="label">Syllabus PDF URL (Optional)</label>
+                <label className="label">Syllabus PDF URL</label>
                 <input
                   className="input"
                   placeholder="https://.../syllabus.pdf"
                   value={editing.syllabus_pdf_url ?? ''}
                   onChange={e => setEditing((p: any) => ({ ...p, syllabus_pdf_url: e.target.value }))}
                 />
+                <label className="label mt-3">Or upload syllabus PDF</label>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => setSyllabusFile(e.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="mt-2 text-xs text-[var(--muted)]">
+                  Uploading a file replaces the URL after save. Paste URL remains available for externally hosted syllabus files.
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -181,7 +200,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
             {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="flex gap-3">
               <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving...' : 'Save Exam'}</button>
-              <button onClick={() => setEditing(null)} className="btn-secondary">Cancel</button>
+              <button onClick={() => { setEditing(null); setSyllabusFile(null); }} className="btn-secondary">Cancel</button>
             </div>
           </div>
         </div>,
@@ -210,7 +229,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
                 )}
               </div>
               <button
-                onClick={() => setEditing({ ...exam, negative_marking: normalizePercent(exam.negative_marking ?? 20) })}
+                onClick={() => { setEditing({ ...exam, negative_marking: normalizePercent(exam.negative_marking ?? 20) }); setSyllabusFile(null); }}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 Edit
