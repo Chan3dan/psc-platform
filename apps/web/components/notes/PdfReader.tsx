@@ -96,7 +96,11 @@ export function PdfReader({
       const holderHeight = Math.max(420, holder.clientHeight - 32);
       const fitWidthScale = holderWidth / baseViewport.width;
       const fitHeightScale = holderHeight / baseViewport.height;
-      const scale = Math.min(fitWidthScale, fitHeightScale) * zoom;
+      const prefersDesktopWidthFit = holder.clientWidth >= 1024;
+      const baseScale = prefersDesktopWidthFit
+        ? Math.min(fitWidthScale, 1.5)
+        : Math.min(fitWidthScale, fitHeightScale);
+      const scale = Math.max(0.5, baseScale) * zoom;
       const viewport = pdfPage.getViewport({ scale });
       const pixelRatio = window.devicePixelRatio || 1;
       const context = canvas.getContext('2d');

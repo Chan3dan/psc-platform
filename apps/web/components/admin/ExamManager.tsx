@@ -34,6 +34,10 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
     return () => setMounted(false);
   }, []);
 
+  useEffect(() => {
+    setExams(initialExams);
+  }, [initialExams]);
+
   async function save() {
     if (!editing) return;
     setSaving(true); setError('');

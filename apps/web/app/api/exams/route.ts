@@ -23,8 +23,21 @@ function normalizeExamPayload(body: Record<string, any>) {
   return body;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const admin = req.nextUrl.searchParams.get('admin') === '1';
+    if (admin) {
+      const session = await getServerSession(authOptions);
+      if (!session) return unauthorized();
+      if (session.user.role !== 'admin') return forbidden();
+
+      await connectDB();
+      const exams = await Exam.find({})
+        .sort({ created_at: -1 })
+        .lean();
+      return ok(exams);
+    }
+
     const cached = await cacheGet(CacheKeys.exams());
     if (cached) return ok(cached);
 
