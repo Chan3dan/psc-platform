@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { PdfReader } from '@/components/notes/PdfReader';
 
 type ContentType = 'pdf' | 'richtext';
 
@@ -41,6 +42,7 @@ export default function AdminNotesPage() {
   const [filterExamId, setFilterExamId] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<typeof emptyForm | null>(null);
+  const [previewNote, setPreviewNote] = useState<any | null>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [editSubjects, setEditSubjects] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -355,9 +357,13 @@ export default function AdminNotesPage() {
                       <button onClick={() => editNote(note)} className="btn-secondary text-xs">Edit</button>
                       <button onClick={() => toggleNote(note)} className="btn-secondary text-xs">{note.is_active ? 'Hide' : 'Show'}</button>
                       {note.content_type === 'pdf' && (
-                        <a href={`/api/notes/${note._id}/file`} target="_blank" rel="noopener noreferrer" className="btn-secondary text-center text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewNote(note)}
+                          className="btn-secondary text-center text-xs"
+                        >
                           Test PDF
-                        </a>
+                        </button>
                       )}
                       <button onClick={() => deleteNote(note)} className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700">Delete</button>
                     </div>
@@ -480,6 +486,39 @@ export default function AdminNotesPage() {
               </button>
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {mounted && previewNote && createPortal(
+        <div
+          className="fixed inset-0 z-[140] bg-slate-950/85 backdrop-blur-sm p-0 md:p-4 flex items-stretch md:items-center justify-center"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setPreviewNote(null);
+          }}
+        >
+          <section className="w-full md:max-w-6xl h-full md:h-[92vh] bg-[var(--bg-elev)] border border-[var(--line)] md:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <header className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-[var(--text)] truncate">Test PDF: {previewNote.title}</h3>
+                <p className="text-xs text-[var(--muted)]">
+                  {previewNote.exam_id?.name ?? 'Exam'} · {previewNote.subject_id?.name ?? 'All subjects'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewNote(null)}
+                className="btn-secondary px-3 py-2 text-xs shrink-0"
+              >
+                Close
+              </button>
+            </header>
+            <PdfReader
+              url={`/api/notes/${previewNote._id}/file`}
+              title={previewNote.title}
+              onBack={() => setPreviewNote(null)}
+            />
+          </section>
         </div>,
         document.body
       )}
