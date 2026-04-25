@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { SiteSettings } from '@/lib/site-settings-config';
 
-const FALLBACK_SITE_URL = 'https://web-six-blond-80.vercel.app';
+const FALLBACK_SITE_URL = 'https://niyukta.vercel.app';
 
 export const SEO_KEYWORDS = [
   'Niyukta',
