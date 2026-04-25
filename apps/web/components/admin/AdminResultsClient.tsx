@@ -6,9 +6,12 @@ import Link from 'next/link';
 import { formatDuration, formatResultDate } from '@/lib/results';
 
 type AdminResultFilter = 'all' | 'flagged' | 'mock' | 'practice' | 'daily_question';
+const PAGE_SIZE = 12;
 
 export function AdminResultsClient({ results, isLoading = false }: { results: any[]; isLoading?: boolean }) {
   const [filter, setFilter] = useState<AdminResultFilter>('all');
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [dailyResultsOpen, setDailyResultsOpen] = useState(false);
   const [dailyResultsDate, setDailyResultsDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -54,15 +57,39 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
   }, [dailyResultsOpen, dailyResultsDate]);
 
   const filteredResults = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
     const regularResults = results.filter((result) => result.test_type !== 'daily_question');
+    let nextResults = regularResults;
+
     if (filter === 'flagged') {
-      return regularResults.filter((result) => Number(result.flagged_count ?? 0) > 0);
+      nextResults = nextResults.filter((result) => Number(result.flagged_count ?? 0) > 0);
+    } else if (filter === 'mock' || filter === 'practice') {
+      nextResults = nextResults.filter((result) => result.test_type === filter);
     }
-    if (filter === 'mock' || filter === 'practice') {
-      return regularResults.filter((result) => result.test_type === filter);
-    }
-    return regularResults;
-  }, [results, filter]);
+
+    if (!normalizedQuery) return nextResults;
+
+    return nextResults.filter((result) => {
+      const haystack = [
+        result.test_id?.title,
+        result.result_context?.label,
+        result.user_id?.name,
+        result.user_id?.email,
+        result.user_id?._id,
+        result.exam_id?.name,
+        result.test_type,
+        formatResultDate(result.created_at),
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(normalizedQuery);
+    });
+  }, [results, filter, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredResults.length / PAGE_SIZE));
+  const paginatedResults = filteredResults.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, query]);
 
   function openDailyQuestionResult(result?: any) {
     const submittedDate = result?.result_context?.submitted_for_date;
@@ -109,12 +136,20 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
       </div>
 
       <div className="card overflow-hidden">
-        <div className="px-4 md:px-6 py-3 border-b border-[var(--line)] flex items-center justify-between gap-3">
+        <div className="px-4 md:px-6 py-3 border-b border-[var(--line)] flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h2 className="font-semibold text-[var(--text)] text-sm">Attempt Queue</h2>
-            <p className="text-xs text-[var(--muted)] mt-0.5">Mock and practice attempts with direct review links. Daily questions open in their own table.</p>
+            <p className="text-xs text-[var(--muted)] mt-0.5">
+              Showing {filteredResults.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, filteredResults.length)} of {filteredResults.length}. Search supports name, email, user id, exam, mock, and date.
+            </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search user, email, exam, date..."
+              className="h-10 w-full rounded-2xl border border-[var(--line)] bg-[var(--bg)] px-3 text-sm text-[var(--text)] outline-none transition focus:border-[var(--brand)] sm:w-72"
+            />
             <button type="button" onClick={() => setDailyResultsOpen(true)} className="btn-secondary text-xs !px-3 !py-2">
               Daily question table
             </button>
@@ -131,7 +166,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
         ) : (
           <>
             <div className="md:hidden divide-y divide-[var(--line)]">
-              {filteredResults.map((result: any) => {
+              {paginatedResults.map((result: any) => {
                 const flaggedCount = Number(result.flagged_count ?? 0);
                 const isDailyQuestion = result.test_type === 'daily_question' && result.daily_question_preview;
                 return (
@@ -196,7 +231,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)]">
-                  {filteredResults.map((result: any) => {
+                  {paginatedResults.map((result: any) => {
                     const flaggedCount = Number(result.flagged_count ?? 0);
                     const isDailyQuestion = result.test_type === 'daily_question' && result.daily_question_preview;
                     return (
@@ -254,6 +289,27 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="flex flex-col gap-3 border-t border-[var(--line)] px-4 py-3 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
+              <span>Page {page} of {totalPages}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  disabled={page === 1}
+                  className="btn-secondary text-xs disabled:opacity-45"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                  disabled={page === totalPages}
+                  className="btn-secondary text-xs disabled:opacity-45"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </>
         )}

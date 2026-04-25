@@ -25,7 +25,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
   });
 
   const borderColor = (a: any) =>
-    a.is_correct ? 'border-l-emerald-400' : a.selected_option === null ? 'border-l-gray-300 dark:border-l-gray-600' : 'border-l-red-400';
+    a.is_correct ? 'border-l-emerald-400' : a.selected_option === null ? 'border-l-[var(--line)]' : 'border-l-red-400';
 
   const scorePct = counts.all > 0 ? Math.round((counts.correct / counts.all) * 100) : 0;
 
@@ -55,7 +55,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
       </div>
 
       <div className="flex gap-2 mb-1 flex-wrap">
-        {(['all', 'correct', 'wrong', 'skipped'] as Filter[]).map(f => (
+        {(['all', 'correct', 'wrong', 'skipped', 'flagged'] as Filter[]).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize
               ${filter === f
@@ -63,7 +63,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
                 : f === 'correct' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                 : f === 'flagged' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
                 : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-[var(--bg)] text-[var(--muted)] hover:bg-[var(--brand-soft)]/35'
               }`}>
             {f} ({counts[f]})
           </button>
@@ -80,12 +80,12 @@ export function ResultReview({ answers }: { answers: any[] }) {
               <button className="w-full text-left p-4 hover:bg-[var(--brand-soft)]/25 transition-colors cursor-pointer" onClick={() => setExpanded(open ? null : q._id)}>
                 <div className="flex items-start gap-3">
                   <span className={`mt-0.5 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
-                    ${a.is_correct ? 'bg-emerald-100 text-emerald-700' : a.selected_option === null ? 'bg-gray-100 dark:bg-gray-800 text-gray-500' : 'bg-red-100 text-red-600'}`}>
+                    ${a.is_correct ? 'bg-emerald-100 text-emerald-700' : a.selected_option === null ? 'bg-[var(--bg)] text-[var(--muted)]' : 'bg-red-100 text-red-600'}`}>
                     {a.is_correct ? <AppIcon name="check" className="h-3 w-3" /> : a.selected_option === null ? '—' : <AppIcon name="alert" className="h-3 w-3" />}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">{q.question_text}</p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                    <p className="text-sm font-medium text-[var(--text)] line-clamp-2">{q.question_text}</p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--muted)]">
                       <span>{q.subject_id?.name}</span>
                       <span>·</span>
                       <span className="capitalize">{q.difficulty ?? 'mixed'}</span>
@@ -96,24 +96,24 @@ export function ResultReview({ answers }: { answers: any[] }) {
                         </>
                       )}
                       <span>·</span>
-                      <span className={a.marks_awarded > 0 ? 'text-emerald-600' : a.marks_awarded < 0 ? 'text-red-500' : 'text-gray-400'}>
+                      <span className={a.marks_awarded > 0 ? 'text-emerald-600' : a.marks_awarded < 0 ? 'text-red-500' : 'text-[var(--muted)]'}>
                         {a.marks_awarded > 0 ? '+' : ''}{a.marks_awarded} marks
                       </span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-gray-400 text-xs block">{open ? 'Hide' : 'Review'}</span>
-                    <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
+                    <span className="text-[var(--muted)] text-xs block">{open ? 'Hide' : 'Review'}</span>
+                    <span className="text-[var(--muted)] text-xs">{open ? '▲' : '▼'}</span>
                   </div>
                 </div>
               </button>
               {open && (
-                <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
+                <div className="px-4 pb-4 border-t border-[var(--line)] pt-3 space-y-2">
                   {q.options.map((opt: any) => {
-                    let cls = 'text-gray-600 dark:text-gray-400';
+                    let cls = 'text-[var(--muted)]';
                     let prefix = '';
-                    if (opt.index === q.correct_answer) { cls = 'text-emerald-700 dark:text-emerald-400 font-medium'; prefix = 'Correct: '; }
-                    if (opt.index === a.selected_option && opt.index !== q.correct_answer) { cls = 'text-red-600 dark:text-red-400 line-through'; prefix = 'Selected: '; }
+                    if (opt.index === q.correct_answer) { cls = 'text-emerald-600 font-medium'; prefix = 'Correct: '; }
+                    if (opt.index === a.selected_option && opt.index !== q.correct_answer) { cls = 'text-red-500 line-through'; prefix = 'Selected: '; }
                     return (
                       <p key={opt.index} className={`text-sm ${cls}`}>
                         {prefix}{String.fromCharCode(65 + opt.index)}. {opt.text}
@@ -132,7 +132,7 @@ export function ResultReview({ answers }: { answers: any[] }) {
                     </span>
                   </div>
                   {q.explanation && (
-                    <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200 mt-2">
+                    <div className="rounded-lg border border-[var(--line)] bg-[var(--brand-soft)]/35 p-3 text-xs text-[var(--text)] mt-2">
                       <strong>Explanation: </strong>{q.explanation}
                     </div>
                   )}
