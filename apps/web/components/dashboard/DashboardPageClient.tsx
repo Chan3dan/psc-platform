@@ -37,6 +37,10 @@ const DASHBOARD_COPY = {
     learningMissionsBody: 'Small daily actions that compound into exam confidence.',
     dailyFeed: 'Daily Updates',
     dailyFeedBody: 'Your exam feed combines today’s question, planner status, and urgent review signals.',
+    feedNoticeTitle: 'Today’s learning is ready',
+    feedNoticeBody: 'Answer Question of the Day and take this week’s mock from Newsfeed.',
+    openQuestion: 'Daily question',
+    openWeeklyMock: 'Weekly mock',
     questionOfDay: 'Question of the Day',
     questionOfDayBody: 'A focused daily question pulled from your selected exam track.',
     answerNow: 'Answer now',
@@ -113,6 +117,10 @@ const DASHBOARD_COPY = {
     learningMissionsBody: 'सानो दैनिक कामले ठूलो तयारी बनाउँछ।',
     dailyFeed: 'दैनिक अपडेट',
     dailyFeedBody: 'आजको प्रश्न, planner status र urgent review संकेत यहीँ देखिन्छन्।',
+    feedNoticeTitle: 'आजको अध्ययन तयार छ',
+    feedNoticeBody: 'Newsfeed बाट आजको प्रश्न र यो हप्ताको mock खोल्नुहोस्।',
+    openQuestion: 'आजको प्रश्न',
+    openWeeklyMock: 'Weekly mock',
     questionOfDay: 'आजको प्रश्न',
     questionOfDayBody: 'तपाईंको चयन गरिएको परीक्षाबाट आजको focused question।',
     answerNow: 'अहिले उत्तर दिनुहोस्',
@@ -332,9 +340,36 @@ export function DashboardPageClient() {
     { label: t.accuracy, value: `${Number(analytics.overall_accuracy ?? 0)}%`, tone: 'text-indigo-600' },
     { label: t.questionsSolved, value: Number(analytics.total_questions ?? 0).toLocaleString(), tone: 'text-amber-600' },
   ];
+  const feedNotice = (
+    <section className="sticky top-[84px] z-30 md:static md:z-auto">
+      <div className="rounded-3xl border border-blue-200/80 bg-white/90 p-3 shadow-lg shadow-blue-500/10 backdrop-blur-xl dark:border-blue-900/70 dark:bg-slate-950/90">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand)] text-white">
+              <AppIcon name="idea" className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--text)]">{t.feedNoticeTitle}</p>
+              <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">{t.feedNoticeBody}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:flex md:shrink-0">
+            <Link href="/feed" className="btn-primary !px-3 !py-2 text-xs justify-center">
+              {t.openQuestion}
+            </Link>
+            <Link href="/feed" className="btn-secondary !px-3 !py-2 text-xs justify-center">
+              {t.openWeeklyMock}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 
   return (
     <div className="page-wrap space-y-6">
+      {feedNotice}
+
       <section className="card glass p-6 md:p-7">
         <div className="flex flex-col lg:flex-row gap-5 lg:items-center lg:justify-between">
           <div className="space-y-3">

@@ -54,13 +54,14 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
   }, [dailyResultsOpen, dailyResultsDate]);
 
   const filteredResults = useMemo(() => {
+    const regularResults = results.filter((result) => result.test_type !== 'daily_question');
     if (filter === 'flagged') {
-      return results.filter((result) => Number(result.flagged_count ?? 0) > 0);
+      return regularResults.filter((result) => Number(result.flagged_count ?? 0) > 0);
     }
-    if (filter === 'mock' || filter === 'practice' || filter === 'daily_question') {
-      return results.filter((result) => result.test_type === filter);
+    if (filter === 'mock' || filter === 'practice') {
+      return regularResults.filter((result) => result.test_type === filter);
     }
-    return results;
+    return regularResults;
   }, [results, filter]);
 
   function openDailyQuestionResult(result?: any) {
@@ -69,11 +70,12 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
     setDailyResultsOpen(true);
   }
 
+  const regularResults = results.filter((result) => result.test_type !== 'daily_question');
   const filterCards = [
-    { key: 'all' as const, label: 'Recent Attempts', value: results.length, tone: 'text-blue-600' },
-    { key: 'flagged' as const, label: 'Flagged Attempts', value: results.filter((result) => Number(result.flagged_count ?? 0) > 0).length, tone: 'text-amber-600' },
-    { key: 'mock' as const, label: 'Mock Attempts', value: results.filter((result) => result.test_type === 'mock').length, tone: 'text-emerald-600' },
-    { key: 'practice' as const, label: 'Practice Attempts', value: results.filter((result) => result.test_type === 'practice').length, tone: 'text-purple-600' },
+    { key: 'all' as const, label: 'Recent Attempts', value: regularResults.length, tone: 'text-blue-600' },
+    { key: 'flagged' as const, label: 'Flagged Attempts', value: regularResults.filter((result) => Number(result.flagged_count ?? 0) > 0).length, tone: 'text-amber-600' },
+    { key: 'mock' as const, label: 'Mock Attempts', value: regularResults.filter((result) => result.test_type === 'mock').length, tone: 'text-emerald-600' },
+    { key: 'practice' as const, label: 'Practice Attempts', value: regularResults.filter((result) => result.test_type === 'practice').length, tone: 'text-purple-600' },
     { key: 'daily_question' as const, label: 'Daily Questions', value: results.filter((result) => result.test_type === 'daily_question').length, tone: 'text-indigo-600' },
   ];
 
@@ -91,8 +93,11 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
             <button
               key={stat.label}
               onClick={() => {
+                if (stat.key === 'daily_question') {
+                  setDailyResultsOpen(true);
+                  return;
+                }
                 setFilter(stat.key);
-                if (stat.key === 'daily_question') setDailyResultsOpen(true);
               }}
               className={`card p-4 md:p-5 text-left transition border ${active ? 'border-[var(--brand)] ring-2 ring-[color:color-mix(in_oklab,var(--brand)_24%,transparent)]' : 'border-[var(--line)] hover:border-[var(--brand)]/30'}`}
             >
@@ -107,11 +112,16 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
         <div className="px-4 md:px-6 py-3 border-b border-[var(--line)] flex items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold text-[var(--text)] text-sm">Attempt Queue</h2>
-            <p className="text-xs text-[var(--muted)] mt-0.5">Latest attempts with direct review links.</p>
+            <p className="text-xs text-[var(--muted)] mt-0.5">Mock and practice attempts with direct review links. Daily questions open in their own table.</p>
           </div>
-          <Link href="/admin/flagged" className="text-xs text-[var(--brand)] hover:underline">
-            Open flagged queue
-          </Link>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <button type="button" onClick={() => setDailyResultsOpen(true)} className="btn-secondary text-xs !px-3 !py-2">
+              Daily question table
+            </button>
+            <Link href="/admin/flagged" className="text-xs text-[var(--brand)] hover:underline">
+              Open flagged queue
+            </Link>
+          </div>
         </div>
 
         {filteredResults.length === 0 ? (
@@ -322,7 +332,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                 <table className="w-full min-w-[860px] text-sm">
                   <thead className="bg-[var(--brand-soft)]/35">
                     <tr>
-                      {['User', 'Exam', 'Subject', 'Selected', 'Result', 'Score', 'Time', 'Submitted'].map((heading) => (
+                      {['User', 'Exam', 'Subject', 'Selected', 'Result', 'Score', 'Time', 'Submitted', 'Review'].map((heading) => (
                         <th key={heading} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{heading}</th>
                       ))}
                     </tr>
@@ -345,6 +355,11 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                         <td className="px-4 py-3 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</td>
                         <td className="px-4 py-3 text-[var(--muted)]">{formatDuration(row.total_time_seconds)}</td>
                         <td className="px-4 py-3 text-[var(--muted)]">{formatResultDate(row.submitted_at)}</td>
+                        <td className="px-4 py-3">
+                          <Link href={`/admin/results/${row.result_id}`} className="text-[var(--brand)] font-medium hover:underline">
+                            Review
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
