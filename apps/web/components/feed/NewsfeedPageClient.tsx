@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
+import { formatDuration } from '@/lib/results';
 
 type FeedTab = 'latest' | 'question' | 'more';
 
@@ -22,6 +23,23 @@ export function NewsfeedPageClient() {
   const [activeTab, setActiveTab] = useState<FeedTab>('latest');
   const [questionOfDay, setQuestionOfDay] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+  const feedQuery = useQuery({
+    queryKey: ['newsfeed-weekly'],
+    queryFn: async () => {
+      const response = await fetch('/api/feed', {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      const payload = await readJson(response);
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.error ?? 'Could not load weekly feed.');
+      }
+      return payload.data;
+    },
+    retry: 1,
+    staleTime: 60_000,
+  });
 
   const questionQuery = useQuery({
     queryKey: ['newsfeed-question-of-day'],
@@ -118,6 +136,8 @@ export function NewsfeedPageClient() {
             <div className="mt-5">
               {activeTab === 'latest' && (
                 <div className="grid gap-3">
+                  <WeeklyMockCard data={feedQuery.data} isLoading={feedQuery.isLoading} />
+                  <WeeklyResultCard data={feedQuery.data} isLoading={feedQuery.isLoading} />
                   <FeedCard
                     icon="planner"
                     title="Planner verification moved out of dashboard"
@@ -167,6 +187,107 @@ export function NewsfeedPageClient() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) {
+  const weeklyMock = data?.weekly?.weeklyMock;
+  if (isLoading) return <div className="h-32 animate-pulse rounded-2xl bg-[var(--brand-soft)]/20" />;
+
+  if (!weeklyMock) {
+    return (
+      <FeedCard
+        icon="mock"
+        title="Weekly mock test"
+        body="A weekly test will appear here after an active mock test is added for your selected exam."
+        href="/mock"
+        cta="Browse mocks"
+      />
+    );
+  }
+
+  return (
+    <Link href={weeklyMock.href} className="group block rounded-3xl border border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-blue-500 dark:border-blue-900 dark:from-blue-950/50 dark:to-cyan-950/30">
+      <div className="flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
+          <AppIcon name="mock" className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="badge-blue">Weekly mock test</span>
+          <span className="mt-2 block font-semibold text-[var(--text)]">{weeklyMock.title}</span>
+          <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
+            {weeklyMock.week_start} to {weeklyMock.week_end} · {weeklyMock.total_questions} questions · {weeklyMock.duration_minutes} min
+          </span>
+          <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">
+            Start weekly mock
+            <AppIcon name="arrow-right" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }) {
+  const published = data?.weekly?.publishedResult;
+  if (isLoading) return null;
+
+  if (!published || published.total_attempts === 0) {
+    return (
+      <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
+            <AppIcon name="leaderboard" className="h-5 w-5" />
+          </span>
+          <span>
+            <span className="block font-semibold text-[var(--text)]">Weekly result publishing</span>
+            <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
+              Rankings publish automatically after the weekly mock window closes at midnight NPT.
+            </span>
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl border border-emerald-300 bg-emerald-50/70 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <span className="badge-green">Published weekly ranking</span>
+          <h2 className="mt-2 font-semibold text-[var(--text)]">{published.title}</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Week {published.week_start} to {published.week_end} · Published {published.published_at_label}
+          </p>
+        </div>
+        <Link href="/leaderboard" className="btn-secondary text-xs">Full leaderboard</Link>
+      </div>
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/80">
+        <table className="w-full min-w-[620px] text-sm">
+          <thead className="bg-[var(--brand-soft)]/35">
+            <tr>
+              {['Rank', 'User', 'Score', 'Accuracy', 'Time'].map((heading) => (
+                <th key={heading} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{heading}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--line)]">
+            {published.rows.slice(0, 5).map((row: any) => (
+              <tr key={row.result_id}>
+                <td className="px-4 py-3 font-bold text-[var(--text)]">#{row.rank}</td>
+                <td className="px-4 py-3">
+                  <p className="font-medium text-[var(--text)]">{row.user_name}</p>
+                  <p className="text-xs text-[var(--muted)]">{row.user_email}</p>
+                </td>
+                <td className="px-4 py-3 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</td>
+                <td className="px-4 py-3 text-emerald-600 font-semibold">{row.accuracy_percent}%</td>
+                <td className="px-4 py-3 text-[var(--muted)]">{formatDuration(row.total_time_seconds)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

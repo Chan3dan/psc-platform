@@ -133,6 +133,15 @@ function buildDailyFeed({
     status: 'Open feed',
   });
 
+  feed.push({
+    id: 'weekly-mock-feed',
+    type: 'mock',
+    title: 'Weekly mock test',
+    body: 'Your weekly exam-style mock and published rank updates now live in Newsfeed.',
+    href: '/feed',
+    status: 'Open weekly test',
+  });
+
   if (plan) {
     feed.push({
       id: 'study-plan',

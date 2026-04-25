@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { AppIcon } from '@/components/icons/AppIcon';
 import { formatDuration, formatResultDate } from '@/lib/results';
 
 type AdminResultFilter = 'all' | 'flagged' | 'mock' | 'practice' | 'daily_question';
@@ -11,11 +10,48 @@ type AdminResultFilter = 'all' | 'flagged' | 'mock' | 'practice' | 'daily_questi
 export function AdminResultsClient({ results, isLoading = false }: { results: any[]; isLoading?: boolean }) {
   const [filter, setFilter] = useState<AdminResultFilter>('all');
   const [mounted, setMounted] = useState(false);
-  const [previewResult, setPreviewResult] = useState<any | null>(null);
+  const [dailyResultsOpen, setDailyResultsOpen] = useState(false);
+  const [dailyResultsDate, setDailyResultsDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dailyResults, setDailyResults] = useState<any | null>(null);
+  const [dailyResultsLoading, setDailyResultsLoading] = useState(false);
+  const [dailyResultsError, setDailyResultsError] = useState('');
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!dailyResultsOpen || !dailyResultsDate) return;
+    let cancelled = false;
+
+    async function loadDailyResults() {
+      setDailyResultsLoading(true);
+      setDailyResultsError('');
+      try {
+        const response = await fetch(`/api/admin/daily-question-results?date=${encodeURIComponent(dailyResultsDate)}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error ?? 'Could not load daily question results');
+        }
+        if (!cancelled) setDailyResults(payload.data);
+      } catch (error) {
+        if (!cancelled) {
+          setDailyResults(null);
+          setDailyResultsError(error instanceof Error ? error.message : 'Could not load daily question results');
+        }
+      } finally {
+        if (!cancelled) setDailyResultsLoading(false);
+      }
+    }
+
+    loadDailyResults();
+    return () => {
+      cancelled = true;
+    };
+  }, [dailyResultsOpen, dailyResultsDate]);
 
   const filteredResults = useMemo(() => {
     if (filter === 'flagged') {
@@ -27,10 +63,10 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
     return results;
   }, [results, filter]);
 
-  function openDailyQuestionResult(result: any) {
-    if (result.test_type === 'daily_question' && result.daily_question_preview) {
-      setPreviewResult(result);
-    }
+  function openDailyQuestionResult(result?: any) {
+    const submittedDate = result?.result_context?.submitted_for_date;
+    if (submittedDate) setDailyResultsDate(submittedDate);
+    setDailyResultsOpen(true);
   }
 
   const filterCards = [
@@ -54,7 +90,10 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
           return (
             <button
               key={stat.label}
-              onClick={() => setFilter(stat.key)}
+              onClick={() => {
+                setFilter(stat.key);
+                if (stat.key === 'daily_question') setDailyResultsOpen(true);
+              }}
               className={`card p-4 md:p-5 text-left transition border ${active ? 'border-[var(--brand)] ring-2 ring-[color:color-mix(in_oklab,var(--brand)_24%,transparent)]' : 'border-[var(--line)] hover:border-[var(--brand)]/30'}`}
             >
               <div className={`text-xl md:text-2xl font-bold ${stat.tone}`}>{stat.value}</div>
@@ -90,7 +129,9 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                     key={result._id}
                     role={isDailyQuestion ? 'button' : undefined}
                     tabIndex={isDailyQuestion ? 0 : undefined}
-                    onClick={() => openDailyQuestionResult(result)}
+                    onClick={() => {
+                      if (isDailyQuestion) openDailyQuestionResult(result);
+                    }}
                     onKeyDown={(event) => {
                       if (isDailyQuestion && (event.key === 'Enter' || event.key === ' ')) {
                         event.preventDefault();
@@ -119,7 +160,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation();
-                          setPreviewResult(result);
+                          openDailyQuestionResult(result);
                         }}
                         className="text-xs font-semibold text-[var(--brand)]"
                       >
@@ -147,11 +188,14 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                 <tbody className="divide-y divide-[var(--line)]">
                   {filteredResults.map((result: any) => {
                     const flaggedCount = Number(result.flagged_count ?? 0);
+                    const isDailyQuestion = result.test_type === 'daily_question' && result.daily_question_preview;
                     return (
                       <tr
                         key={result._id}
-                        onClick={() => openDailyQuestionResult(result)}
-                        className={`hover:bg-[var(--brand-soft)]/25 ${result.test_type === 'daily_question' && result.daily_question_preview ? 'cursor-pointer' : ''}`}
+                        onClick={() => {
+                          if (isDailyQuestion) openDailyQuestionResult(result);
+                        }}
+                        className={`hover:bg-[var(--brand-soft)]/25 ${isDailyQuestion ? 'cursor-pointer' : ''}`}
                       >
                         <td className="px-6 py-3 font-medium text-[var(--text)]">{result.test_id?.title ?? result.result_context?.label ?? 'Practice Session'}</td>
                         <td className="px-6 py-3 text-[var(--muted)]">
@@ -183,7 +227,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                                 type="button"
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  setPreviewResult(result);
+                                  openDailyQuestionResult(result);
                                 }}
                                 className="text-[var(--brand)] font-medium hover:underline"
                               >
@@ -205,88 +249,113 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
         )}
       </div>
 
-      {mounted && previewResult && createPortal(
+      {mounted && dailyResultsOpen && createPortal(
         <div
           className="fixed inset-0 z-[140] bg-black/70 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(event) => {
-            if (event.target === event.currentTarget) setPreviewResult(null);
+            if (event.target === event.currentTarget) setDailyResultsOpen(false);
           }}
         >
-          <section className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-3xl bg-white dark:bg-slate-950 border border-[var(--line)] md:rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-            <header className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
+          <section className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-6xl bg-white dark:bg-slate-950 border border-[var(--line)] md:rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+            <header className="flex flex-col gap-3 border-b border-[var(--line)] px-5 py-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text)]">Question of the Day Result</h3>
+                <h3 className="text-lg font-semibold text-[var(--text)]">Question of the Day Results</h3>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  {previewResult.user_id?.name ?? 'Unknown user'} · {previewResult.exam_id?.name ?? 'Unknown exam'} · {formatResultDate(previewResult.created_at)}
+                  Review every user answer for a selected date in one table.
                 </p>
               </div>
-              <button onClick={() => setPreviewResult(null)} className="btn-secondary text-xs px-3 py-1.5">
-                Close
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="date"
+                  value={dailyResultsDate}
+                  onChange={(event) => setDailyResultsDate(event.target.value)}
+                  className="h-10 rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] px-3 text-sm text-[var(--text)]"
+                />
+                <button onClick={() => setDailyResultsOpen(false)} className="btn-secondary text-xs px-3 py-1.5">
+                  Close
+                </button>
+              </div>
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-4">
+              {dailyResultsLoading ? (
+                <div className="h-56 animate-pulse rounded-3xl bg-[var(--brand-soft)]/25" />
+              ) : dailyResultsError ? (
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50">
+                  {dailyResultsError}
+                </div>
+              ) : dailyResults ? (
+                <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="rounded-2xl border border-[var(--line)] p-3">
-                  <p className="text-xs text-[var(--muted)]">Score</p>
-                  <p className="mt-1 text-xl font-semibold text-[var(--text)]">{previewResult.score}/{previewResult.max_score}</p>
+                  <p className="text-xs text-[var(--muted)]">Answers</p>
+                  <p className="mt-1 text-xl font-semibold text-[var(--text)]">{dailyResults.summary?.total ?? 0}</p>
+                </div>
+                <div className="rounded-2xl border border-[var(--line)] p-3">
+                  <p className="text-xs text-[var(--muted)]">Correct</p>
+                  <p className="mt-1 text-xl font-semibold text-emerald-600">{dailyResults.summary?.correct ?? 0}</p>
+                </div>
+                <div className="rounded-2xl border border-[var(--line)] p-3">
+                  <p className="text-xs text-[var(--muted)]">Wrong</p>
+                  <p className="mt-1 text-xl font-semibold text-red-600">{dailyResults.summary?.wrong ?? 0}</p>
                 </div>
                 <div className="rounded-2xl border border-[var(--line)] p-3">
                   <p className="text-xs text-[var(--muted)]">Accuracy</p>
-                  <p className="mt-1 text-xl font-semibold text-emerald-600">{previewResult.accuracy_percent}%</p>
-                </div>
-                <div className="rounded-2xl border border-[var(--line)] p-3">
-                  <p className="text-xs text-[var(--muted)]">Subject</p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--text)]">{previewResult.daily_question_preview?.subject_name ?? 'General'}</p>
-                </div>
-                <div className="rounded-2xl border border-[var(--line)] p-3">
-                  <p className="text-xs text-[var(--muted)]">Selected</p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--text)]">
-                    {previewResult.daily_question_preview?.selected_option === null
-                      ? 'Not selected'
-                      : `Option ${String.fromCharCode(65 + Number(previewResult.daily_question_preview?.selected_option ?? 0))}`}
-                  </p>
+                  <p className="mt-1 text-xl font-semibold text-[var(--text)]">{dailyResults.summary?.accuracy_percent ?? 0}%</p>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  <AppIcon name="questions" className="h-3.5 w-3.5" />
-                  Prompt
-                </div>
-                <p className="mt-2 text-sm font-medium text-[var(--text)]">{previewResult.daily_question_preview?.question_text}</p>
-              </div>
-
-              <div className="space-y-2">
-                {(previewResult.daily_question_preview?.options ?? []).map((option: any) => {
-                  const optionIndex = Number(option.index);
-                  const isCorrect = optionIndex === Number(previewResult.daily_question_preview?.correct_answer);
-                  const isSelected = optionIndex === Number(previewResult.daily_question_preview?.selected_option);
-                  return (
-                    <div
-                      key={optionIndex}
-                      className={`rounded-2xl border px-4 py-3 ${
-                        isCorrect
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950'
-                          : isSelected
-                            ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                            : 'border-[var(--line)] bg-[var(--bg-elev)]/70'
-                      }`}
-                    >
+              {dailyResults.questionSummaries?.length > 0 && (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {dailyResults.questionSummaries.map((question: any) => (
+                    <div key={question.question_of_day_id} className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        Option {String.fromCharCode(65 + optionIndex)}
+                        {question.exam_name} · {question.subject_name}
                       </p>
-                      <p className="mt-1 text-sm text-[var(--text)]">{option.text}</p>
+                      <p className="mt-2 text-sm font-medium text-[var(--text)]">{question.question_text}</p>
                     </div>
-                  );
-                })}
-              </div>
-
-              {previewResult.daily_question_preview?.explanation && (
-                <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/18 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Explanation</p>
-                  <p className="mt-2 text-sm text-[var(--muted)]">{previewResult.daily_question_preview.explanation}</p>
+                  ))}
                 </div>
+              )}
+
+              <div className="overflow-x-auto rounded-2xl border border-[var(--line)]">
+                <table className="w-full min-w-[860px] text-sm">
+                  <thead className="bg-[var(--brand-soft)]/35">
+                    <tr>
+                      {['User', 'Exam', 'Subject', 'Selected', 'Result', 'Score', 'Time', 'Submitted'].map((heading) => (
+                        <th key={heading} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--line)]">
+                    {(dailyResults.rows ?? []).map((row: any) => (
+                      <tr key={row.result_id}>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-[var(--text)]">{row.user_name}</p>
+                          <p className="text-xs text-[var(--muted)]">{row.user_email}</p>
+                        </td>
+                        <td className="px-4 py-3 text-[var(--muted)]">{row.exam_name}</td>
+                        <td className="px-4 py-3 text-[var(--muted)]">{row.subject_name}</td>
+                        <td className="px-4 py-3 text-[var(--text)]">{row.selected_label}</td>
+                        <td className="px-4 py-3">
+                          <span className={`badge ${row.is_correct ? 'badge-green' : 'badge-amber'}`}>
+                            {row.is_correct ? 'Correct' : 'Wrong'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</td>
+                        <td className="px-4 py-3 text-[var(--muted)]">{formatDuration(row.total_time_seconds)}</td>
+                        <td className="px-4 py-3 text-[var(--muted)]">{formatResultDate(row.submitted_at)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {dailyResults.rows?.length === 0 && (
+                  <p className="p-5 text-sm text-[var(--muted)]">No users answered the question of the day for this date.</p>
+                )}
+              </div>
+                </>
+              ) : (
+                <p className="text-sm text-[var(--muted)]">Choose a date to load daily question results.</p>
               )}
             </div>
           </section>
