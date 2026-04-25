@@ -7,6 +7,7 @@ import { signOut } from 'next-auth/react';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
@@ -57,13 +58,16 @@ export function MobileHeader({ user, targetExamName }: MobileHeaderProps) {
                 hideSubtitleOnMobile={false}
               />
             </div>
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="btn-secondary !px-3 !py-2 shrink-0"
-              aria-label="Open navigation menu"
-            >
-              Menu
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle className="hidden min-[380px]:inline-flex !px-3 !py-2" />
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="btn-secondary !px-3 !py-2"
+                aria-label="Open navigation menu"
+              >
+                Menu
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -90,6 +94,9 @@ export function MobileHeader({ user, targetExamName }: MobileHeaderProps) {
             </div>
 
             <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+              <div className="px-1 pb-2">
+                <ThemeToggle className="w-full !justify-center" />
+              </div>
               {APP_NAV_ITEMS.map((item) => {
                 const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                 return (

@@ -1,4 +1,5 @@
 import { MockTest, Result } from '@psc/shared/models';
+import { Types } from 'mongoose';
 
 const KATHMANDU_OFFSET_MINUTES = 345;
 
@@ -36,6 +37,10 @@ function addDaysToDateKey(dateKey: string, days: number) {
 function seededIndex(length: number, seed: string) {
   if (length <= 0) return 0;
   return seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % length;
+}
+
+function isValidObjectId(value: unknown) {
+  return typeof value === 'string' && Types.ObjectId.isValid(value);
 }
 
 export function getKathmanduWeekWindows(date = new Date()) {
@@ -90,6 +95,20 @@ export async function buildWeeklyFeedForExam(exam: any) {
 
   const activeMock = mockTests[seededIndex(mockTests.length, `${exam._id}:${windows.current.key}`)];
   const publishedMock = mockTests[seededIndex(mockTests.length, `${exam._id}:${windows.published.key}`)];
+  const pastWeeklyMocks = Array.from({ length: 8 }).map((_, index) => {
+    const weekStart = addDaysToDateKey(windows.current.startKey, -(index + 1) * 7);
+    const weekEnd = addDaysToDateKey(weekStart, 6);
+    const mock = mockTests[seededIndex(mockTests.length, `${exam._id}:${weekStart}`)];
+    return {
+      _id: String(mock._id),
+      title: mock.title,
+      duration_minutes: mock.duration_minutes,
+      total_questions: mock.total_questions,
+      week_start: weekStart,
+      week_end: weekEnd,
+      href: `/mock/${exam.slug}?test=${String(mock._id)}&weekly=past&week=${weekEnd}`,
+    };
+  });
 
   const rows = await Result.find({
     test_type: 'mock',
@@ -117,8 +136,9 @@ export async function buildWeeklyFeedForExam(exam: any) {
       attempt_date: windows.current.endKey,
       week_start: windows.current.startKey,
       week_end: windows.current.endKey,
-      href: `/mock/${exam.slug}?test=${String(activeMock._id)}`,
+      href: `/mock/${exam.slug}?test=${String(activeMock._id)}&weekly=scheduled&week=${windows.current.endKey}`,
     },
+    pastWeeklyMocks,
     publishedResult: {
       title: `${publishedMock.title} rankings`,
       week_start: windows.published.startKey,
@@ -139,4 +159,62 @@ export async function buildWeeklyFeedForExam(exam: any) {
       })),
     },
   };
+}
+
+export async function validateScheduledWeeklyAttempt({
+  userId,
+  testId,
+  examId,
+  weekEnd,
+}: {
+  userId: string;
+  testId: string;
+  examId: string;
+  weekEnd?: string | null;
+}) {
+  if (!isValidObjectId(userId) || !isValidObjectId(testId) || !isValidObjectId(examId)) {
+    return { ok: false as const, error: 'Weekly mock context is invalid.', status: 400 };
+  }
+
+  const windows = getKathmanduWeekWindows();
+  if (windows.localDay !== 6 || weekEnd !== windows.current.endKey) {
+    return {
+      ok: false as const,
+      error: `This weekly mock is only available on ${windows.current.endKey}. Use Past Weekly Mocks after it expires.`,
+      status: 403,
+    };
+  }
+
+  const mockTests = await MockTest.find({ exam_id: examId, is_active: true })
+    .select('_id')
+    .sort({ created_at: 1 })
+    .lean() as any[];
+  if (!mockTests.length) {
+    return { ok: false as const, error: 'Weekly mock is not configured for this exam.', status: 404 };
+  }
+
+  const activeMock = mockTests[seededIndex(mockTests.length, `${examId}:${windows.current.key}`)];
+  if (String(activeMock?._id) !== testId) {
+    return { ok: false as const, error: 'This is not the scheduled weekly mock for today.', status: 403 };
+  }
+
+  const existing = await Result.exists({
+    user_id: userId,
+    test_id: testId,
+    test_type: 'mock',
+    created_at: {
+      $gte: localDateKeyToUtc(windows.current.endKey),
+      $lte: localDateKeyToUtc(windows.current.endKey, true),
+    },
+  });
+
+  if (existing) {
+    return {
+      ok: false as const,
+      error: 'You already attempted this scheduled weekly mock. Past weekly mocks are available for extra practice.',
+      status: 409,
+    };
+  }
+
+  return { ok: true as const };
 }

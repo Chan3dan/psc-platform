@@ -16,6 +16,8 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
   const searchParams = useSearchParams();
   const router = useRouter();
   const testId = searchParams.get('test');
+  const weeklyMode = searchParams.get('weekly');
+  const weeklyWeek = searchParams.get('week');
 
   const {
     session, currentIndex, answers, isSubmitted, isSubmitting, submitError, result,
@@ -54,7 +56,11 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
     fetch('/api/tests/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ test_id: testId, test_type: 'mock' }),
+      body: JSON.stringify({
+        test_id: testId,
+        test_type: 'mock',
+        ...(weeklyMode === 'scheduled' ? { weekly: 'scheduled', week: weeklyWeek } : {}),
+      }),
     })
       .then(async (r) => {
         const payload = await r.json().catch(() => null);
@@ -87,7 +93,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [initialSession, startSession, testId]);
+  }, [initialSession, startSession, testId, weeklyMode, weeklyWeek]);
 
   useEffect(() => {
     let mounted = true;

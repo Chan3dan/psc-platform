@@ -7,6 +7,7 @@ import { signOut } from 'next-auth/react';
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
@@ -54,13 +55,16 @@ export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
                 admin
               />
             </div>
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="btn-secondary !px-3 !py-2 shrink-0"
-              aria-label="Open admin navigation menu"
-            >
-              Menu
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle className="hidden min-[380px]:inline-flex !px-3 !py-2" />
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="btn-secondary !px-3 !py-2"
+                aria-label="Open admin navigation menu"
+              >
+                Menu
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -88,6 +92,7 @@ export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
             </div>
 
             <div className="px-3 pt-3">
+              <ThemeToggle className="mb-2 w-full !justify-center" />
               <Link
                 href="/dashboard"
                 className="w-full flex items-center justify-center rounded-2xl border border-[var(--line)] bg-white/80 dark:bg-white/5 px-3 py-3 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]/35 hover:bg-[var(--brand-soft)]/40"

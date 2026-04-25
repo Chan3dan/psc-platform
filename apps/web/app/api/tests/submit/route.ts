@@ -2,11 +2,12 @@ import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { Exam, Question, Result, User } from '@psc/shared/models';
+import { Exam, MockTest, Question, Result, User } from '@psc/shared/models';
 import { ok, err, unauthorized, serverError } from '@/lib/apiResponse';
 import { calculateScore, calculatePercentile } from '@psc/shared/utils/scoring';
 import { Types } from 'mongoose';
 import { CacheKeys, cacheDel } from '@/lib/redis';
+import { validateScheduledWeeklyAttempt } from '@/lib/weekly-feed';
 
 function normalizeNegativePercent(value: number | undefined) {
   if (typeof value !== 'number' || Number.isNaN(value)) return 25;
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest) {
       test_type = 'mock',
       answers: submittedAnswers,
       total_time_seconds = 0,
+      weekly,
+      week,
     } = await req.json();
 
     if (!Array.isArray(submittedAnswers) || submittedAnswers.length === 0) {
@@ -42,6 +45,19 @@ export async function POST(req: NextRequest) {
     }
     const normalizedExamId = normalizeId(exam_id);
     if (!normalizedExamId) return err('exam_id is required');
+    if (weekly === 'scheduled') {
+      const normalizedTestId = normalizeId(test_id);
+      if (!normalizedTestId) return err('test_id is required for scheduled weekly mock');
+      const mock = await MockTest.findById(normalizedTestId).select('exam_id').lean() as any;
+      if (!mock) return err('Mock test not found', 404);
+      const validation = await validateScheduledWeeklyAttempt({
+        userId: session.user.id,
+        testId: normalizedTestId,
+        examId: normalizedExamId,
+        weekEnd: week,
+      });
+      if (!validation.ok) return err(validation.error, validation.status);
+    }
 
     const normalizedAnswers = submittedAnswers
       .map((a: any) => {

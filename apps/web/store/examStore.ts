@@ -4,7 +4,7 @@ import { devtools } from 'zustand/middleware';
 
 export interface QuestionOption { index: number; text: string; image_url?: string; }
 export interface SessionQuestion { _id: string; question_text: string; question_image_url?: string | null; options: QuestionOption[]; subject_id: string; difficulty: string; }
-export interface ExamConfig { test_id: string | null; exam_id: string; title: string; duration_minutes: number; total_marks: number; total_questions: number; negative_marking: number; marks_per_question: number; test_type: string; }
+export interface ExamConfig { test_id: string | null; exam_id: string; title: string; duration_minutes: number; total_marks: number; total_questions: number; negative_marking: number; marks_per_question: number; test_type: string; weekly_context?: { mode?: string | null; week?: string | null }; }
 export interface ExamSession { config: ExamConfig; questions: SessionQuestion[]; started_at: string; }
 export interface AnswerRecord {
   question_id: string;
@@ -153,6 +153,9 @@ export const useExamStore = create<ExamStoreState>()(
               test_type: session.config.test_type,
               answers: submittedAnswers,
               total_time_seconds: totalTime,
+              ...(session.config.weekly_context?.mode === 'scheduled'
+                ? { weekly: 'scheduled', week: session.config.weekly_context.week }
+                : {}),
             }),
           });
           clearTimeout(timeout);

@@ -351,15 +351,15 @@ export function DashboardPageClient() {
   ];
   const feedNotice = (
     <section className="sticky top-[84px] z-30 md:static md:z-auto">
-      <div className="rounded-3xl border border-blue-200/80 bg-white/90 p-3 shadow-lg shadow-blue-500/10 backdrop-blur-xl dark:border-blue-900/70 dark:bg-slate-950/90">
+      <div className="rounded-3xl border border-blue-200/80 bg-white/95 p-3 shadow-lg shadow-blue-500/10 backdrop-blur-xl dark:border-blue-800/80 dark:bg-slate-950 dark:shadow-blue-950/25">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand)] text-white">
               <AppIcon name="idea" className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[var(--text)]">{t.feedNoticeTitle}</p>
-              <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">{t.feedNoticeBody}</p>
+              <p className="text-sm font-semibold text-slate-950 dark:text-white">{t.feedNoticeTitle}</p>
+              <p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-300">{t.feedNoticeBody}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 md:flex md:shrink-0">

@@ -55,6 +55,8 @@ export type TestSessionInput = {
   count?: number;
   difficulty?: string | null;
   question_ids?: string[];
+  weekly?: 'scheduled' | 'past' | null;
+  week?: string | null;
 };
 
 export async function buildTestSession(input: TestSessionInput) {
@@ -68,6 +70,8 @@ export async function buildTestSession(input: TestSessionInput) {
     count = 20,
     difficulty,
     question_ids = [],
+    weekly,
+    week,
   } = input;
 
   let questions: any[] = [];
@@ -100,6 +104,7 @@ export async function buildTestSession(input: TestSessionInput) {
       negative_marking_percent: normalizeNegativePercent(mockTest.negative_marking),
       marks_per_question: mockTest.total_marks / mockTest.total_questions,
       test_type: 'mock',
+      ...(weekly ? { weekly_context: { mode: weekly, week: week ?? null } } : {}),
     };
 
     if (mockTest.config.auto_generate) {

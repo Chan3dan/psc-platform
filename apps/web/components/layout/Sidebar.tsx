@@ -7,6 +7,7 @@ import { SearchModal } from '@/components/layout/SearchModal';
 import { APP_NAV_ITEMS } from '@/components/layout/nav-items';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
@@ -47,6 +48,7 @@ export function Sidebar({ user, targetExamName }: SidebarProps) {
           <span className="badge-blue">{settings.liveLabel}</span>
         </div>
         <div className="px-3 pt-3">
+          <ThemeToggle className="mb-2 w-full !justify-center !px-3" />
           <button
             className="w-full input text-left text-sm text-[var(--muted)] hover:text-[var(--text)]"
             onClick={() => setSearchOpen(true)}

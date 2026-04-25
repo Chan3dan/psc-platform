@@ -23,6 +23,7 @@ export function NewsfeedPageClient() {
   const [activeTab, setActiveTab] = useState<FeedTab>('latest');
   const [questionOfDay, setQuestionOfDay] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [pastWeeklyOpen, setPastWeeklyOpen] = useState(false);
 
   const feedQuery = useQuery({
     queryKey: ['newsfeed-weekly'],
@@ -137,6 +138,12 @@ export function NewsfeedPageClient() {
               {activeTab === 'latest' && (
                 <div className="grid gap-3">
                   <WeeklyMockCard data={feedQuery.data} isLoading={feedQuery.isLoading} />
+                  <PastWeeklyMockLauncher
+                    data={feedQuery.data}
+                    isLoading={feedQuery.isLoading}
+                    open={pastWeeklyOpen}
+                    setOpen={setPastWeeklyOpen}
+                  />
                   <WeeklyResultCard data={feedQuery.data} isLoading={feedQuery.isLoading} />
                   <FeedCard
                     icon="planner"
@@ -231,13 +238,13 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
   }
 
   return (
-    <Link href={weeklyMock.href} className="group block rounded-3xl border border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-blue-500 dark:border-blue-800 dark:bg-slate-900 dark:from-blue-950/80 dark:to-slate-950">
+    <Link href={weeklyMock.href} className="group block rounded-3xl border border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-blue-500 dark:border-blue-700 dark:from-slate-950 dark:via-slate-950 dark:to-blue-950 dark:shadow-blue-950/30">
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
           <AppIcon name="mock" className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="badge-blue">Weekly mock test</span>
+          <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-100">Weekly mock test</span>
           <span className="mt-2 block font-semibold text-slate-950 dark:text-white">{weeklyMock.title}</span>
           <span className="mt-1 block text-sm leading-6 text-slate-600 dark:text-slate-300">
             Today only · {weeklyMock.total_questions} questions · {weeklyMock.duration_minutes} min
@@ -249,6 +256,91 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
         </span>
       </div>
     </Link>
+  );
+}
+
+function PastWeeklyMockLauncher({
+  data,
+  isLoading,
+  open,
+  setOpen,
+}: {
+  data: any;
+  isLoading: boolean;
+  open: boolean;
+  setOpen: (value: boolean) => void;
+}) {
+  const pastMocks = Array.isArray(data?.weekly?.pastWeeklyMocks) ? data.weekly.pastWeeklyMocks : [];
+  if (isLoading || pastMocks.length === 0) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group block w-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4 text-left transition-colors hover:border-[var(--brand)]/50 hover:bg-[var(--brand-soft)]/25"
+      >
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
+            <AppIcon name="mock" className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-[var(--text)]">Past weekly mock tests</span>
+            <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
+              Practice expired weekly sets without scheduled ranking pressure.
+            </span>
+            <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">
+              Open past mocks
+              <AppIcon name="arrow-right" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-[90]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
+            aria-label="Close past weekly mocks"
+            onClick={() => setOpen(false)}
+          />
+          <section className="absolute inset-x-3 top-8 mx-auto flex max-h-[86dvh] max-w-2xl flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] p-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">Expired weekly tests</p>
+                <h2 className="mt-1 text-lg font-bold text-[var(--text)]">Past Weekly Mocks</h2>
+                <p className="mt-1 text-sm text-[var(--muted)]">These are normal mock attempts. Scheduled ranks only count on the original Saturday.</p>
+              </div>
+              <button type="button" onClick={() => setOpen(false)} className="btn-secondary !px-3 !py-2 text-xs">
+                Close
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid gap-3">
+                {pastMocks.map((mock: any) => (
+                  <Link
+                    key={`${mock._id}-${mock.week_end}`}
+                    href={mock.href}
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/55 p-4 transition-colors hover:border-[var(--brand)]/50 hover:bg-[var(--brand-soft)]/20"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--brand)]">{mock.week_start} to {mock.week_end}</p>
+                        <h3 className="mt-1 font-semibold text-[var(--text)]">{mock.title}</h3>
+                        <p className="mt-1 text-sm text-[var(--muted)]">{mock.total_questions} questions · {mock.duration_minutes} min</p>
+                      </div>
+                      <span className="btn-primary !px-3 !py-2 text-xs">Attempt</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
   );
 }
 

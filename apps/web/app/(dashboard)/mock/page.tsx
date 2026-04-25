@@ -3,6 +3,7 @@ import { MockTestCatalog } from '@/components/exam/MockTestCatalog';
 import { getActiveMockTests } from '@/lib/catalog-data';
 import { authOptions } from '@/lib/auth';
 import { getUserPreferences } from '@/lib/user-preferences';
+import { buildWeeklyFeedForExam } from '@/lib/weekly-feed';
 
 export default async function MockIndexPage() {
   const session = await getServerSession(authOptions);
@@ -11,6 +12,7 @@ export default async function MockIndexPage() {
   const filteredTests = preferences.targetExam
     ? tests.filter((test: any) => String(test.exam_id?._id ?? '') === preferences.targetExam?._id)
     : tests;
+  const weeklyFeed = preferences.targetExam ? await buildWeeklyFeedForExam(preferences.targetExam) : null;
 
   return (
     <div className="page-wrap space-y-6">
@@ -45,7 +47,11 @@ export default async function MockIndexPage() {
         </div>
       </div>
 
-      <MockTestCatalog tests={filteredTests} initialExamId={preferences.targetExam?._id ?? 'all'} />
+      <MockTestCatalog
+        tests={filteredTests}
+        initialExamId={preferences.targetExam?._id ?? 'all'}
+        pastWeeklyMocks={(weeklyFeed as any)?.pastWeeklyMocks ?? []}
+      />
     </div>
   );
 }
