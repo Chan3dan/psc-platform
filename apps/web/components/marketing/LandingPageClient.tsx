@@ -154,29 +154,27 @@ export function LandingPageClient({
     <div className="min-h-screen">
       <div className="page-wrap pb-2">
         <nav className="card glass px-4 sm:px-5 py-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} subtitle={settings.tagline} compact />
+          <div className="min-w-0 flex flex-1 items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} subtitle={settings.tagline} compact />
+            </div>
+            <ThemeToggle className="shrink-0" />
           </div>
-          <div className="flex flex-col items-stretch gap-2 shrink-0 w-full sm:w-auto sm:min-w-[18rem]">
-            <div className="flex items-center justify-end gap-2">
-              <ThemeToggle />
-              <button
-                type="button"
-                onClick={() => setLanguage((current) => (current === 'en' ? 'ne' : 'en'))}
-                className="btn-secondary !px-4 !py-2 text-sm"
-              >
-                {t.languageLabel}
-              </button>
-              <InstallAppButton className="hidden lg:inline-flex" />
-            </div>
-            <div className="flex items-center justify-end gap-2 sm:gap-3">
-              <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-2">
-                {t.signIn}
-              </Link>
-              <Link href="/register" className="btn-primary !px-5 sm:!px-6">
-                {t.getStarted}
-              </Link>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setLanguage((current) => (current === 'en' ? 'ne' : 'en'))}
+              className="btn-secondary !px-4 !py-2 text-sm"
+            >
+              {t.languageLabel}
+            </button>
+            <InstallAppButton className="hidden md:inline-flex" />
+            <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-2">
+              {t.signIn}
+            </Link>
+            <Link href="/register" className="btn-primary !px-5 sm:!px-6">
+              {t.getStarted}
+            </Link>
           </div>
         </nav>
       </div>
