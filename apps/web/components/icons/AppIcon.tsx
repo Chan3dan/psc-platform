@@ -22,7 +22,9 @@ type IconName =
   | 'idea'
   | 'upload'
   | 'close'
-  | 'arrow-right';
+  | 'arrow-right'
+  | 'sun'
+  | 'moon';
 
 interface AppIconProps {
   name: IconName;
@@ -234,6 +236,26 @@ export function AppIcon({ name, className = 'h-5 w-5' }: AppIconProps) {
         <svg {...baseProps}>
           <path d="M5 12h14" />
           <path d="m13 6 6 6-6 6" />
+        </svg>
+      );
+    case 'sun':
+      return (
+        <svg {...baseProps}>
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2.5v2.2" />
+          <path d="M12 19.3v2.2" />
+          <path d="m4.9 4.9 1.6 1.6" />
+          <path d="m17.5 17.5 1.6 1.6" />
+          <path d="M2.5 12h2.2" />
+          <path d="M19.3 12h2.2" />
+          <path d="m4.9 19.1 1.6-1.6" />
+          <path d="m17.5 6.5 1.6-1.6" />
+        </svg>
+      );
+    case 'moon':
+      return (
+        <svg {...baseProps}>
+          <path d="M20 14.2A7.8 7.8 0 1 1 9.8 4 6.5 6.5 0 0 0 20 14.2Z" />
         </svg>
       );
     default:

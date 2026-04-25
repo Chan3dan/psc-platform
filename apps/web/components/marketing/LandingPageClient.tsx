@@ -6,6 +6,7 @@ import { AppIcon } from '@/components/icons/AppIcon';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { InstallAppButton } from '@/components/marketing/InstallAppButton';
 import { FeedbackForm } from '@/components/feedback/FeedbackForm';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import type { SiteSettings } from '@/lib/site-settings-config';
 import { UPCOMING_EXAM_TRACKS } from '@/lib/exam-tracks';
 
@@ -156,21 +157,26 @@ export function LandingPageClient({
           <div className="min-w-0 flex-1">
             <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} subtitle={settings.tagline} compact />
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={() => setLanguage((current) => (current === 'en' ? 'ne' : 'en'))}
-              className="btn-secondary !px-4 !py-2 text-sm"
-            >
-              {t.languageLabel}
-            </button>
-            <InstallAppButton className="hidden md:inline-flex" />
-            <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-2">
-              {t.signIn}
-            </Link>
-            <Link href="/register" className="btn-primary !px-5 sm:!px-6">
-              {t.getStarted}
-            </Link>
+          <div className="flex flex-col items-stretch gap-2 shrink-0 w-full sm:w-auto sm:min-w-[18rem]">
+            <div className="flex items-center justify-end gap-2">
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={() => setLanguage((current) => (current === 'en' ? 'ne' : 'en'))}
+                className="btn-secondary !px-4 !py-2 text-sm"
+              >
+                {t.languageLabel}
+              </button>
+              <InstallAppButton className="hidden lg:inline-flex" />
+            </div>
+            <div className="flex items-center justify-end gap-2 sm:gap-3">
+              <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-2">
+                {t.signIn}
+              </Link>
+              <Link href="/register" className="btn-primary !px-5 sm:!px-6">
+                {t.getStarted}
+              </Link>
+            </div>
           </div>
         </nav>
       </div>
