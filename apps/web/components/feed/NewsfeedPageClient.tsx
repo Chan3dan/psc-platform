@@ -97,10 +97,10 @@ export function NewsfeedPageClient() {
   return (
     <div className="page-wrap space-y-5">
       <section className="card glass overflow-hidden">
-        <div className="grid gap-0 lg:grid-cols-[0.86fr,1.14fr]">
-          <div className="min-h-[220px] border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_38%),linear-gradient(145deg,var(--brand-soft),transparent)] p-5 lg:border-b-0 lg:border-r">
+        <div className="grid items-start gap-0 lg:grid-cols-[0.72fr,1.28fr]">
+          <div className="self-start border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_38%),linear-gradient(145deg,var(--brand-soft),transparent)] p-5 lg:border-b-0 lg:border-r">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">Newsfeed</p>
-            <h1 className="mt-3 text-3xl font-bold text-[var(--text)]">Today’s study stream</h1>
+            <h1 className="mt-3 text-2xl font-bold text-[var(--text)] md:text-3xl">Today’s study stream</h1>
             <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
               Dashboard stays light. Your daily question, latest updates, and quick learning actions live here.
             </p>
@@ -193,7 +193,7 @@ export function NewsfeedPageClient() {
 
 function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) {
   const weeklyMock = data?.weekly?.weeklyMock;
-  if (isLoading) return <div className="h-32 animate-pulse rounded-2xl bg-[var(--brand-soft)]/20" />;
+  if (isLoading) return <MotivationalLoadingCard label="Preparing your weekly challenge" />;
 
   if (!weeklyMock) {
     return (
@@ -207,17 +207,40 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
     );
   }
 
+  if (!weeklyMock.can_attempt) {
+    return (
+      <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)]/90 p-4 shadow-lg shadow-blue-500/5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
+            <AppIcon name="mock" className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="badge-amber">Weekly mock locked</span>
+            <span className="mt-2 block font-semibold text-[var(--text)]">{weeklyMock.title}</span>
+            <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
+              Opens only on {weeklyMock.attempt_date} for focused exam-day discipline. Results publish after the day closes.
+            </span>
+            <Link href="/planner" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">
+              Prepare with planner
+              <AppIcon name="arrow-right" className="h-3.5 w-3.5" />
+            </Link>
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Link href={weeklyMock.href} className="group block rounded-3xl border border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-blue-500 dark:border-blue-900 dark:from-blue-950/50 dark:to-cyan-950/30">
+    <Link href={weeklyMock.href} className="group block rounded-3xl border border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-blue-500 dark:border-blue-800 dark:bg-slate-900 dark:from-blue-950/80 dark:to-slate-950">
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
           <AppIcon name="mock" className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="badge-blue">Weekly mock test</span>
-          <span className="mt-2 block font-semibold text-[var(--text)]">{weeklyMock.title}</span>
-          <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
-            {weeklyMock.week_start} to {weeklyMock.week_end} · {weeklyMock.total_questions} questions · {weeklyMock.duration_minutes} min
+          <span className="mt-2 block font-semibold text-slate-950 dark:text-white">{weeklyMock.title}</span>
+          <span className="mt-1 block text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Today only · {weeklyMock.total_questions} questions · {weeklyMock.duration_minutes} min
           </span>
           <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">
             Start weekly mock
@@ -258,7 +281,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
           <span className="badge-green">Published weekly ranking</span>
           <h2 className="mt-2 font-semibold text-[var(--text)]">{published.title}</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Week {published.week_start} to {published.week_end} · Published {published.published_at_label}
+            Attempt date {published.attempt_date ?? published.week_end} · Published {published.published_at_label}
           </p>
         </div>
         <Link href="/leaderboard" className="btn-secondary text-xs">Full leaderboard</Link>
@@ -287,6 +310,28 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+const MOTIVATION_QUOTES = [
+  'Small daily practice beats last-minute panic.',
+  'One honest review today saves ten wrong answers later.',
+  'Discipline turns preparation into confidence.',
+];
+
+function MotivationalLoadingCard({ label }: { label: string }) {
+  const quote = MOTIVATION_QUOTES[new Date().getDate() % MOTIVATION_QUOTES.length];
+  return (
+    <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+      <div className="flex items-start gap-3">
+        <span className="h-10 w-10 shrink-0 animate-pulse rounded-2xl bg-[var(--brand-soft)]" />
+        <span className="min-w-0 flex-1">
+          <span className="block h-4 w-44 animate-pulse rounded bg-[var(--line)]" />
+          <span className="mt-3 block text-sm font-medium text-[var(--text)]">{label}</span>
+          <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">{quote}</span>
+        </span>
       </div>
     </div>
   );
@@ -344,7 +389,7 @@ function DailyQuestionCard({
   submitQuestion: any;
 }) {
   if (isLoading) {
-    return <div className="h-64 animate-pulse rounded-2xl bg-[var(--brand-soft)]/20" />;
+    return <MotivationalLoadingCard label="Loading today’s focused question" />;
   }
 
   if (error || !questionOfDay || !question) {

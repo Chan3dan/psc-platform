@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
@@ -8,6 +9,12 @@ interface Props {
   exams: Array<{ _id: string; name: string; slug: string }>;
   initialExamId?: string;
 }
+
+const PLANNER_QUOTES = [
+  'A plan is only real when your activity proves it.',
+  'Protect today’s study block like an exam hall seat.',
+  'Weak topics become easy when they appear on the calendar.',
+];
 
 export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
   const [plan, setPlan] = useState(initialPlan);
@@ -222,6 +229,17 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
   const currentDayProgress = day?.tasks?.length
     ? Math.round((day.tasks.filter((task: any) => task.is_completed).length / day.tasks.length) * 100)
     : 0;
+  const todayIndex = Math.max(
+    0,
+    (plan.daily_schedule ?? []).findIndex((item: any) => {
+      const date = new Date(item.date);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime() === today.getTime();
+    })
+  );
+  const todayPlan = (plan.daily_schedule ?? [])[todayIndex] ?? day;
+  const nextTask = todayPlan?.tasks?.find((task: any) => !task.is_completed) ?? todayPlan?.tasks?.[0] ?? null;
+  const plannerQuote = PLANNER_QUOTES[new Date().getDate() % PLANNER_QUOTES.length];
 
   return (
     <div className="space-y-6">
@@ -293,6 +311,55 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
 
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/18 p-4 text-sm text-[var(--muted)]">
           This planner no longer trusts manual checkmarks. Tasks auto-complete only after real solved questions, revision activity, or a verified mock attempt matches the day’s workload.
+        </div>
+      </div>
+
+      <div className="card overflow-hidden border border-blue-200 dark:border-blue-900">
+        <div className="grid gap-0 lg:grid-cols-[0.8fr,1.2fr]">
+          <div className="bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_42%),linear-gradient(145deg,var(--brand-soft),transparent)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">Today’s boost</p>
+            <h3 className="mt-2 text-xl font-bold text-[var(--text)]">
+              {todayPlan?.is_completed ? 'Today is verified' : 'Finish one verified action'}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{plannerQuote}</p>
+          </div>
+          <div className="p-5">
+            {nextTask ? (
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)]">{nextTask.subject_name}</p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {nextTask.task_type} · {nextTask.duration_minutes}min
+                    {nextTask.question_count > 0 ? ` · ${nextTask.question_count} questions` : ''}
+                  </p>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Auto-completes after real activity: {nextTask.task_type === 'mock' ? `${nextTask.minimum_minutes ?? 0}+ mock minutes` : `${nextTask.minimum_questions ?? nextTask.question_count ?? 0}+ questions`}.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelDay(todayIndex >= 0 ? todayIndex : selDay);
+                      syncProgress.mutate({ dayIndex: todayIndex >= 0 ? todayIndex : selDay });
+                    }}
+                    disabled={syncProgress.isPending}
+                    className="btn-primary text-xs"
+                  >
+                    {syncProgress.isPending ? 'Checking...' : 'Verify today'}
+                  </button>
+                  <Link href={nextTask.task_type === 'mock' ? '/mock' : '/exams'} className="btn-secondary text-xs">
+                    Start activity
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <p className="text-sm text-[var(--muted)]">No pending task for today. Keep the streak alive with a short drill or review queue.</p>
+                <Link href="/drill" className="btn-primary text-xs">Start speed drill</Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

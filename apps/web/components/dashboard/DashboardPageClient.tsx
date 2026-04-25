@@ -170,7 +170,14 @@ const DASHBOARD_COPY = {
   },
 } as const;
 
+const LOADING_QUOTES = [
+  'Every focused question is a small vote for your future rank.',
+  'Consistency is quiet, but results are loud.',
+  'Prepare smart today so exam day feels familiar.',
+];
+
 function DashboardLoadingState() {
+  const quote = LOADING_QUOTES[new Date().getDate() % LOADING_QUOTES.length];
   return (
     <div className="page-wrap space-y-6">
       <section className="card glass p-6 md:p-7">
@@ -178,6 +185,8 @@ function DashboardLoadingState() {
           <div className="h-6 w-40 rounded-full bg-[var(--brand-soft)]/70 animate-pulse" />
           <div className="h-10 w-64 rounded-2xl bg-[var(--line)] animate-pulse" />
           <div className="h-5 w-full max-w-xl rounded-xl bg-[var(--line)] animate-pulse" />
+          <p className="pt-2 text-sm font-medium text-[var(--text)]">Loading your study command center...</p>
+          <p className="text-xs leading-5 text-[var(--muted)]">{quote}</p>
         </div>
       </section>
       <section className="grid grid-cols-2 xl:grid-cols-4 gap-4">

@@ -1,11 +1,19 @@
 export default function DashboardLoading() {
+  const quotes = [
+    'Small daily effort compounds into exam confidence.',
+    'Read, attempt, review, repeat. That is the rank loop.',
+    'Your future self is built during quiet practice sessions.',
+  ];
+  const quote = quotes[new Date().getDate() % quotes.length];
   return (
-    <div className="page-wrap space-y-4 animate-pulse">
+    <div className="page-wrap space-y-4">
       <div className="card glass p-6 md:p-7">
-        <div className="h-4 w-32 rounded-full bg-[var(--brand-soft)]" />
-        <div className="mt-4 h-8 w-64 rounded-xl bg-gray-200 dark:bg-gray-800" />
-        <div className="mt-3 h-4 w-80 max-w-full rounded-xl bg-gray-200 dark:bg-gray-800" />
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="h-4 w-32 animate-pulse rounded-full bg-[var(--brand-soft)]" />
+        <div className="mt-4 h-8 w-64 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800" />
+        <div className="mt-3 h-4 w-80 max-w-full animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800" />
+        <p className="mt-4 text-sm font-semibold text-[var(--text)]">Preparing your learning workspace...</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{quote}</p>
+        <div className="mt-5 flex animate-pulse flex-wrap gap-3">
           <div className="h-11 w-36 rounded-2xl bg-gray-200 dark:bg-gray-800" />
           <div className="h-11 w-36 rounded-2xl bg-gray-200 dark:bg-gray-800" />
           <div className="h-11 w-36 rounded-2xl bg-gray-200 dark:bg-gray-800" />

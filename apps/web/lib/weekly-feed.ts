@@ -49,6 +49,7 @@ export function getKathmanduWeekWindows(date = new Date()) {
 
   return {
     todayKey,
+    localDay,
     current: {
       key: currentStartKey,
       startKey: currentStartKey,
@@ -94,7 +95,10 @@ export async function buildWeeklyFeedForExam(exam: any) {
     test_type: 'mock',
     exam_id: exam._id,
     test_id: publishedMock._id,
-    created_at: { $gte: windows.published.startUtc, $lte: windows.published.endUtc },
+    created_at: {
+      $gte: localDateKeyToUtc(windows.published.endKey),
+      $lte: localDateKeyToUtc(windows.published.endKey, true),
+    },
   })
     .select('score max_score accuracy_percent total_time_seconds created_at user_id')
     .populate('user_id', 'name email')
@@ -109,6 +113,8 @@ export async function buildWeeklyFeedForExam(exam: any) {
       duration_minutes: activeMock.duration_minutes,
       total_questions: activeMock.total_questions,
       total_marks: activeMock.total_marks,
+      can_attempt: windows.localDay === 6,
+      attempt_date: windows.current.endKey,
       week_start: windows.current.startKey,
       week_end: windows.current.endKey,
       href: `/mock/${exam.slug}?test=${String(activeMock._id)}`,
@@ -117,6 +123,7 @@ export async function buildWeeklyFeedForExam(exam: any) {
       title: `${publishedMock.title} rankings`,
       week_start: windows.published.startKey,
       week_end: windows.published.endKey,
+      attempt_date: windows.published.endKey,
       published_at_label: `${addDaysToDateKey(windows.published.endKey, 1)} 00:00 NPT`,
       total_attempts: rows.length,
       rows: rows.map((result, index) => ({
