@@ -97,22 +97,7 @@ export function NewsfeedPageClient() {
 
   return (
     <div className="page-wrap space-y-5">
-      <section className="card glass overflow-hidden">
-        <div className="grid items-start gap-0 lg:grid-cols-[0.72fr,1.28fr]">
-          <div className="self-start border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_38%),linear-gradient(145deg,var(--brand-soft),transparent)] p-5 lg:border-b-0 lg:border-r">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">Newsfeed</p>
-            <h1 className="mt-3 text-2xl font-bold text-[var(--text)] md:text-3xl">Today’s study stream</h1>
-            <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
-              Dashboard stays light. Your daily question, latest updates, and quick learning actions live here.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="badge-blue">Daily</span>
-              <span className="badge-amber">Exam focused</span>
-              <span className="badge-gray">Low friction</span>
-            </div>
-          </div>
-
-          <div className="p-4 sm:p-5">
+      <section className="card glass overflow-hidden p-4 sm:p-5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {TABS.map((tab) => {
                 const active = activeTab === tab.id;
@@ -191,8 +176,6 @@ export function NewsfeedPageClient() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
       </section>
     </div>
   );
@@ -215,6 +198,7 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
   }
 
   if (!weeklyMock.can_attempt) {
+    const attempted = Boolean(weeklyMock.already_attempted);
     return (
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)]/90 p-4 shadow-lg shadow-blue-500/5">
         <div className="flex items-start gap-3">
@@ -222,10 +206,12 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
             <AppIcon name="mock" className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="badge-amber">Weekly mock locked</span>
+            <span className={attempted ? 'badge-green' : 'badge-amber'}>{attempted ? 'Attempt completed' : 'Weekly mock locked'}</span>
             <span className="mt-2 block font-semibold text-[var(--text)]">{weeklyMock.title}</span>
             <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
-              Opens only on {weeklyMock.attempt_date} for focused exam-day discipline. Results publish after the day closes.
+              {attempted
+                ? 'Your ranked attempt is saved. Rankings publish after midnight NPT, then this test appears in Past Weekly Mocks for normal practice.'
+                : `Opens only on ${weeklyMock.attempt_date} for focused exam-day discipline. Results publish after the day closes.`}
             </span>
             <Link href="/planner" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">
               Prepare with planner
@@ -238,15 +224,15 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
   }
 
   return (
-    <Link href={weeklyMock.href} className="group block rounded-3xl border border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-blue-500 dark:border-blue-700 dark:from-slate-950 dark:via-slate-950 dark:to-blue-950 dark:shadow-blue-950/30">
+    <Link href={weeklyMock.href} className="group block rounded-3xl border border-[var(--brand)]/45 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_38%),var(--bg-elev)] p-4 shadow-lg shadow-blue-500/10 transition-colors hover:border-[var(--brand)]">
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
           <AppIcon name="mock" className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-100">Weekly mock test</span>
-          <span className="mt-2 block font-semibold text-slate-950 dark:text-white">{weeklyMock.title}</span>
-          <span className="mt-1 block text-sm leading-6 text-slate-600 dark:text-slate-300">
+          <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--brand)]">Weekly mock test</span>
+          <span className="mt-2 block font-semibold text-[var(--text)]">{weeklyMock.title}</span>
+          <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
             Today only · {weeklyMock.total_questions} questions · {weeklyMock.duration_minutes} min
           </span>
           <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">

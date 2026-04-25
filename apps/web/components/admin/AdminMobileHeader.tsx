@@ -95,7 +95,7 @@ export function AdminMobileHeader({ user }: AdminMobileHeaderProps) {
               <ThemeToggle className="mb-2 w-full !justify-center" />
               <Link
                 href="/dashboard"
-                className="w-full flex items-center justify-center rounded-2xl border border-[var(--line)] bg-white/80 dark:bg-white/5 px-3 py-3 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]/35 hover:bg-[var(--brand-soft)]/40"
+                className="w-full flex items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] px-3 py-3 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]/35 hover:bg-[var(--brand-soft)]/40"
               >
                 Back to App
               </Link>

@@ -2,6 +2,7 @@ import { MockTest, Result } from '@psc/shared/models';
 import { Types } from 'mongoose';
 
 const KATHMANDU_OFFSET_MINUTES = 345;
+const WEEKLY_MOCK_LAUNCH_DATE_KEY = '2026-04-25';
 
 function toKathmanduLocalDate(date = new Date()) {
   return new Date(date.getTime() + KATHMANDU_OFFSET_MINUTES * 60_000);
@@ -72,7 +73,7 @@ export function getKathmanduWeekWindows(date = new Date()) {
   };
 }
 
-export async function buildWeeklyFeedForExam(exam: any) {
+export async function buildWeeklyFeedForExam(exam: any, userId?: string | null) {
   if (!exam?._id) {
     return {
       weeklyMock: null,
@@ -95,20 +96,34 @@ export async function buildWeeklyFeedForExam(exam: any) {
 
   const activeMock = mockTests[seededIndex(mockTests.length, `${exam._id}:${windows.current.key}`)];
   const publishedMock = mockTests[seededIndex(mockTests.length, `${exam._id}:${windows.published.key}`)];
-  const pastWeeklyMocks = Array.from({ length: 8 }).map((_, index) => {
-    const weekStart = addDaysToDateKey(windows.current.startKey, -(index + 1) * 7);
-    const weekEnd = addDaysToDateKey(weekStart, 6);
-    const mock = mockTests[seededIndex(mockTests.length, `${exam._id}:${weekStart}`)];
-    return {
-      _id: String(mock._id),
-      title: mock.title,
-      duration_minutes: mock.duration_minutes,
-      total_questions: mock.total_questions,
-      week_start: weekStart,
-      week_end: weekEnd,
-      href: `/mock/${exam.slug}?test=${String(mock._id)}&weekly=past&week=${weekEnd}`,
-    };
-  });
+  const pastWeeklyMocks = Array.from({ length: 8 })
+    .map((_, index) => {
+      const weekStart = addDaysToDateKey(windows.current.startKey, -(index + 1) * 7);
+      const weekEnd = addDaysToDateKey(weekStart, 6);
+      const mock = mockTests[seededIndex(mockTests.length, `${exam._id}:${weekStart}`)];
+      return {
+        _id: String(mock._id),
+        title: mock.title,
+        duration_minutes: mock.duration_minutes,
+        total_questions: mock.total_questions,
+        week_start: weekStart,
+        week_end: weekEnd,
+        href: `/mock/${exam.slug}?test=${String(mock._id)}&weekly=past&week=${weekEnd}`,
+      };
+    })
+    .filter((mock) => mock.week_end >= WEEKLY_MOCK_LAUNCH_DATE_KEY && mock.week_end < windows.todayKey);
+
+  const scheduledAttempt = userId && isValidObjectId(userId)
+    ? await Result.exists({
+        user_id: userId,
+        test_id: activeMock._id,
+        test_type: 'mock',
+        created_at: {
+          $gte: localDateKeyToUtc(windows.current.endKey),
+          $lte: localDateKeyToUtc(windows.current.endKey, true),
+        },
+      })
+    : null;
 
   const rows = await Result.find({
     test_type: 'mock',
@@ -132,7 +147,8 @@ export async function buildWeeklyFeedForExam(exam: any) {
       duration_minutes: activeMock.duration_minutes,
       total_questions: activeMock.total_questions,
       total_marks: activeMock.total_marks,
-      can_attempt: windows.localDay === 6,
+      can_attempt: windows.localDay === 6 && !scheduledAttempt,
+      already_attempted: Boolean(scheduledAttempt),
       attempt_date: windows.current.endKey,
       week_start: windows.current.startKey,
       week_end: windows.current.endKey,

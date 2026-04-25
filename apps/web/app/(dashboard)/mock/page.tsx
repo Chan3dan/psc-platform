@@ -12,7 +12,7 @@ export default async function MockIndexPage() {
   const filteredTests = preferences.targetExam
     ? tests.filter((test: any) => String(test.exam_id?._id ?? '') === preferences.targetExam?._id)
     : tests;
-  const weeklyFeed = preferences.targetExam ? await buildWeeklyFeedForExam(preferences.targetExam) : null;
+  const weeklyFeed = preferences.targetExam && session ? await buildWeeklyFeedForExam(preferences.targetExam, session.user.id) : null;
 
   return (
     <div className="page-wrap space-y-6">

@@ -266,7 +266,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
             if (event.target === event.currentTarget) setDailyResultsOpen(false);
           }}
         >
-          <section className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-6xl bg-white dark:bg-slate-950 border border-[var(--line)] md:rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+          <section className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-6xl bg-[var(--bg-elev)] border border-[var(--line)] md:rounded-3xl overflow-hidden shadow-2xl flex flex-col">
             <header className="flex flex-col gap-3 border-b border-[var(--line)] px-5 py-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-[var(--text)]">Question of the Day Results</h3>
@@ -279,7 +279,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                   type="date"
                   value={dailyResultsDate}
                   onChange={(event) => setDailyResultsDate(event.target.value)}
-                  className="h-10 rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] px-3 text-sm text-[var(--text)]"
+                  className="h-10 rounded-2xl border border-[var(--line)] bg-[var(--bg)] px-3 text-sm text-[var(--text)]"
                 />
                 <button onClick={() => setDailyResultsOpen(false)} className="btn-secondary text-xs px-3 py-1.5">
                   Close
@@ -297,19 +297,19 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
               ) : dailyResults ? (
                 <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-[var(--line)] p-3">
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/45 p-3">
                   <p className="text-xs text-[var(--muted)]">Answers</p>
                   <p className="mt-1 text-xl font-semibold text-[var(--text)]">{dailyResults.summary?.total ?? 0}</p>
                 </div>
-                <div className="rounded-2xl border border-[var(--line)] p-3">
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/45 p-3">
                   <p className="text-xs text-[var(--muted)]">Correct</p>
                   <p className="mt-1 text-xl font-semibold text-emerald-600">{dailyResults.summary?.correct ?? 0}</p>
                 </div>
-                <div className="rounded-2xl border border-[var(--line)] p-3">
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/45 p-3">
                   <p className="text-xs text-[var(--muted)]">Wrong</p>
                   <p className="mt-1 text-xl font-semibold text-red-600">{dailyResults.summary?.wrong ?? 0}</p>
                 </div>
-                <div className="rounded-2xl border border-[var(--line)] p-3">
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/45 p-3">
                   <p className="text-xs text-[var(--muted)]">Accuracy</p>
                   <p className="mt-1 text-xl font-semibold text-[var(--text)]">{dailyResults.summary?.accuracy_percent ?? 0}%</p>
                 </div>
@@ -328,7 +328,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                 </div>
               )}
 
-              <div className="overflow-x-auto rounded-2xl border border-[var(--line)]">
+              <div className="overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--bg)]/35">
                 <table className="w-full min-w-[860px] text-sm">
                   <thead className="bg-[var(--brand-soft)]/35">
                     <tr>

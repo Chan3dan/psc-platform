@@ -20,7 +20,7 @@ export async function GET() {
       .lean() as any;
 
     const exam = user?.preferences?.target_exam_id ?? null;
-    const weekly = await buildWeeklyFeedForExam(exam);
+    const weekly = await buildWeeklyFeedForExam(exam, session.user.id);
 
     return ok({
       exam: exam
