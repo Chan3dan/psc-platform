@@ -5,6 +5,138 @@ import { useQuery } from '@tanstack/react-query';
 import { DashboardCharts } from '@/components/analytics/DashboardCharts';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { formatDuration } from '@/lib/results';
+import { ExamPreferenceSelector } from '@/components/preferences/ExamPreferenceSelector';
+
+const DASHBOARD_COPY = {
+  en: {
+    welcomeBadge: 'Welcome',
+    welcomeTitle: 'Let’s set up your exam focus',
+    welcomeBody:
+      'Choose the exam you are preparing for first. After that, your dashboard, mocks, practice, notes, planner, and leaderboard will stay centered on that target.',
+    commandCenter: 'Your Command Center',
+    hello: 'Hello',
+    streakMessage: (streak: number) =>
+      `You are on a ${streak}-day streak. Stay consistent and keep momentum high.`,
+    noStreak: 'Start a practice session today to begin your streak and unlock momentum.',
+    focus: 'Focus',
+    dayStreak: 'day streak',
+    testsTracked: 'tests tracked',
+    startPractice: 'Start Practice',
+    takeMock: 'Take Mock Test',
+    openPlanner: 'Open Planner',
+    examReadiness: 'Exam Readiness',
+    readinessBody: (exam: string) =>
+      `Based on your ${exam} accuracy, mock attempts, consistency, and review backlog.`,
+    ready: 'Ready',
+    building: 'Building',
+    needsFocus: 'Needs focus',
+    reviewItems: 'review items',
+    mocksThisWeek: 'mocks this week',
+    learningMissions: 'Today’s Learning Missions',
+    learningMissionsBody: 'Small daily actions that compound into exam confidence.',
+    smartReview: 'Smart review',
+    testsTaken: 'Tests Taken',
+    avgScore: 'Avg Score',
+    accuracy: 'Accuracy',
+    questionsSolved: 'Questions Solved',
+    currentExamFocus: 'Your current exam focus',
+    currentExamBody:
+      'Change your target exam here whenever you switch preparation. Live areas will update around the chosen exam.',
+    quickDrill: 'Quick Drill',
+    quickDrillBody: (count: number) => `5 questions in 5 minutes. ${count} completed today.`,
+    startSpeedDrill: 'Start Speed Drill',
+    milestoneRewards: 'Milestone Rewards',
+    milestoneRewardsBody: 'Achievement signals that keep preparation motivating.',
+    viewProgress: 'View progress',
+    unlocked: 'Unlocked',
+    progress: (value: number) => `${value}% progress`,
+    performanceInsights: 'Performance Insights',
+    insights: 'insights',
+    insightsEmpty: 'Complete a few tests to generate personalized insight cards.',
+    quickActions: 'Quick Actions',
+    practiceBySubject: 'Practice by subject',
+    checkLeaderboard: 'Check leaderboard',
+    reviseNotes: 'Revise notes',
+    priorityWeakTopics: 'Priority Weak Topics',
+    activeStudyPlan: 'Active Study Plan',
+    viewFullPlan: 'View full plan',
+    target: 'Target',
+    noActiveStudyPlan: 'No Active Study Plan',
+    noActiveStudyPlanBody:
+      'Create a plan to get a personalized day-by-day preparation roadmap.',
+    createPlan: 'Create Plan',
+    recentAttempts: 'Recent Test Attempts',
+    viewAll: 'View all',
+    noAttempts: 'No attempts yet',
+    noAttemptsBody:
+      'Start a practice set or mock test to unlock analytics and insight tracking.',
+    beginPractice: 'Begin Practice',
+  },
+  ne: {
+    welcomeBadge: 'स्वागत',
+    welcomeTitle: 'आफ्नो लक्ष्य परीक्षा छान्नुहोस्',
+    welcomeBody:
+      'पहिले आफूले तयारी गरिरहेको परीक्षा छान्नुहोस्। त्यसपछि ड्यासबोर्ड, मोक, अभ्यास, नोट्स, प्लानर र लिडरबोर्ड सोही लक्ष्यमा केन्द्रित रहनेछन्।',
+    commandCenter: 'तपाईंको कमाण्ड सेन्टर',
+    hello: 'नमस्ते',
+    streakMessage: (streak: number) =>
+      `तपाईं ${streak} दिनको streak मा हुनुहुन्छ। निरन्तरता कायम राख्नुहोस्।`,
+    noStreak: 'आज अभ्यास सुरु गरेर आफ्नो streak र momentum बनाउनुहोस्।',
+    focus: 'लक्ष्य',
+    dayStreak: 'दिन streak',
+    testsTracked: 'टेस्ट ट्र्याक गरिएको',
+    startPractice: 'अभ्यास सुरु गर्नुहोस्',
+    takeMock: 'मोक टेस्ट दिनुहोस्',
+    openPlanner: 'प्लानर खोल्नुहोस्',
+    examReadiness: 'परीक्षा तयारी स्कोर',
+    readinessBody: (exam: string) =>
+      `${exam} मा तपाईंको accuracy, mock, consistency र review backlog को आधारमा।`,
+    ready: 'तयार',
+    building: 'बन्दैछ',
+    needsFocus: 'ध्यान चाहिन्छ',
+    reviewItems: 'review item',
+    mocksThisWeek: 'यो हप्ता mock',
+    learningMissions: 'आजका अध्ययन लक्ष्य',
+    learningMissionsBody: 'सानो दैनिक कामले ठूलो तयारी बनाउँछ।',
+    smartReview: 'स्मार्ट review',
+    testsTaken: 'दिएका टेस्ट',
+    avgScore: 'औसत स्कोर',
+    accuracy: 'शुद्धता',
+    questionsSolved: 'समाधान गरिएका प्रश्न',
+    currentExamFocus: 'हालको लक्ष्य परीक्षा',
+    currentExamBody:
+      'तपाईंको तयारी परिवर्तन भएमा यहाँबाट लक्ष्य परीक्षा बदल्न सक्नुहुन्छ।',
+    quickDrill: 'छिटो Drill',
+    quickDrillBody: (count: number) => `५ मिनेटमा ५ प्रश्न। आज ${count} पटक पूरा भयो।`,
+    startSpeedDrill: 'Speed Drill सुरु गर्नुहोस्',
+    milestoneRewards: 'Milestone Rewards',
+    milestoneRewardsBody: 'प्रेरणा जोगाइराख्ने उपलब्धि संकेतहरू।',
+    viewProgress: 'प्रगति हेर्नुहोस्',
+    unlocked: 'Unlocked',
+    progress: (value: number) => `${value}% प्रगति`,
+    performanceInsights: 'Performance Insights',
+    insights: 'insight',
+    insightsEmpty: 'केही टेस्ट पूरा गरेपछि व्यक्तिगत insight cards देखिन्छन्।',
+    quickActions: 'Quick Actions',
+    practiceBySubject: 'विषयगत अभ्यास',
+    checkLeaderboard: 'Leaderboard हेर्नुहोस्',
+    reviseNotes: 'नोट्स दोहोर्याउनुहोस्',
+    priorityWeakTopics: 'प्राथमिक कमजोर विषय',
+    activeStudyPlan: 'सक्रिय अध्ययन योजना',
+    viewFullPlan: 'पूरा plan हेर्नुहोस्',
+    target: 'लक्ष्य',
+    noActiveStudyPlan: 'सक्रिय योजना छैन',
+    noActiveStudyPlanBody:
+      'व्यक्तिगत दिन-प्रतिदिन roadmap पाउन नयाँ योजना बनाउनुहोस्।',
+    createPlan: 'योजना बनाउनुहोस्',
+    recentAttempts: 'हालैका टेस्ट प्रयास',
+    viewAll: 'सबै हेर्नुहोस्',
+    noAttempts: 'अहिलेसम्म प्रयास छैन',
+    noAttemptsBody:
+      'Analytics र insight tracking खोल्न अभ्यास वा mock सुरु गर्नुहोस्।',
+    beginPractice: 'अभ्यास सुरु गर्नुहोस्',
+  },
+} as const;
 
 function DashboardLoadingState() {
   return (
@@ -50,12 +182,40 @@ export function DashboardPageClient() {
   const firstName = data.user?.name?.split?.(' ')?.[0] ?? 'there';
   const streak = data.user?.stats?.current_streak ?? 0;
   const readinessScore = Number(engagement.readinessScore ?? 0);
+  const preferredExam = data.preferredExam;
+  const language = data.user?.preferences?.language === 'ne' ? 'ne' : 'en';
+  const t = DASHBOARD_COPY[language];
+
+  if (!preferredExam) {
+    return (
+      <div className="page-wrap space-y-6">
+        <section className="card glass p-6 md:p-7">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
+              <AppIcon name="dashboard" className="h-3.5 w-3.5" />
+              {t.welcomeBadge}
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">{t.welcomeTitle}</h1>
+            <p className="text-sm text-[var(--muted)] max-w-2xl">
+              {t.welcomeBody}
+            </p>
+          </div>
+        </section>
+
+        <ExamPreferenceSelector
+          activeExams={data.activeExams ?? []}
+          tracks={data.examTracks ?? []}
+          currentExamId={null}
+        />
+      </div>
+    );
+  }
 
   const statCards = [
-    { label: 'Tests Taken', value: analytics.total_tests, tone: 'text-blue-600' },
-    { label: 'Avg Score', value: `${analytics.avg_score_percent}%`, tone: 'text-emerald-600' },
-    { label: 'Accuracy', value: `${analytics.overall_accuracy}%`, tone: 'text-indigo-600' },
-    { label: 'Questions Solved', value: analytics.total_questions.toLocaleString(), tone: 'text-amber-600' },
+    { label: t.testsTaken, value: analytics.total_tests, tone: 'text-blue-600' },
+    { label: t.avgScore, value: `${analytics.avg_score_percent}%`, tone: 'text-emerald-600' },
+    { label: t.accuracy, value: `${analytics.overall_accuracy}%`, tone: 'text-indigo-600' },
+    { label: t.questionsSolved, value: analytics.total_questions.toLocaleString(), tone: 'text-amber-600' },
   ];
 
   return (
@@ -65,22 +225,26 @@ export function DashboardPageClient() {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
               <AppIcon name="dashboard" className="h-3.5 w-3.5" />
-              Your Command Center
+              {t.commandCenter}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mt-1">Hello, {firstName}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mt-1">{t.hello}, {firstName}</h1>
             <p className="text-sm text-[var(--muted)] mt-2">
               {streak > 0
-                ? `You are on a ${streak}-day streak. Stay consistent and keep momentum high.`
-                : 'Start a practice session today to begin your streak and unlock momentum.'}
+                ? t.streakMessage(streak)
+                : t.noStreak}
             </p>
             <div className="flex flex-wrap gap-2 text-xs">
+              <span className="badge-blue inline-flex items-center gap-1.5">
+                <AppIcon name="exams" className="h-3.5 w-3.5" />
+                {t.focus}: {preferredExam.name}
+              </span>
               <span className="badge-amber inline-flex items-center gap-1.5">
                 <AppIcon name="leaderboard" className="h-3.5 w-3.5" />
-                {streak} day streak
+                {streak} {t.dayStreak}
               </span>
               <span className="badge-gray inline-flex items-center gap-1.5">
                 <AppIcon name="analytics" className="h-3.5 w-3.5" />
-                {analytics.total_tests} tests tracked
+                {analytics.total_tests} {t.testsTracked}
               </span>
             </div>
           </div>
@@ -88,15 +252,15 @@ export function DashboardPageClient() {
           <div className="flex flex-wrap gap-3">
             <Link href="/exams" className="btn-primary inline-flex items-center gap-2">
               <AppIcon name="practice" className="h-4 w-4" />
-              Start Practice
+              {t.startPractice}
             </Link>
             <Link href="/mock" className="btn-secondary inline-flex items-center gap-2">
               <AppIcon name="mock" className="h-4 w-4" />
-              Take Mock Test
+              {t.takeMock}
             </Link>
             <Link href="/planner" className="btn-secondary inline-flex items-center gap-2">
               <AppIcon name="planner" className="h-4 w-4" />
-              Open Planner
+              {t.openPlanner}
             </Link>
           </div>
         </div>
@@ -106,14 +270,14 @@ export function DashboardPageClient() {
         <div className="card p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-wide font-semibold text-[var(--muted)]">Exam Readiness</p>
+              <p className="text-xs uppercase tracking-wide font-semibold text-[var(--muted)]">{t.examReadiness}</p>
               <h2 className="mt-1 text-3xl font-bold text-[var(--text)]">{readinessScore}%</h2>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Based on accuracy, mock attempts, consistency, and review backlog.
+                {t.readinessBody(preferredExam.name)}
               </p>
             </div>
             <span className={`badge ${readinessScore >= 70 ? 'badge-green' : readinessScore >= 45 ? 'badge-amber' : 'badge-red'}`}>
-              {readinessScore >= 70 ? 'Ready' : readinessScore >= 45 ? 'Building' : 'Needs focus'}
+              {readinessScore >= 70 ? t.ready : readinessScore >= 45 ? t.building : t.needsFocus}
             </span>
           </div>
           <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
@@ -124,10 +288,10 @@ export function DashboardPageClient() {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
             <Link href="/review" className="rounded-xl border border-[var(--line)] px-3 py-2 hover:bg-[var(--brand-soft)]/45">
-              {engagement.reviewQueueCount ?? 0} review items
+              {engagement.reviewQueueCount ?? 0} {t.reviewItems}
             </Link>
             <Link href="/mock" className="rounded-xl border border-[var(--line)] px-3 py-2 hover:bg-[var(--brand-soft)]/45">
-              {engagement.weeklyMockCount ?? 0} mocks this week
+              {engagement.weeklyMockCount ?? 0} {t.mocksThisWeek}
             </Link>
           </div>
         </div>
@@ -135,10 +299,10 @@ export function DashboardPageClient() {
         <div className="card p-5">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-[var(--text)]">Today’s Learning Missions</h2>
-              <p className="text-xs text-[var(--muted)] mt-0.5">Small daily actions that compound into exam confidence.</p>
+              <h2 className="text-sm font-semibold text-[var(--text)]">{t.learningMissions}</h2>
+              <p className="text-xs text-[var(--muted)] mt-0.5">{t.learningMissionsBody}</p>
             </div>
-            <Link href="/review" className="hidden sm:inline-flex text-xs text-[var(--brand)] hover:underline">Smart review</Link>
+            <Link href="/review" className="hidden sm:inline-flex text-xs text-[var(--brand)] hover:underline">{t.smartReview}</Link>
           </div>
           <div className="space-y-3">
             {(engagement.dailyMissions ?? []).map((mission: any) => (
@@ -171,15 +335,24 @@ export function DashboardPageClient() {
         ))}
       </section>
 
+      <ExamPreferenceSelector
+        activeExams={data.activeExams ?? []}
+        tracks={data.examTracks ?? []}
+        currentExamId={preferredExam._id}
+        title={t.currentExamFocus}
+        description={t.currentExamBody}
+        compact
+      />
+
       <section className="card p-5">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="space-y-1">
-            <h2 className="text-sm font-semibold text-[var(--text)]">Quick Drill</h2>
-            <p className="text-sm text-[var(--muted)] mt-1">5 questions in 5 minutes. {data.drillsToday} completed today.</p>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t.quickDrill}</h2>
+            <p className="text-sm text-[var(--muted)] mt-1">{t.quickDrillBody(data.drillsToday)}</p>
           </div>
           <Link href="/drill" className="btn-primary inline-flex items-center gap-2">
             <AppIcon name="drill" className="h-4 w-4" />
-            Start Speed Drill
+            {t.startSpeedDrill}
           </Link>
         </div>
       </section>
@@ -187,10 +360,10 @@ export function DashboardPageClient() {
       <section className="card p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-[var(--text)]">Milestone Rewards</h2>
-            <p className="text-xs text-[var(--muted)] mt-0.5">Achievement signals that keep preparation motivating.</p>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t.milestoneRewards}</h2>
+            <p className="text-xs text-[var(--muted)] mt-0.5">{t.milestoneRewardsBody}</p>
           </div>
-          <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">View progress</Link>
+          <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">{t.viewProgress}</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {(engagement.milestones ?? []).map((milestone: any) => (
@@ -201,7 +374,7 @@ export function DashboardPageClient() {
                 </span>
                 <p className="text-sm font-medium text-[var(--text)]">{milestone.label}</p>
               </div>
-              <p className="mt-2 text-xs text-[var(--muted)]">{milestone.completed ? 'Unlocked' : `${Math.round(milestone.progress ?? 0)}% progress`}</p>
+              <p className="mt-2 text-xs text-[var(--muted)]">{milestone.completed ? t.unlocked : t.progress(Math.round(milestone.progress ?? 0))}</p>
             </div>
           ))}
         </div>
@@ -212,8 +385,8 @@ export function DashboardPageClient() {
         {analytics.insights.length > 0 ? (
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-[var(--text)]">Performance Insights</h2>
-              <span className="badge-blue">{analytics.insights.length} insights</span>
+              <h2 className="text-sm font-semibold text-[var(--text)]">{t.performanceInsights}</h2>
+              <span className="badge-blue">{analytics.insights.length} {t.insights}</span>
             </div>
             <div className="space-y-2.5">
               {analytics.insights.map((ins: any, i: number) => (
@@ -250,22 +423,22 @@ export function DashboardPageClient() {
           </div>
         ) : (
           <div className="card p-5">
-            <h2 className="text-sm font-semibold text-[var(--text)]">Performance Insights</h2>
-            <p className="text-sm text-[var(--muted)] mt-2">Complete a few tests to generate personalized insight cards.</p>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t.performanceInsights}</h2>
+            <p className="text-sm text-[var(--muted)] mt-2">{t.insightsEmpty}</p>
           </div>
         )}
 
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-[var(--text)]">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-[var(--text)]">{t.quickActions}</h2>
           <div className="mt-3 space-y-2">
             <Link href="/practice" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
-              Practice by subject <AppIcon name="arrow-right" className="h-4 w-4" />
+              {t.practiceBySubject} <AppIcon name="arrow-right" className="h-4 w-4" />
             </Link>
             <Link href="/leaderboard" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
-              Check leaderboard <AppIcon name="arrow-right" className="h-4 w-4" />
+              {t.checkLeaderboard} <AppIcon name="arrow-right" className="h-4 w-4" />
             </Link>
             <Link href="/notes" className="flex items-center justify-between rounded-xl border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--brand-soft)]/50 transition-colors">
-              Revise notes <AppIcon name="arrow-right" className="h-4 w-4" />
+              {t.reviseNotes} <AppIcon name="arrow-right" className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -278,7 +451,7 @@ export function DashboardPageClient() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {analytics.weak_topics.length > 0 && (
           <div className="card p-5">
-            <h2 className="text-sm font-semibold text-[var(--text)] mb-3">Priority Weak Topics</h2>
+            <h2 className="text-sm font-semibold text-[var(--text)] mb-3">{t.priorityWeakTopics}</h2>
             <div className="space-y-2.5">
               {analytics.weak_topics.slice(0, 6).map((topic: any) => (
                 <div key={topic.subject_id} className="rounded-2xl border border-[var(--line)] p-3">
@@ -299,23 +472,23 @@ export function DashboardPageClient() {
         {data.plan ? (
           <div className="card p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[var(--text)]">Active Study Plan</h2>
+              <h2 className="text-sm font-semibold text-[var(--text)]">{t.activeStudyPlan}</h2>
               <Link href="/planner" className="inline-flex items-center gap-1 text-xs text-[var(--brand)] hover:opacity-90">
-                View full plan
+                {t.viewFullPlan}
                 <AppIcon name="arrow-right" className="h-3.5 w-3.5" />
               </Link>
             </div>
             <p className="text-base font-semibold text-[var(--text)] mt-3">{data.plan.examName}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-[var(--muted)]">
               <span className="badge-amber inline-flex items-center gap-1.5"><AppIcon name="drill" className="h-3.5 w-3.5" /> {data.plan.streakDays} day streak</span>
-              <span className="badge-gray inline-flex items-center gap-1.5"><AppIcon name="planner" className="h-3.5 w-3.5" /> Target: {data.plan.targetDate ? new Date(data.plan.targetDate).toLocaleDateString() : '—'}</span>
+              <span className="badge-gray inline-flex items-center gap-1.5"><AppIcon name="planner" className="h-3.5 w-3.5" /> {t.target}: {data.plan.targetDate ? new Date(data.plan.targetDate).toLocaleDateString() : '—'}</span>
             </div>
           </div>
         ) : (
           <div className="card p-5">
-            <h2 className="text-sm font-semibold text-[var(--text)]">No Active Study Plan</h2>
-            <p className="text-sm text-[var(--muted)] mt-2">Create a plan to get a personalized day-by-day preparation roadmap.</p>
-            <Link href="/planner" className="btn-secondary mt-4">Create Plan</Link>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t.noActiveStudyPlan}</h2>
+            <p className="text-sm text-[var(--muted)] mt-2">{t.noActiveStudyPlanBody}</p>
+            <Link href="/planner" className="btn-secondary mt-4">{t.createPlan}</Link>
           </div>
         )}
       </section>
@@ -323,8 +496,8 @@ export function DashboardPageClient() {
       {data.recentResults.length > 0 ? (
         <section className="card overflow-hidden">
           <div className="px-5 py-3 border-b border-[var(--line)] flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--text)]">Recent Test Attempts</h2>
-            <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">View all</Link>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t.recentAttempts}</h2>
+            <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">{t.viewAll}</Link>
           </div>
           <div className="divide-y divide-[var(--line)]">
             {data.recentResults.map((result: any) => {
@@ -355,9 +528,9 @@ export function DashboardPageClient() {
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
             <AppIcon name="notes" className="h-7 w-7" />
           </div>
-          <h3 className="font-semibold text-[var(--text)] mb-1">No attempts yet</h3>
-          <p className="text-sm text-[var(--muted)] mb-4">Start a practice set or mock test to unlock analytics and insight tracking.</p>
-          <Link href="/exams" className="btn-primary inline-flex">Begin Practice</Link>
+          <h3 className="font-semibold text-[var(--text)] mb-1">{t.noAttempts}</h3>
+          <p className="text-sm text-[var(--muted)] mb-4">{t.noAttemptsBody}</p>
+          <Link href="/exams" className="btn-primary inline-flex">{t.beginPractice}</Link>
         </section>
       )}
     </div>

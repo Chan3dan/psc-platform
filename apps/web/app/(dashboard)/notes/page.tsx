@@ -6,19 +6,31 @@ import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Exam } from '@psc/shared/models';
 import { NotesClient } from '@/components/notes/NotesClient';
+import { getUserPreferences } from '@/lib/user-preferences';
 
 export default async function NotesPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/login');
+  const preferences = await getUserPreferences(session.user.id);
   await connectDB();
   const exams = await Exam.find({ is_active: true }).select('_id name slug').lean();
+  const visibleExams = preferences.targetExam
+    ? exams.filter((exam: any) => String(exam._id) === preferences.targetExam?._id)
+    : exams;
   return (
     <div className="page-wrap max-w-4xl">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-[var(--text)]">Study Notes</h1>
-        <p className="text-sm text-[var(--muted)] mt-1">PDFs and rich-text notes for each subject.</p>
+        <p className="text-sm text-[var(--muted)] mt-1">
+          {preferences.targetExam
+            ? `Showing notes for ${preferences.targetExam.name}.`
+            : 'PDFs and rich-text notes for each subject.'}
+        </p>
       </div>
-      <NotesClient exams={JSON.parse(JSON.stringify(exams))} />
+      <NotesClient
+        exams={JSON.parse(JSON.stringify(visibleExams))}
+        initialExamId={preferences.targetExam?._id ?? undefined}
+      />
     </div>
   );
 }

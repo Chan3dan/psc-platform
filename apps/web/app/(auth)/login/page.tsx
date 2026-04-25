@@ -7,13 +7,52 @@ import Link from 'next/link';
 import { BrandMark } from '@/components/branding/BrandMark';
 import { useSiteSettings } from '@/components/branding/SiteSettingsProvider';
 
+const COPY = {
+  en: {
+    toggle: 'नेपाली',
+    home: 'Home',
+    signUp: 'Sign up',
+    welcome: 'Welcome back',
+    subtitle: 'Sign in to continue with',
+    google: 'Continue with Google',
+    or: 'or',
+    email: 'Email',
+    password: 'Password',
+    emailPlaceholder: 'you@example.com',
+    invalid: 'Invalid email or password',
+    signingIn: 'Signing in…',
+    signIn: 'Sign in',
+    noAccount: 'No account?',
+    createOne: 'Create one free',
+  },
+  ne: {
+    toggle: 'English',
+    home: 'होम',
+    signUp: 'साइन अप',
+    welcome: 'फेरि स्वागत छ',
+    subtitle: 'अगाडि बढ्न लगइन गर्नुहोस्',
+    google: 'Google मार्फत जारी राख्नुहोस्',
+    or: 'वा',
+    email: 'इमेल',
+    password: 'पासवर्ड',
+    emailPlaceholder: 'you@example.com',
+    invalid: 'इमेल वा पासवर्ड मिलेन',
+    signingIn: 'लगइन हुँदैछ…',
+    signIn: 'लगइन',
+    noAccount: 'खाता छैन?',
+    createOne: 'नयाँ खाता खोल्नुहोस्',
+  },
+} as const;
+
 export default function LoginPage() {
   const router = useRouter();
   const { status } = useSession();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [language, setLanguage] = useState<'en' | 'ne'>('en');
   const settings = useSiteSettings();
+  const t = COPY[language];
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -33,7 +72,7 @@ export default function LoginPage() {
     if (res?.ok) {
       router.push('/dashboard');
     } else {
-      setError('Invalid email or password');
+      setError(t.invalid);
       setLoading(false);
     }
   }
@@ -44,6 +83,9 @@ export default function LoginPage() {
         <nav className="page-wrap pb-0">
           <div className="card glass px-5 py-3 flex items-center justify-between">
             <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} compact />
+            <button type="button" className="btn-secondary py-2" onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}>
+              {t.toggle}
+            </button>
           </div>
         </nav>
       </div>
@@ -56,8 +98,11 @@ export default function LoginPage() {
         <div className="card glass px-5 py-3 flex items-center justify-between">
           <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} compact />
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">Home</Link>
-            <Link href="/register" className="btn-secondary py-2">Sign up</Link>
+            <button type="button" className="btn-secondary py-2" onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}>
+              {t.toggle}
+            </button>
+            <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">{t.home}</Link>
+            <Link href="/register" className="btn-secondary py-2">{t.signUp}</Link>
           </div>
         </div>
       </nav>
@@ -67,8 +112,8 @@ export default function LoginPage() {
           <div className="flex justify-center">
             <BrandMark name={settings.brandName} logoUrl={settings.logoUrl} />
           </div>
-          <h1 className="text-2xl font-semibold text-[var(--text)] mt-3">Welcome back</h1>
-          <p className="text-sm text-[var(--muted)] mt-1">Sign in to continue with {settings.brandName}</p>
+          <h1 className="text-2xl font-semibold text-[var(--text)] mt-3">{t.welcome}</h1>
+          <p className="text-sm text-[var(--muted)] mt-1">{t.subtitle} {settings.brandName}</p>
         </div>
         <div className="card glass p-6 space-y-4">
           <button
@@ -81,35 +126,35 @@ export default function LoginPage() {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Continue with Google
+            {t.google}
           </button>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-[var(--line)]" />
-            <span className="text-xs text-[var(--muted)]">or</span>
+            <span className="text-xs text-[var(--muted)]">{t.or}</span>
             <div className="flex-1 h-px bg-[var(--line)]" />
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Email</label>
+              <label className="label">{t.email}</label>
               <input type="email" required autoComplete="email" value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className="input" placeholder="you@example.com" />
+                className="input" placeholder={t.emailPlaceholder} />
             </div>
             <div>
-              <label className="label">Password</label>
+              <label className="label">{t.password}</label>
               <input type="password" required autoComplete="current-password" value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 className="input" placeholder="••••••••" />
             </div>
             {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-xl">{error}</p>}
             <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? t.signingIn : t.signIn}
             </button>
           </form>
         </div>
         <p className="text-center text-sm text-[var(--muted)] mt-4">
-          No account?{' '}
-          <Link href="/register" className="text-[var(--brand)] hover:opacity-90 font-semibold">Create one free</Link>
+          {t.noAccount}{' '}
+          <Link href="/register" className="text-[var(--brand)] hover:opacity-90 font-semibold">{t.createOne}</Link>
         </p>
       </div>
       </div>

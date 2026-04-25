@@ -6,13 +6,14 @@ import { AppIcon } from '@/components/icons/AppIcon';
 interface Props {
   initialPlan: any | null;
   exams: Array<{ _id: string; name: string; slug: string }>;
+  initialExamId?: string;
 }
 
-export function PlannerClient({ initialPlan, exams }: Props) {
+export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
   const [plan, setPlan] = useState(initialPlan);
   const [creating, setCreating] = useState(!initialPlan);
   const [form, setForm] = useState({
-    exam_id: exams[0]?._id ?? '',
+    exam_id: initialExamId ?? exams[0]?._id ?? '',
     target_date: '',
     daily_hours: 2,
     preferences: {

@@ -252,6 +252,46 @@ const UserSchema = new Schema<IUser>(
 );
 UserSchema.index({ email: 1 });
 
+export interface IFeedback extends Document {
+  user_id?: Types.ObjectId;
+  name: string;
+  email: string;
+  category: 'general' | 'bug' | 'feature' | 'exam_request';
+  exam_slug?: string;
+  exam_name?: string;
+  message: string;
+  status: 'new' | 'reviewing' | 'planned' | 'resolved' | 'closed';
+  admin_note?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const FeedbackSchema = new Schema<IFeedback>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User' },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    category: {
+      type: String,
+      enum: ['general', 'bug', 'feature', 'exam_request'],
+      default: 'general',
+    },
+    exam_slug: { type: String, lowercase: true, trim: true },
+    exam_name: { type: String, trim: true },
+    message: { type: String, required: true, trim: true },
+    status: {
+      type: String,
+      enum: ['new', 'reviewing', 'planned', 'resolved', 'closed'],
+      default: 'new',
+    },
+    admin_note: { type: String, default: '' },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+FeedbackSchema.index({ status: 1, created_at: -1 });
+FeedbackSchema.index({ category: 1, created_at: -1 });
+FeedbackSchema.index({ email: 1, created_at: -1 });
+
 export interface IAnswer {
   question_id: Types.ObjectId;
   selected_option: number | null;
@@ -479,3 +519,5 @@ export const SiteSetting =
 export const StudyPlan = mongoose.models.StudyPlan || mongoose.model<IStudyPlan>('StudyPlan', StudyPlanSchema);
 export const Bookmark = mongoose.models.Bookmark || mongoose.model('Bookmark', BookmarkSchema);
 export const Note = mongoose.models.Note || mongoose.model('Note', NoteSchema);
+export const Feedback =
+  mongoose.models.Feedback || mongoose.model<IFeedback>('Feedback', FeedbackSchema);

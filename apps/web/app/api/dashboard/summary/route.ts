@@ -1,10 +1,11 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { Result, StudyPlan, User } from '@psc/shared/models';
+import { Exam, Result, StudyPlan, User } from '@psc/shared/models';
 import { generateAnalytics } from '@psc/shared/utils/analytics';
 import { ok, serverError, unauthorized } from '@/lib/apiResponse';
 import { CacheKeys, cacheGet, cacheSet } from '@/lib/redis';
+import { UPCOMING_EXAM_TRACKS } from '@/lib/exam-tracks';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,8 +130,22 @@ export async function GET() {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
 
-    const [results, user, plan, drillsToday] = await Promise.all([
-      Result.find({ user_id: userId })
+    const user = (await User.findById(userId)
+      .select('name stats preferences')
+      .populate('preferences.target_exam_id', 'name slug description')
+      .lean()) as any;
+
+    const targetExamId = user?.preferences?.target_exam_id?._id
+      ? String(user.preferences.target_exam_id._id)
+      : null;
+
+    const resultFilter: Record<string, unknown> = { user_id: userId };
+    if (targetExamId) {
+      resultFilter.exam_id = targetExamId;
+    }
+
+    const [results, plan, drillsToday, activeExams] = await Promise.all([
+      Result.find(resultFilter)
         .sort({ created_at: -1 })
         .limit(20)
         .select(
@@ -138,17 +153,18 @@ export async function GET() {
         )
         .populate('test_id', 'title')
         .lean(),
-      User.findById(userId).select('name stats').lean(),
       StudyPlan.findOne({ user_id: userId, is_active: true })
         .select('exam_id streak_days target_date')
         .populate('exam_id', 'name')
         .lean(),
       Result.countDocuments({
         user_id: userId,
+        ...(targetExamId ? { exam_id: targetExamId } : {}),
         test_type: 'practice',
         created_at: { $gte: start, $lte: end },
         total_time_seconds: { $lte: 300 },
       }),
+      Exam.find({ is_active: true }).select('name slug description').sort({ name: 1 }).lean(),
     ]);
 
     const analytics = generateAnalytics(results as any);
@@ -177,8 +193,26 @@ export async function GET() {
         ? {
             name: (user as any).name ?? '',
             stats: (user as any).stats ?? {},
+            preferences: {
+              language: (user as any)?.preferences?.language === 'ne' ? 'ne' : 'en',
+            },
           }
         : null,
+      preferredExam: targetExamId
+        ? {
+            _id: targetExamId,
+            name: user.preferences.target_exam_id.name,
+            slug: user.preferences.target_exam_id.slug,
+            description: user.preferences.target_exam_id.description ?? '',
+          }
+        : null,
+      activeExams: (activeExams as any[]).map((exam) => ({
+        _id: String(exam._id),
+        name: exam.name,
+        slug: exam.slug,
+        description: exam.description ?? '',
+      })),
+      examTracks: UPCOMING_EXAM_TRACKS,
       plan: plan
         ? {
             examName: (plan as any).exam_id?.name ?? '',

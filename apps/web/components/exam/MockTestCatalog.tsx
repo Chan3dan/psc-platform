@@ -4,10 +4,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppIcon } from '@/components/icons/AppIcon';
 
-export function MockTestCatalog({ tests }: { tests: any[] }) {
+export function MockTestCatalog({
+  tests,
+  initialExamId = 'all',
+}: {
+  tests: any[];
+  initialExamId?: string;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [exam, setExam] = useState('all');
+  const [exam, setExam] = useState(initialExamId || 'all');
 
   useEffect(() => {
     for (const test of tests.slice(0, 6)) {
@@ -25,6 +31,16 @@ export function MockTestCatalog({ tests }: { tests: any[] }) {
     }
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [tests]);
+
+  useEffect(() => {
+    if (exams.length === 1) {
+      setExam(exams[0].id);
+      return;
+    }
+    if (initialExamId && initialExamId !== 'all') {
+      setExam(initialExamId);
+    }
+  }, [exams, initialExamId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

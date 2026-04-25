@@ -12,9 +12,10 @@ import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/l
 
 interface MobileHeaderProps {
   user: { name?: string | null; email?: string | null; role?: string };
+  targetExamName?: string;
 }
 
-export function MobileHeader({ user }: MobileHeaderProps) {
+export function MobileHeader({ user, targetExamName }: MobileHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,7 +52,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
                 href="/dashboard"
                 name={settings.brandName}
                 logoUrl={settings.logoUrl}
-                subtitle={`Hi, ${firstName}`}
+                subtitle={targetExamName ? `${firstName} · ${targetExamName}` : `Hi, ${firstName}`}
                 compact
                 hideSubtitleOnMobile={false}
               />
@@ -130,6 +131,7 @@ export function MobileHeader({ user }: MobileHeaderProps) {
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--text)] truncate">{user.name}</p>
                   <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
+                  {targetExamName ? <p className="text-[11px] text-[var(--brand)] truncate mt-0.5">{targetExamName}</p> : null}
                 </div>
               </div>
               <button

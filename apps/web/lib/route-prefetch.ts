@@ -14,6 +14,7 @@ export const USER_PREFETCH_ROUTES = [
   '/leaderboard',
   '/notes',
   '/bookmarks',
+  '/settings',
 ] as const;
 
 export const ADMIN_PREFETCH_ROUTES = [
@@ -26,6 +27,7 @@ export const ADMIN_PREFETCH_ROUTES = [
   '/admin/mocks',
   '/admin/analytics',
   '/admin/users',
+  '/admin/feedback',
   '/admin/notes',
   '/admin/settings',
 ] as const;

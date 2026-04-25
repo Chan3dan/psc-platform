@@ -14,6 +14,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/admin/mocks', label: 'Mocks', icon: 'mock' },
   { href: '/admin/analytics', label: 'Analytics', icon: 'analytics' },
   { href: '/admin/users', label: 'Users', icon: 'users' },
+  { href: '/admin/feedback', label: 'Feedback', icon: 'idea' },
   { href: '/admin/notes', label: 'Notes', icon: 'notes' },
   { href: '/admin/settings', label: 'Settings', icon: 'settings' },
 ];

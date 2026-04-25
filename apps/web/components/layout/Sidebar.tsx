@@ -12,9 +12,10 @@ import { ADMIN_PREFETCH_ROUTES, USER_PREFETCH_ROUTES, prefetchRoutes } from '@/l
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; role?: string };
+  targetExamName?: string;
 }
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, targetExamName }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -88,6 +89,7 @@ export function Sidebar({ user }: SidebarProps) {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-[var(--text)] truncate">{user.name}</p>
               <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
+              {targetExamName ? <p className="text-[11px] text-[var(--brand)] truncate mt-0.5">{targetExamName}</p> : null}
             </div>
             <button onClick={() => signOut({ callbackUrl: '/' })}
               className="text-[var(--muted)] hover:text-[var(--text)] transition-colors text-sm" title="Sign out">

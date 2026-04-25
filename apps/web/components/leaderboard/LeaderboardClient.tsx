@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 type Period = 'all' | 'week' | 'month';
 
-export function LeaderboardClient() {
-  const [examId, setExamId] = useState('');
+export function LeaderboardClient({ initialExamId = '' }: { initialExamId?: string }) {
+  const [examId, setExamId] = useState(initialExamId);
   const [testId, setTestId] = useState('');
   const [tests, setTests] = useState<any[]>([]);
   const [period, setPeriod] = useState<Period>('all');
@@ -20,6 +20,13 @@ export function LeaderboardClient() {
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
+
+  useEffect(() => {
+    if (initialExamId && exams.length) {
+      void loadTests(initialExamId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialExamId, exams.length]);
 
   async function loadTests(eid: string) {
     setExamId(eid);

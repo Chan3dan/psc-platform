@@ -16,4 +16,5 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { href: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
   { href: '/notes', label: 'Notes', icon: 'notes' },
   { href: '/bookmarks', label: 'Bookmarks', icon: 'bookmarks' },
+  { href: '/settings', label: 'Settings', icon: 'settings' },
 ];

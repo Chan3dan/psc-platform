@@ -1,12 +1,12 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { PdfReader } from './PdfReader';
 
 // ── NOTES CLIENT ─────────────────────────────────────────────
-export function NotesClient({ exams }: { exams: any[] }) {
-  const [examId, setExamId] = useState(exams[0]?._id ?? '');
+export function NotesClient({ exams, initialExamId }: { exams: any[]; initialExamId?: string }) {
+  const [examId, setExamId] = useState(initialExamId ?? exams[0]?._id ?? '');
   const [query, setQuery] = useState('');
   const [type, setType] = useState<'all' | 'pdf' | 'richtext'>('all');
   const [activeNote, setActiveNote] = useState<any | null>(null);
@@ -40,6 +40,12 @@ export function NotesClient({ exams }: { exams: any[] }) {
       return hay.includes(q);
     });
   }, [notes, query, type]);
+
+  useEffect(() => {
+    if (initialExamId) {
+      setExamId(initialExamId);
+    }
+  }, [initialExamId]);
 
   return (
     <div className="space-y-5">
