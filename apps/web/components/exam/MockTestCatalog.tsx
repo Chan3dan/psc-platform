@@ -78,7 +78,7 @@ export function MockTestCatalog({
           <button
             type="button"
             onClick={() => setPastOpen(true)}
-            className="card w-full p-4 text-left transition-colors hover:border-blue-300 dark:hover:border-blue-700"
+            className="card w-full p-4 text-left transition-colors hover:border-[var(--brand)]/45 hover:bg-[var(--brand-soft)]/15"
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-3">
@@ -147,14 +147,14 @@ export function MockTestCatalog({
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {filtered.map((test) => (
-            <div key={test._id} className="card p-5 md:p-6 flex items-start justify-between gap-4 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+            <div key={test._id} className="card flex items-start justify-between gap-4 p-5 transition-colors hover:border-[var(--brand)]/45 hover:bg-[var(--brand-soft)]/12 md:p-6">
               <div className="min-w-0">
                 <p className="text-xs uppercase tracking-wide text-[var(--muted)] font-semibold">{test.exam_id?.name}</p>
                 <h2 className="font-semibold text-[var(--text)] text-lg mt-1 line-clamp-2">{test.title}</h2>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
                   <span className="badge badge-blue inline-flex items-center gap-1.5"><AppIcon name="mock" className="h-3.5 w-3.5" /> {test.duration_minutes} min</span>
-                  <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 inline-flex items-center gap-1.5"><AppIcon name="questions" className="h-3.5 w-3.5" /> {test.total_questions} questions</span>
-                  <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 inline-flex items-center gap-1.5"><AppIcon name="users" className="h-3.5 w-3.5" /> {test.attempt_count ?? 0} attempts</span>
+                  <span className="badge badge-green inline-flex items-center gap-1.5"><AppIcon name="questions" className="h-3.5 w-3.5" /> {test.total_questions} questions</span>
+                  <span className="badge inline-flex items-center gap-1.5 bg-violet-100 text-violet-700"><AppIcon name="users" className="h-3.5 w-3.5" /> {test.attempt_count ?? 0} attempts</span>
                 </div>
               </div>
               <Link

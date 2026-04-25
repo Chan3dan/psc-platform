@@ -94,7 +94,7 @@ export function LeaderboardClient({ initialExamId = '' }: { initialExamId?: stri
             <button
               key={value}
               onClick={() => setPeriod(value)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${period === value ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${period === value ? 'bg-blue-600 text-white' : 'bg-[var(--bg)] text-[var(--muted)] border border-[var(--line)] hover:bg-[var(--brand-soft)]/35'}`}
             >
               {label}
             </button>
@@ -113,11 +113,11 @@ export function LeaderboardClient({ initialExamId = '' }: { initialExamId?: stri
       )}
 
       {showPinnedUser && (
-        <div className="card p-4 mb-4 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
-          <p className="text-xs text-blue-700 dark:text-blue-300">Your Rank</p>
+        <div className="card p-4 mb-4 border border-[var(--brand)]/35 bg-[var(--brand-soft)]/40">
+          <p className="text-xs text-[var(--brand)]">Your Rank</p>
           <div className="flex items-center justify-between mt-1">
-            <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">#{lb.current_user_rank.rank} {lb.current_user_rank.name}</span>
-            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{lb.current_user_rank.score}</span>
+            <span className="text-sm font-semibold text-[var(--text)]">#{lb.current_user_rank.rank} {lb.current_user_rank.name}</span>
+            <span className="text-sm font-semibold text-[var(--brand)]">{lb.current_user_rank.score}</span>
           </div>
         </div>
       )}
@@ -135,10 +135,10 @@ export function LeaderboardClient({ initialExamId = '' }: { initialExamId?: stri
             {lb.leaderboard.map((entry: any) => {
               const isMe = String(entry.user_id) === String(lb.current_user_id);
               return (
-                <div key={entry.rank} className={`flex items-center gap-4 px-5 py-3 ${isMe ? 'bg-blue-50 dark:bg-blue-950' : ''}`}>
+                <div key={entry.rank} className={`flex items-center gap-4 px-5 py-3 ${isMe ? 'bg-[var(--brand-soft)]/45' : ''}`}>
                   <span className="w-8 text-center text-lg">{entry.rank <= 3 ? medals[entry.rank - 1] : `#${entry.rank}`}</span>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${isMe ? 'text-blue-700 dark:text-blue-300' : 'text-[var(--text)]'}`}>
+                    <p className={`text-sm font-medium truncate ${isMe ? 'text-[var(--brand)]' : 'text-[var(--text)]'}`}>
                       {entry.name}{isMe ? ' (You)' : ''}
                     </p>
                     <p className="text-xs text-[var(--muted)]">{entry.accuracy}% accuracy · {Math.floor(entry.time_taken / 60)}m {entry.time_taken % 60}s</p>

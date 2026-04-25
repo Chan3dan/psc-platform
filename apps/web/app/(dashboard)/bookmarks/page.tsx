@@ -131,7 +131,7 @@ export default function BookmarksPage() {
             <div className="space-y-1.5">
               <button
                 onClick={() => setSubjectFilter('all')}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm ${subjectFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-[var(--text)]'}`}
+                className={`w-full rounded-lg px-3 py-2 text-left text-sm ${subjectFilter === 'all' ? 'bg-blue-600 text-white' : 'border border-[var(--line)] bg-[var(--bg)] text-[var(--text)] hover:bg-[var(--brand-soft)]/35'}`}
               >
                 All Subjects ({bookmarks.length})
               </button>
@@ -139,7 +139,7 @@ export default function BookmarksPage() {
                 <button
                   key={s.id}
                   onClick={() => setSubjectFilter(s.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm ${subjectFilter === s.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-[var(--text)]'}`}
+                  className={`w-full rounded-lg px-3 py-2 text-left text-sm ${subjectFilter === s.id ? 'bg-blue-600 text-white' : 'border border-[var(--line)] bg-[var(--bg)] text-[var(--text)] hover:bg-[var(--brand-soft)]/35'}`}
                 >
                   {s.name} ({s.count})
                 </button>
@@ -174,14 +174,14 @@ export default function BookmarksPage() {
                       {q.options.map((opt: any) => (
                         <p
                           key={opt.index}
-                          className={`text-sm ${opt.index === q.correct_answer ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-[var(--muted)]'}`}
+                          className={`text-sm ${opt.index === q.correct_answer ? 'font-medium text-emerald-600' : 'text-[var(--muted)]'}`}
                         >
                           {opt.index === q.correct_answer ? 'Correct: ' : ''}{String.fromCharCode(65 + opt.index)}. {opt.text}
                         </p>
                       ))}
 
                       {q.explanation && (
-                        <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200">
+                        <div className="rounded-lg border border-[var(--line)] bg-[var(--brand-soft)]/35 p-3 text-xs text-[var(--text)]">
                           <strong>Explanation:</strong> {q.explanation}
                         </div>
                       )}

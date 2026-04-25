@@ -275,7 +275,7 @@ export function DashboardPageClient() {
       return (
         <div className="page-wrap">
           <section className="card glass p-6 md:p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 dark:bg-red-950/50">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100 text-red-500">
               <AppIcon name="alert" className="h-7 w-7" />
             </div>
             <p className="text-xs font-semibold uppercase tracking-wide text-red-500">Dashboard temporarily unavailable</p>
@@ -446,7 +446,7 @@ export function DashboardPageClient() {
               {readinessScore >= 70 ? t.ready : readinessScore >= 45 ? t.building : t.needsFocus}
             </span>
           </div>
-          <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-[var(--bg)]">
             <div
               className="h-full rounded-full bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500"
               style={{ width: `${readinessScore}%` }}
@@ -474,13 +474,13 @@ export function DashboardPageClient() {
             {dailyMissions.map((mission: any) => (
               <Link key={mission.id} href={mission.href} className="block rounded-2xl border border-[var(--line)] p-3 hover:border-[var(--brand)]/50 hover:bg-[var(--brand-soft)]/25 transition-colors">
                 <div className="flex items-start gap-3">
-                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl ${mission.completed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>
+                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl ${mission.completed ? 'bg-emerald-100 text-emerald-600' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>
                     <AppIcon name={mission.completed ? 'check' : mission.type === 'mock' ? 'mock' : mission.type === 'review' ? 'bookmarks' : 'drill'} className="h-4 w-4" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold text-[var(--text)]">{mission.title}</span>
                     <span className="mt-0.5 block text-xs text-[var(--muted)]">{mission.description}</span>
-                    <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                    <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-[var(--bg)]">
                       <span className={`block h-full rounded-full ${mission.completed ? 'bg-emerald-500' : 'bg-[var(--brand)]'}`} style={{ width: `${mission.progress ?? 0}%` }} />
                     </span>
                   </span>
@@ -589,7 +589,7 @@ export function DashboardPageClient() {
           {milestones.map((milestone: any) => (
             <div key={milestone.label} className="rounded-2xl border border-[var(--line)] p-3">
               <div className="flex items-center gap-2">
-                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${milestone.completed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950' : 'bg-gray-100 text-gray-500 dark:bg-gray-800'}`}>
+                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${milestone.completed ? 'bg-emerald-100 text-emerald-600' : 'bg-[var(--bg)] text-[var(--muted)]'}`}>
                   <AppIcon name={milestone.completed ? 'check' : 'leaderboard'} className="h-3.5 w-3.5" />
                 </span>
                 <p className="text-sm font-medium text-[var(--text)]">{milestone.label}</p>
@@ -614,12 +614,12 @@ export function DashboardPageClient() {
                   key={i}
                   className={`rounded-xl px-3 py-2.5 text-sm flex items-start gap-2 ${
                     ins.type === 'weakness'
-                      ? 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300'
+                      ? 'bg-red-50 text-red-700'
                       : ins.type === 'strength'
-                        ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                        ? 'bg-emerald-50 text-emerald-700'
                         : ins.type === 'milestone'
-                          ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
-                          : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-amber-50 text-amber-700'
                   }`}
                 >
                   <span className="shrink-0 mt-0.5">
@@ -680,7 +680,7 @@ export function DashboardPageClient() {
                     <span className="text-sm font-medium text-[var(--text)] flex-1 truncate">{topic.subject_name}</span>
                     <span className="text-xs text-red-500 font-semibold shrink-0">{topic.avg_accuracy}%</span>
                   </div>
-                  <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--bg)]">
                     <div className="h-full bg-red-400 rounded-full" style={{ width: `${topic.avg_accuracy}%` }} />
                   </div>
                 </div>

@@ -231,28 +231,28 @@ export function QuestionTable({
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
           <button
-            className={`card p-2 text-left transition border ${difficultyFilter === '' ? 'border-blue-400 ring-2 ring-blue-200 dark:ring-blue-900' : 'border-[var(--line)]'}`}
+            className={`card p-2 text-left transition border ${difficultyFilter === '' ? 'border-blue-400 ring-2 ring-blue-200/70' : 'border-[var(--line)]'}`}
             onClick={() => { setDifficultyFilter(''); setPage(1); }}
           >
             <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">All</p>
             <p className="text-sm font-semibold text-[var(--text)]">{difficultyCounts.all}</p>
           </button>
           <button
-            className={`card p-2 text-left transition border ${difficultyFilter === 'easy' ? 'border-emerald-400 ring-2 ring-emerald-200 dark:ring-emerald-900' : 'border-[var(--line)]'}`}
+            className={`card p-2 text-left transition border ${difficultyFilter === 'easy' ? 'border-emerald-400 ring-2 ring-emerald-200/70' : 'border-[var(--line)]'}`}
             onClick={() => { setDifficultyFilter('easy'); setPage(1); }}
           >
             <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Easy</p>
             <p className="text-sm font-semibold text-emerald-600">{difficultyCounts.easy}</p>
           </button>
           <button
-            className={`card p-2 text-left transition border ${difficultyFilter === 'medium' ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-900' : 'border-[var(--line)]'}`}
+            className={`card p-2 text-left transition border ${difficultyFilter === 'medium' ? 'border-amber-400 ring-2 ring-amber-200/70' : 'border-[var(--line)]'}`}
             onClick={() => { setDifficultyFilter('medium'); setPage(1); }}
           >
             <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Medium</p>
             <p className="text-sm font-semibold text-amber-600">{difficultyCounts.medium}</p>
           </button>
           <button
-            className={`card p-2 text-left transition border ${difficultyFilter === 'hard' ? 'border-red-400 ring-2 ring-red-200 dark:ring-red-900' : 'border-[var(--line)]'}`}
+            className={`card p-2 text-left transition border ${difficultyFilter === 'hard' ? 'border-red-400 ring-2 ring-red-200/70' : 'border-[var(--line)]'}`}
             onClick={() => { setDifficultyFilter('hard'); setPage(1); }}
           >
             <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Hard</p>
@@ -410,7 +410,7 @@ export function QuestionTable({
                         key={o.index}
                         className={`text-sm ${
                           o.index === q.correct_answer
-                            ? 'text-emerald-700 dark:text-emerald-400 font-medium'
+                            ? 'text-emerald-600 font-medium'
                             : 'text-[var(--muted)]'
                         }`}
                       >

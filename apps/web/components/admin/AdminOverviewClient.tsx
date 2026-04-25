@@ -87,7 +87,7 @@ export function AdminOverviewClient() {
             <h2 className="font-semibold text-[var(--text)] text-sm">Flagged By Users</h2>
             <p className="text-xs text-[var(--muted)] mt-0.5">Recent questions users marked for review during tests.</p>
           </div>
-          <Link href="/admin/flagged" className="text-xs text-[var(--brand)] hover:underline">
+          <Link href="/admin/flagged" className="btn-secondary px-3 py-2 text-xs">
             Open flagged queue
           </Link>
         </div>
@@ -133,7 +133,7 @@ export function AdminOverviewClient() {
                   <p className="font-medium text-[var(--text)] truncate">{user.name}</p>
                   <p className="text-xs text-[var(--muted)] truncate mt-0.5">{user.email}</p>
                 </div>
-                <span className={`badge text-xs ${user.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300' : 'badge-gray'}`}>
+                <span className={`badge text-xs ${user.role === 'admin' ? 'bg-orange-100 text-orange-700' : 'badge-gray'}`}>
                   {user.role}
                 </span>
               </div>
@@ -156,7 +156,7 @@ export function AdminOverviewClient() {
                   <td className="px-6 py-2.5 font-medium text-[var(--text)]">{user.name}</td>
                   <td className="px-6 py-2.5 text-[var(--muted)]">{user.email}</td>
                   <td className="px-6 py-2.5">
-                    <span className={`badge ${user.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300' : 'badge-gray'}`}>
+                    <span className={`badge ${user.role === 'admin' ? 'bg-orange-100 text-orange-700' : 'badge-gray'}`}>
                       {user.role}
                     </span>
                   </td>

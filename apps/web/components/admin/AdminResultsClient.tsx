@@ -153,7 +153,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
             <button type="button" onClick={() => setDailyResultsOpen(true)} className="btn-secondary text-xs !px-3 !py-2">
               Daily question table
             </button>
-            <Link href="/admin/flagged" className="text-xs text-[var(--brand)] hover:underline">
+            <Link href="/admin/flagged" className="btn-secondary text-xs !px-3 !py-2">
               Open flagged queue
             </Link>
           </div>
@@ -347,7 +347,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
               {dailyResultsLoading ? (
                 <div className="h-56 animate-pulse rounded-3xl bg-[var(--brand-soft)]/25" />
               ) : dailyResultsError ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50">
+                <div className="rounded-2xl border border-red-300/60 bg-red-50/90 p-5 text-sm text-red-600">
                   {dailyResultsError}
                 </div>
               ) : dailyResults ? (

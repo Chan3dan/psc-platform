@@ -307,7 +307,7 @@ export default function AdminNotesPage() {
           </label>
 
           {msg && (
-            <p className={`rounded-xl px-3 py-2 text-sm ${msg.startsWith('Error:') ? 'bg-red-50 text-red-600 dark:bg-red-950' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}`}>
+            <p className={`rounded-xl px-3 py-2 text-sm ${msg.startsWith('Error:') ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
               {msg}
             </p>
           )}
@@ -341,7 +341,7 @@ export default function AdminNotesPage() {
           ) : (
             <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
               {notes.map((note: any) => (
-                <article key={note._id} className={`rounded-2xl border p-4 ${note.is_active ? 'border-[var(--line)] bg-white/70 dark:bg-slate-900/70' : 'border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/30'}`}>
+                <article key={note._id} className={`rounded-2xl border p-4 ${note.is_active ? 'border-[var(--line)] bg-[var(--bg-elev)]/92' : 'border-amber-200 bg-amber-50/70'}`}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -380,7 +380,7 @@ export default function AdminNotesPage() {
           className="fixed inset-0 z-[120] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
-          <div className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-3xl md:rounded-2xl border border-[var(--line)] bg-white shadow-2xl overflow-hidden flex flex-col dark:bg-slate-950">
+          <div className="flex h-full w-full flex-col overflow-hidden border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl md:h-auto md:max-h-[92vh] md:max-w-3xl md:rounded-2xl">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
               <div>
                 <h3 className="text-lg font-semibold text-[var(--text)]">Edit Note</h3>
@@ -448,7 +448,7 @@ export default function AdminNotesPage() {
                     type="file"
                     accept="application/pdf,.pdf"
                     onChange={(e) => setEditing((p) => p ? { ...p, file: e.target.files?.[0] ?? null } : p)}
-                    className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--brand-soft)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--brand)] hover:file:opacity-90"
                   />
                   <p className="mt-2 text-xs text-[var(--muted)]">Leave empty to keep the current PDF. Upload a new file to repair broken notes.</p>
                 </div>
@@ -473,7 +473,7 @@ export default function AdminNotesPage() {
               </label>
 
               {editMsg && (
-                <p className={`rounded-xl px-3 py-2 text-sm ${editMsg.startsWith('Error:') ? 'bg-red-50 text-red-600 dark:bg-red-950' : 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'}`}>
+                <p className={`rounded-xl px-3 py-2 text-sm ${editMsg.startsWith('Error:') ? 'bg-red-50 text-red-600' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>
                   {editMsg}
                 </p>
               )}

@@ -70,11 +70,11 @@ export function NotesClient({ exams, initialExamId }: { exams: any[]; initialExa
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors capitalize ${
                 type === t
                   ? t === 'pdf'
-                    ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
+                    ? 'bg-red-100 text-red-700'
                     : t === 'richtext'
-                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                    : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-blue-100 text-blue-700'
+                  : 'bg-[var(--bg)] text-[var(--muted)] border border-[var(--line)] hover:bg-[var(--brand-soft)]/35'
               }`}
             >
               {t === 'richtext' ? 'Quick notes' : t} ({counts[t]})
@@ -115,14 +115,14 @@ export function NotesClient({ exams, initialExamId }: { exams: any[]; initialExa
         ))}
       </div>
 
-      {isLoading && <p className="text-sm text-gray-400 py-4">Loading notes…</p>}
+      {isLoading && <p className="py-4 text-sm text-[var(--muted)]">Loading notes...</p>}
 
       {!isLoading && notes.length === 0 && (
         <div className="card p-10 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
             <AppIcon name="notes" className="h-6 w-6" />
           </div>
-          <p className="text-sm text-gray-400">No notes available for this exam yet.</p>
+          <p className="text-sm text-[var(--muted)]">No notes available for this exam yet.</p>
         </div>
       )}
 
@@ -134,12 +134,12 @@ export function NotesClient({ exams, initialExamId }: { exams: any[]; initialExa
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {filtered.map((note: any) => (
-          <div key={note._id} className="card p-4 hover:border-blue-300 dark:hover:border-blue-700 transition-all">
+          <div key={note._id} className="card p-4 transition-all hover:border-[var(--brand)]/45 hover:bg-[var(--brand-soft)]/15">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{note.title}</h3>
+                <h3 className="truncate font-medium text-[var(--text)]">{note.title}</h3>
                 {note.subject_id?.name && (
-                  <p className="text-xs text-gray-400 mt-0.5">{note.subject_id.name}</p>
+                  <p className="mt-0.5 text-xs text-[var(--muted)]">{note.subject_id.name}</p>
                 )}
               </div>
               <span className={`badge shrink-0 ${note.content_type === 'pdf' ? 'badge-red' : 'badge-blue'}`}>
@@ -158,7 +158,7 @@ export function NotesClient({ exams, initialExamId }: { exams: any[]; initialExa
             )}
             {note.content_type === 'richtext' && note.content_html && (
               <>
-                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 line-clamp-3"
+                <div className="mt-3 line-clamp-3 text-sm text-[var(--muted)]"
                   dangerouslySetInnerHTML={{ __html: note.content_html }} />
                 <button
                   type="button"

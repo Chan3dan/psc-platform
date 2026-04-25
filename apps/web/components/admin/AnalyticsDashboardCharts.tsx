@@ -14,6 +14,19 @@ import {
   YAxis,
 } from 'recharts';
 
+const tooltipContentStyle = {
+  backgroundColor: 'var(--bg-elev)',
+  border: '1px solid var(--line)',
+  borderRadius: '16px',
+  color: 'var(--text)',
+  boxShadow: 'var(--shadow-soft)',
+};
+
+const tooltipLabelStyle = {
+  color: 'var(--text)',
+  fontWeight: 600,
+};
+
 type DailyPoint = { date: string; count: number };
 type AttemptedQuestion = {
   _id: string;
@@ -130,7 +143,7 @@ export function DashboardCharts({
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,140,170,0.25)" />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8a97ae' }} tickFormatter={(v) => String(v).slice(5)} />
               <YAxis tick={{ fontSize: 11, fill: '#8a97ae' }} />
-              <Tooltip />
+              <Tooltip contentStyle={tooltipContentStyle} labelStyle={tooltipLabelStyle} />
               <Bar dataKey="count" fill="#2563eb" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -143,7 +156,7 @@ export function DashboardCharts({
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,140,170,0.25)" />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8a97ae' }} tickFormatter={(v) => String(v).slice(5)} />
               <YAxis tick={{ fontSize: 11, fill: '#8a97ae' }} />
-              <Tooltip />
+              <Tooltip contentStyle={tooltipContentStyle} labelStyle={tooltipLabelStyle} />
               <Line type="monotone" dataKey="count" stroke="#0ea5a4" strokeWidth={3} dot={{ r: 2 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -160,7 +173,7 @@ export function DashboardCharts({
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,140,170,0.25)" />
                   <XAxis type="number" tick={{ fontSize: 11, fill: '#8a97ae' }} />
                   <YAxis type="category" dataKey="label" width={220} tick={{ fontSize: 11, fill: '#8a97ae' }} />
-                  <Tooltip />
+                  <Tooltip contentStyle={tooltipContentStyle} labelStyle={tooltipLabelStyle} />
                   <Bar dataKey="attempt_count" fill="#6366f1" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -177,7 +190,7 @@ export function DashboardCharts({
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,140,170,0.25)" />
                   <XAxis dataKey="exam_name" tick={{ fontSize: 11, fill: '#8a97ae' }} interval={0} angle={-12} textAnchor="end" height={58} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#8a97ae' }} />
-                  <Tooltip formatter={(value: any) => `${value}%`} />
+                  <Tooltip formatter={(value: any) => `${value}%`} contentStyle={tooltipContentStyle} labelStyle={tooltipLabelStyle} />
                   <Legend />
                   <Bar dataKey="avg_accuracy" fill="#10b981" name="Avg Accuracy %" radius={[6, 6, 0, 0]} />
                   <Bar dataKey="avg_score_percent" fill="#3b82f6" name="Avg Score %" radius={[6, 6, 0, 0]} />
@@ -200,6 +213,8 @@ export function DashboardCharts({
                 <Tooltip
                   formatter={(value: any, _name, payload: any) => [`${value}%`, `${payload?.payload?.exam_name ?? 'Exam'}`]}
                   labelFormatter={(label: any) => `Subject: ${label}`}
+                  contentStyle={tooltipContentStyle}
+                  labelStyle={tooltipLabelStyle}
                 />
                 <Bar dataKey="accuracy" radius={[6, 6, 0, 0]}>
                   {subjectHeatmap.map((row) => (

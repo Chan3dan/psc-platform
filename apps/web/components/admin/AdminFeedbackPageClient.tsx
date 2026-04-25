@@ -171,7 +171,7 @@ export function AdminFeedbackPageClient() {
               </div>
 
               {saveMutation.isError ? (
-                <p className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-300">
+                <p className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-600">
                   {(saveMutation.error as Error).message}
                 </p>
               ) : null}

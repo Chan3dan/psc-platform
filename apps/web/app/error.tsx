@@ -23,7 +23,7 @@ export default function AppError({
           Please retry once. If the issue continues, open the dashboard or sign in again.
         </p>
         {error.digest ? (
-          <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-300">
+          <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
             Error digest: {error.digest}
           </p>
         ) : null}

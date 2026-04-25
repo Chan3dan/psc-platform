@@ -52,7 +52,7 @@ export function UsersTable({
       <div className="p-4 md:p-5 border-b border-[var(--line)] bg-[var(--brand-soft)]/20 space-y-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <button
-            className={`card p-3 text-left transition border ${role === 'all' && status === 'all' ? 'border-blue-400 ring-2 ring-blue-200 dark:ring-blue-900' : 'border-[var(--line)]'}`}
+            className={`card p-3 text-left transition border ${role === 'all' && status === 'all' ? 'border-blue-400 ring-2 ring-blue-200/70' : 'border-[var(--line)]'}`}
             onClick={() => {
               setRole('all');
               setStatus('all');
@@ -63,7 +63,7 @@ export function UsersTable({
             <p className="text-lg font-semibold text-[var(--text)]">{totalUsers}</p>
           </button>
           <button
-            className={`card p-3 text-left transition border ${status === 'active' ? 'border-emerald-400 ring-2 ring-emerald-200 dark:ring-emerald-900' : 'border-[var(--line)]'}`}
+            className={`card p-3 text-left transition border ${status === 'active' ? 'border-emerald-400 ring-2 ring-emerald-200/70' : 'border-[var(--line)]'}`}
             onClick={() => {
               setStatus('active');
               setPage(1);
@@ -73,7 +73,7 @@ export function UsersTable({
             <p className="text-lg font-semibold text-emerald-600">{activeUsers}</p>
           </button>
           <button
-            className={`card p-3 text-left transition border ${role === 'admin' ? 'border-orange-400 ring-2 ring-orange-200 dark:ring-orange-900' : 'border-[var(--line)]'}`}
+            className={`card p-3 text-left transition border ${role === 'admin' ? 'border-orange-400 ring-2 ring-orange-200/70' : 'border-[var(--line)]'}`}
             onClick={() => {
               setRole('admin');
               setPage(1);
@@ -83,7 +83,7 @@ export function UsersTable({
             <p className="text-lg font-semibold text-orange-600">{adminUsers}</p>
           </button>
           <button
-            className={`card p-3 text-left transition border ${role === 'user' ? 'border-violet-400 ring-2 ring-violet-200 dark:ring-violet-900' : 'border-[var(--line)]'}`}
+            className={`card p-3 text-left transition border ${role === 'user' ? 'border-violet-400 ring-2 ring-violet-200/70' : 'border-[var(--line)]'}`}
             onClick={() => {
               setRole('user');
               setPage(1);
@@ -232,7 +232,7 @@ export function UsersTable({
                 <td className="px-4 py-2.5 font-medium text-[var(--text)]">{u.name}</td>
                 <td className="px-4 py-2.5 text-xs text-[var(--muted)]">{u.email}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`badge text-xs ${u.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300' : 'badge-gray'}`}>
+                  <span className={`badge text-xs ${u.role === 'admin' ? 'bg-orange-100 text-orange-700' : 'badge-gray'}`}>
                     {u.role}
                   </span>
                 </td>

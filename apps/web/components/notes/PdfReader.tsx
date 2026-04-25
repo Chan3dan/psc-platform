@@ -191,7 +191,11 @@ export function PdfReader({
   return (
     <div ref={shellRef} className="flex min-h-0 flex-1 flex-col bg-slate-950 text-white">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-slate-900 px-3 py-2">
-        <button type="button" onClick={onBack} className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-950">
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-xl border border-white/15 bg-slate-800 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+        >
           {backLabel}
         </button>
         <div className="min-w-0 flex-1 text-center">
@@ -241,7 +245,7 @@ export function PdfReader({
               type="button"
               onClick={() => goToPage(page - 1)}
               disabled={page <= 1}
-              className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/95 px-4 py-3 text-2xl font-semibold text-slate-950 shadow-lg disabled:opacity-40 sm:block"
+              className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-800/95 px-4 py-3 text-2xl font-semibold text-white shadow-lg disabled:opacity-40 sm:block"
               aria-label="Previous page"
             >
               ‹
@@ -250,7 +254,7 @@ export function PdfReader({
               type="button"
               onClick={() => goToPage(page + 1)}
               disabled={page >= pageCount}
-              className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/95 px-4 py-3 text-2xl font-semibold text-slate-950 shadow-lg disabled:opacity-40 sm:block"
+              className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-800/95 px-4 py-3 text-2xl font-semibold text-white shadow-lg disabled:opacity-40 sm:block"
               aria-label="Next page"
             >
               ›

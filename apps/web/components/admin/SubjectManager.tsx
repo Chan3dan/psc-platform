@@ -69,21 +69,21 @@ export function SubjectManager({ exams, initialSubjects }: { exams: any[]; initi
             setFilterExam('');
             setStatusFilter('all');
           }}
-          className={`card p-4 text-left transition border ${statusFilter === 'all' ? 'border-blue-400 ring-2 ring-blue-200 dark:ring-blue-900' : 'border-[var(--line)]'}`}
+          className={`card p-4 text-left transition border ${statusFilter === 'all' ? 'border-blue-400 ring-2 ring-[color:color-mix(in_oklab,var(--brand)_24%,transparent)]' : 'border-[var(--line)]'}`}
         >
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Subjects</p>
           <p className="text-2xl font-semibold text-[var(--text)] mt-1">{subjects.length}</p>
         </button>
         <button
           onClick={() => setStatusFilter('active')}
-          className={`card p-4 text-left transition border ${statusFilter === 'active' ? 'border-emerald-400 ring-2 ring-emerald-200 dark:ring-emerald-900' : 'border-[var(--line)]'}`}
+          className={`card p-4 text-left transition border ${statusFilter === 'active' ? 'border-emerald-400 ring-2 ring-emerald-200/60' : 'border-[var(--line)]'}`}
         >
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Active</p>
           <p className="text-2xl font-semibold text-emerald-600 mt-1">{activeCount}</p>
         </button>
         <button
           onClick={() => setStatusFilter('inactive')}
-          className={`card p-4 text-left transition border ${statusFilter === 'inactive' ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-900' : 'border-[var(--line)]'}`}
+          className={`card p-4 text-left transition border ${statusFilter === 'inactive' ? 'border-amber-400 ring-2 ring-amber-200/60' : 'border-[var(--line)]'}`}
         >
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Inactive</p>
           <p className="text-2xl font-semibold text-amber-600 mt-1">{inactiveCount}</p>
@@ -126,7 +126,7 @@ export function SubjectManager({ exams, initialSubjects }: { exams: any[]; initi
         >
           <div className="w-full max-w-3xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain card glass rounded-none md:rounded-2xl p-4 md:p-6 pb-24 md:pb-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editing._id ? 'Edit Subject' : 'New Subject'}</h3>
+              <h3 className="font-semibold text-[var(--text)]">{editing._id ? 'Edit Subject' : 'New Subject'}</h3>
               <button onClick={() => setEditing(null)} className="btn-secondary text-xs px-3 py-1.5">Close</button>
             </div>
 
@@ -168,17 +168,17 @@ export function SubjectManager({ exams, initialSubjects }: { exams: any[]; initi
         document.body
       )}
 
-      <div className="card divide-y divide-gray-100 dark:divide-gray-800">
-        {filtered.length === 0 && <p className="text-center text-gray-400 py-8 text-sm">No subjects found.</p>}
+      <div className="card divide-y divide-[var(--line)]">
+        {filtered.length === 0 && <p className="py-8 text-center text-sm text-[var(--muted)]">No subjects found.</p>}
         {filtered.map(sub => (
           <div key={sub._id} className="flex items-center justify-between px-5 py-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{sub.name}</span>
+                <span className="text-sm font-medium text-[var(--text)]">{sub.name}</span>
                 <span className="badge badge-blue">{sub.weightage_percent}%</span>
                 {!sub.is_active && <span className="badge badge-gray">Inactive</span>}
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">{sub.exam_id?.name} · {sub.question_count ?? 0} questions</p>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{sub.exam_id?.name} · {sub.question_count ?? 0} questions</p>
             </div>
             <button onClick={() => setEditing({ ...sub, exam_id: sub.exam_id?._id ?? sub.exam_id })}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium">Edit</button>

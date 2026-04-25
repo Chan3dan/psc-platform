@@ -103,21 +103,21 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <button
           onClick={() => setStatusFilter('all')}
-          className={`card p-4 text-left transition border ${statusFilter === 'all' ? 'border-blue-400 ring-2 ring-blue-200 dark:ring-blue-900' : 'border-[var(--line)]'}`}
+          className={`card p-4 text-left transition border ${statusFilter === 'all' ? 'border-blue-400 ring-2 ring-[color:color-mix(in_oklab,var(--brand)_24%,transparent)]' : 'border-[var(--line)]'}`}
         >
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">All Exams</p>
           <p className="text-2xl font-semibold text-[var(--text)] mt-1">{exams.length}</p>
         </button>
         <button
           onClick={() => setStatusFilter('active')}
-          className={`card p-4 text-left transition border ${statusFilter === 'active' ? 'border-emerald-400 ring-2 ring-emerald-200 dark:ring-emerald-900' : 'border-[var(--line)]'}`}
+          className={`card p-4 text-left transition border ${statusFilter === 'active' ? 'border-emerald-400 ring-2 ring-emerald-200/60' : 'border-[var(--line)]'}`}
         >
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Active</p>
           <p className="text-2xl font-semibold text-emerald-600 mt-1">{activeCount}</p>
         </button>
         <button
           onClick={() => setStatusFilter('inactive')}
-          className={`card p-4 text-left transition border ${statusFilter === 'inactive' ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-900' : 'border-[var(--line)]'}`}
+          className={`card p-4 text-left transition border ${statusFilter === 'inactive' ? 'border-amber-400 ring-2 ring-amber-200/60' : 'border-[var(--line)]'}`}
         >
           <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">Inactive</p>
           <p className="text-2xl font-semibold text-amber-600 mt-1">{inactiveCount}</p>
@@ -129,9 +129,9 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
           className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-0 md:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) { setEditing(null); setSyllabusFile(null); } }}
         >
-          <div className="w-full max-w-4xl max-h-[100dvh] md:max-h-[92vh] overflow-y-auto overscroll-contain rounded-none md:rounded-2xl border border-[var(--line)] bg-white p-4 pb-24 shadow-2xl dark:bg-slate-950 md:p-6 md:pb-6 space-y-4">
+          <div className="w-full max-w-4xl max-h-[100dvh] overflow-y-auto overscroll-contain rounded-none border border-[var(--line)] bg-[var(--bg-elev)] p-4 pb-24 shadow-2xl md:max-h-[92vh] md:rounded-2xl md:p-6 md:pb-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editing._id ? 'Edit Exam' : 'New Exam'}</h3>
+              <h3 className="font-semibold text-[var(--text)]">{editing._id ? 'Edit Exam' : 'New Exam'}</h3>
               <button onClick={() => { setEditing(null); setSyllabusFile(null); }} className="btn-secondary text-xs px-3 py-1.5">Close</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -175,7 +175,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
                   type="file"
                   accept="application/pdf,.pdf"
                   onChange={(e) => setSyllabusFile(e.target.files?.[0] ?? null)}
-                  className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--brand-soft)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--brand)] hover:file:opacity-90"
                 />
                 <p className="mt-2 text-xs text-[var(--muted)]">
                   Uploading a file replaces the URL after save. Paste URL remains available for externally hosted syllabus files.
@@ -195,7 +195,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
                 <input type="checkbox" id="active" checked={editing.is_active ?? true}
                   onChange={e => setEditing((p: any) => ({ ...p, is_active: e.target.checked }))}
                   className="w-4 h-4 accent-blue-600" />
-                <label htmlFor="active" className="text-sm text-gray-700 dark:text-gray-300">Active</label>
+                <label htmlFor="active" className="text-sm text-[var(--text)]">Active</label>
               </div>
             </div>
             <p className="text-xs text-[var(--muted)]">
@@ -211,8 +211,8 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
         document.body
       )}
 
-      <div className="card divide-y divide-gray-100 dark:divide-gray-800">
-        {filtered.length === 0 && <p className="text-center text-gray-400 py-8 text-sm">No exams found for current filters.</p>}
+      <div className="card divide-y divide-[var(--line)]">
+        {filtered.length === 0 && <p className="py-8 text-center text-sm text-[var(--muted)]">No exams found for current filters.</p>}
         {filtered.map(exam => {
           const marksPerQuestion = exam.total_questions ? exam.total_marks / exam.total_questions : 1;
           const negativePercent = exam.negative_marking <= 1 ? exam.negative_marking * 100 : exam.negative_marking;
@@ -222,10 +222,10 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
             <div key={exam._id} className="flex items-center justify-between px-5 py-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{exam.name}</h3>
+                  <h3 className="font-medium text-[var(--text)]">{exam.name}</h3>
                   {!exam.is_active && <span className="badge badge-gray">Inactive</span>}
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
                   {exam.duration_minutes}min · {exam.total_questions}q · {exam.total_marks}pts · −{negativePercent}% ({negativePerWrong.toFixed(2)} / wrong)
                 </p>
                 {(exam.syllabus_outline || exam.syllabus_pdf_url) && (
