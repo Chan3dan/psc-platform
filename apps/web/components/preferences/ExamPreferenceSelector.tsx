@@ -67,7 +67,11 @@ export function ExamPreferenceSelector({
         throw new Error(payload?.error ?? 'Could not save your exam preference');
       }
       setNotice('Your exam focus has been updated.');
-      router.refresh();
+      if (!currentExamId) {
+        router.replace('/dashboard');
+      } else {
+        router.refresh();
+      }
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Could not save your exam preference');
     } finally {

@@ -27,6 +27,12 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
     return results;
   }, [results, filter]);
 
+  function openDailyQuestionResult(result: any) {
+    if (result.test_type === 'daily_question' && result.daily_question_preview) {
+      setPreviewResult(result);
+    }
+  }
+
   const filterCards = [
     { key: 'all' as const, label: 'Recent Attempts', value: results.length, tone: 'text-blue-600' },
     { key: 'flagged' as const, label: 'Flagged Attempts', value: results.filter((result) => Number(result.flagged_count ?? 0) > 0).length, tone: 'text-amber-600' },
@@ -78,8 +84,21 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
             <div className="md:hidden divide-y divide-[var(--line)]">
               {filteredResults.map((result: any) => {
                 const flaggedCount = Number(result.flagged_count ?? 0);
+                const isDailyQuestion = result.test_type === 'daily_question' && result.daily_question_preview;
                 return (
-                  <Link key={result._id} href={`/admin/results/${result._id}`} className="block px-4 py-3 space-y-2 hover:bg-[var(--brand-soft)]/30 transition-colors">
+                  <div
+                    key={result._id}
+                    role={isDailyQuestion ? 'button' : undefined}
+                    tabIndex={isDailyQuestion ? 0 : undefined}
+                    onClick={() => openDailyQuestionResult(result)}
+                    onKeyDown={(event) => {
+                      if (isDailyQuestion && (event.key === 'Enter' || event.key === ' ')) {
+                        event.preventDefault();
+                        openDailyQuestionResult(result);
+                      }
+                    }}
+                    className={`block px-4 py-3 space-y-2 transition-colors ${isDailyQuestion ? 'cursor-pointer hover:bg-[var(--brand-soft)]/30' : ''}`}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="font-medium text-[var(--text)] truncate">{result.test_id?.title ?? result.result_context?.label ?? 'Practice Session'}</p>
@@ -95,19 +114,23 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                       <span>{formatDuration(result.total_time_seconds)} · {formatResultDate(result.created_at)}</span>
                       <span className="font-semibold text-[var(--text)]">{result.score}/{result.max_score}</span>
                     </div>
-                    {result.test_type === 'daily_question' && result.daily_question_preview && (
+                    {isDailyQuestion ? (
                       <button
                         type="button"
                         onClick={(event) => {
-                          event.preventDefault();
+                          event.stopPropagation();
                           setPreviewResult(result);
                         }}
                         className="text-xs font-semibold text-[var(--brand)]"
                       >
-                        Open daily question preview
+                        Open daily question result
                       </button>
+                    ) : (
+                      <Link href={`/admin/results/${result._id}`} className="text-xs font-semibold text-[var(--brand)]">
+                        Review full result
+                      </Link>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>
@@ -125,7 +148,11 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                   {filteredResults.map((result: any) => {
                     const flaggedCount = Number(result.flagged_count ?? 0);
                     return (
-                      <tr key={result._id} className="hover:bg-[var(--brand-soft)]/25">
+                      <tr
+                        key={result._id}
+                        onClick={() => openDailyQuestionResult(result)}
+                        className={`hover:bg-[var(--brand-soft)]/25 ${result.test_type === 'daily_question' && result.daily_question_preview ? 'cursor-pointer' : ''}`}
+                      >
                         <td className="px-6 py-3 font-medium text-[var(--text)]">{result.test_id?.title ?? result.result_context?.label ?? 'Practice Session'}</td>
                         <td className="px-6 py-3 text-[var(--muted)]">
                           <div className="space-y-1">
@@ -134,6 +161,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                             {result.user_id?._id && (
                               <Link
                                 href={`/admin/users?query=${encodeURIComponent(result.user_id.email ?? result.user_id._id)}`}
+                                onClick={(event) => event.stopPropagation()}
                                 className="text-xs text-[var(--brand)] hover:underline"
                               >
                                 Find user
@@ -150,15 +178,20 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                         <td className="px-6 py-3 text-[var(--muted)]">{formatDuration(result.total_time_seconds)} · {formatResultDate(result.created_at)}</td>
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
-                            <Link href={`/admin/results/${result._id}`} className="text-[var(--brand)] font-medium hover:underline">Review</Link>
                             {result.test_type === 'daily_question' && result.daily_question_preview && (
                               <button
                                 type="button"
-                                onClick={() => setPreviewResult(result)}
-                                className="text-xs font-semibold text-[var(--brand)] hover:underline"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setPreviewResult(result);
+                                }}
+                                className="text-[var(--brand)] font-medium hover:underline"
                               >
-                                Preview
+                                View result
                               </button>
+                            )}
+                            {result.test_type !== 'daily_question' && (
+                              <Link href={`/admin/results/${result._id}`} className="text-[var(--brand)] font-medium hover:underline">Review</Link>
                             )}
                           </div>
                         </td>
@@ -209,7 +242,9 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                 <div className="rounded-2xl border border-[var(--line)] p-3">
                   <p className="text-xs text-[var(--muted)]">Selected</p>
                   <p className="mt-1 text-sm font-semibold text-[var(--text)]">
-                    Option {String.fromCharCode(65 + Number(previewResult.daily_question_preview?.selected_option ?? 0))}
+                    {previewResult.daily_question_preview?.selected_option === null
+                      ? 'Not selected'
+                      : `Option ${String.fromCharCode(65 + Number(previewResult.daily_question_preview?.selected_option ?? 0))}`}
                   </p>
                 </div>
               </div>
@@ -224,11 +259,12 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
 
               <div className="space-y-2">
                 {(previewResult.daily_question_preview?.options ?? []).map((option: any) => {
-                  const isCorrect = option.index === previewResult.daily_question_preview?.correct_answer;
-                  const isSelected = option.index === previewResult.daily_question_preview?.selected_option;
+                  const optionIndex = Number(option.index);
+                  const isCorrect = optionIndex === Number(previewResult.daily_question_preview?.correct_answer);
+                  const isSelected = optionIndex === Number(previewResult.daily_question_preview?.selected_option);
                   return (
                     <div
-                      key={option.index}
+                      key={optionIndex}
                       className={`rounded-2xl border px-4 py-3 ${
                         isCorrect
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950'
@@ -238,7 +274,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
                       }`}
                     >
                       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        Option {String.fromCharCode(65 + Number(option.index))}
+                        Option {String.fromCharCode(65 + optionIndex)}
                       </p>
                       <p className="mt-1 text-sm text-[var(--text)]">{option.text}</p>
                     </div>

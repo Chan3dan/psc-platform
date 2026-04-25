@@ -106,7 +106,7 @@ export const CacheKeys = {
     scope: 'test' | 'exam' = 'test'
   ) => `lb:${scope}:${id}:${period}`,
   adminOverview: () => 'admin:overview',
-  adminResults: () => 'admin:results',
+  adminResults: () => 'admin:results:v2',
   adminUsers: () => 'admin:users',
   adminFlagged: () => 'admin:flagged',
 };

@@ -87,9 +87,19 @@ export async function GET() {
               const answer = result.answers[0];
               const question = questionMap.get(String(answer.question_id));
               if (!question) return null;
+              const options = Array.isArray(question.options)
+                ? question.options.map((option: any, index: number) => {
+                    if (typeof option === 'string') return { index, text: option };
+                    const optionIndex = Number(option?.index);
+                    return {
+                      index: Number.isFinite(optionIndex) ? optionIndex : index,
+                      text: String(option?.text ?? option?.label ?? ''),
+                    };
+                  }).filter((option: any) => option.text)
+                : [];
               return {
                 question_text: question.question_text,
-                options: question.options ?? [],
+                options,
                 correct_answer: question.correct_answer,
                 explanation: question.explanation ?? '',
                 selected_option: answer.selected_option ?? null,
