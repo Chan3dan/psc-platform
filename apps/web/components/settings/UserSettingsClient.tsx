@@ -110,6 +110,8 @@ export function UserSettingsClient({
         activeExams={activeExams}
         tracks={examTracks}
         currentExamId={preferences.targetExam?._id ?? null}
+        userName={name}
+        userEmail={email}
         title="Target exam"
         description="Your target exam becomes the default context for dashboard, practice, mocks, notes, planner, and leaderboard."
       />
@@ -117,6 +119,9 @@ export function UserSettingsClient({
       <FeedbackForm
         title="Feedback and requests"
         description="Need a smoother workflow, found a bug, or want an exam like NaSu or Kharidar next? Send it here."
+        initialName={name}
+        initialEmail={email}
+        hideIdentityFields
       />
     </div>
   );

@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardCharts } from '@/components/analytics/DashboardCharts';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { formatDuration } from '@/lib/results';
-import { ExamPreferenceSelector } from '@/components/preferences/ExamPreferenceSelector';
 
 const DASHBOARD_COPY = {
   en: {
@@ -14,6 +14,7 @@ const DASHBOARD_COPY = {
     welcomeBody:
       'Choose the exam you are preparing for first. After that, your dashboard, mocks, practice, notes, planner, and leaderboard will stay centered on that target.',
     commandCenter: 'Your Command Center',
+    language: 'Language',
     hello: 'Hello',
     streakMessage: (streak: number) =>
       `You are on a ${streak}-day streak. Stay consistent and keep momentum high.`,
@@ -42,6 +43,7 @@ const DASHBOARD_COPY = {
     currentExamFocus: 'Your current exam focus',
     currentExamBody:
       'Change your target exam here whenever you switch preparation. Live areas will update around the chosen exam.',
+    updateExamFocus: 'Update exam focus',
     quickDrill: 'Quick Drill',
     quickDrillBody: (count: number) => `5 questions in 5 minutes. ${count} completed today.`,
     startSpeedDrill: 'Start Speed Drill',
@@ -78,6 +80,7 @@ const DASHBOARD_COPY = {
     welcomeBody:
       'पहिले आफूले तयारी गरिरहेको परीक्षा छान्नुहोस्। त्यसपछि ड्यासबोर्ड, मोक, अभ्यास, नोट्स, प्लानर र लिडरबोर्ड सोही लक्ष्यमा केन्द्रित रहनेछन्।',
     commandCenter: 'तपाईंको कमाण्ड सेन्टर',
+    language: 'भाषा',
     hello: 'नमस्ते',
     streakMessage: (streak: number) =>
       `तपाईं ${streak} दिनको streak मा हुनुहुन्छ। निरन्तरता कायम राख्नुहोस्।`,
@@ -106,6 +109,7 @@ const DASHBOARD_COPY = {
     currentExamFocus: 'हालको लक्ष्य परीक्षा',
     currentExamBody:
       'तपाईंको तयारी परिवर्तन भएमा यहाँबाट लक्ष्य परीक्षा बदल्न सक्नुहुन्छ।',
+    updateExamFocus: 'लक्ष्य परीक्षा बदल्नुहोस्',
     quickDrill: 'छिटो Drill',
     quickDrillBody: (count: number) => `५ मिनेटमा ५ प्रश्न। आज ${count} पटक पूरा भयो।`,
     startSpeedDrill: 'Speed Drill सुरु गर्नुहोस्',
@@ -162,6 +166,8 @@ function DashboardLoadingState() {
 }
 
 export function DashboardPageClient() {
+  const [language, setLanguage] = useState<'en' | 'ne'>('en');
+  const [savingLanguage, setSavingLanguage] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
@@ -173,6 +179,11 @@ export function DashboardPageClient() {
     gcTime: 5 * 60_000,
   });
 
+  useEffect(() => {
+    if (!data) return;
+    setLanguage(data.user?.preferences?.language === 'ne' ? 'ne' : 'en');
+  }, [data]);
+
   if (isLoading || !data) {
     return <DashboardLoadingState />;
   }
@@ -183,30 +194,61 @@ export function DashboardPageClient() {
   const streak = data.user?.stats?.current_streak ?? 0;
   const readinessScore = Number(engagement.readinessScore ?? 0);
   const preferredExam = data.preferredExam;
-  const language = data.user?.preferences?.language === 'ne' ? 'ne' : 'en';
   const t = DASHBOARD_COPY[language];
+
+  async function updateLanguage(nextLanguage: 'en' | 'ne') {
+    if (nextLanguage === language) return;
+    setLanguage(nextLanguage);
+    setSavingLanguage(true);
+    try {
+      const response = await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: nextLanguage }),
+      });
+      const payload = await response.json();
+      if (!payload?.success) {
+        throw new Error(payload?.error ?? 'Could not update language');
+      }
+    } catch {
+      setLanguage(data.user?.preferences?.language === 'ne' ? 'ne' : 'en');
+    } finally {
+      setSavingLanguage(false);
+    }
+  }
 
   if (!preferredExam) {
     return (
       <div className="page-wrap space-y-6">
         <section className="card glass p-6 md:p-7">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
-              <AppIcon name="dashboard" className="h-3.5 w-3.5" />
-              {t.welcomeBadge}
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
+                <AppIcon name="dashboard" className="h-3.5 w-3.5" />
+                {t.welcomeBadge}
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">{t.welcomeTitle}</h1>
+              <p className="text-sm text-[var(--muted)] max-w-2xl">
+                {t.welcomeBody}
+              </p>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">{t.welcomeTitle}</h1>
-            <p className="text-sm text-[var(--muted)] max-w-2xl">
-              {t.welcomeBody}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t.language}</span>
+              <button type="button" onClick={() => void updateLanguage('en')} disabled={savingLanguage} className={language === 'en' ? 'btn-primary !px-4 !py-2 text-sm' : 'btn-secondary !px-4 !py-2 text-sm'}>English</button>
+              <button type="button" onClick={() => void updateLanguage('ne')} disabled={savingLanguage} className={language === 'ne' ? 'btn-primary !px-4 !py-2 text-sm' : 'btn-secondary !px-4 !py-2 text-sm'}>नेपाली</button>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
+              <AppIcon name="settings" className="h-3.5 w-3.5" />
+              {t.currentExamFocus}
+            </div>
+            <Link href="/settings" className="btn-primary inline-flex items-center gap-2">
+              <AppIcon name="settings" className="h-4 w-4" />
+              {t.updateExamFocus}
+            </Link>
           </div>
         </section>
-
-        <ExamPreferenceSelector
-          activeExams={data.activeExams ?? []}
-          tracks={data.examTracks ?? []}
-          currentExamId={null}
-        />
       </div>
     );
   }
@@ -249,7 +291,13 @@ export function DashboardPageClient() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col items-start gap-3 lg:items-end">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t.language}</span>
+              <button type="button" onClick={() => void updateLanguage('en')} disabled={savingLanguage} className={language === 'en' ? 'btn-primary !px-4 !py-2 text-sm' : 'btn-secondary !px-4 !py-2 text-sm'}>English</button>
+              <button type="button" onClick={() => void updateLanguage('ne')} disabled={savingLanguage} className={language === 'ne' ? 'btn-primary !px-4 !py-2 text-sm' : 'btn-secondary !px-4 !py-2 text-sm'}>नेपाली</button>
+            </div>
+            <div className="flex flex-wrap gap-3">
             <Link href="/exams" className="btn-primary inline-flex items-center gap-2">
               <AppIcon name="practice" className="h-4 w-4" />
               {t.startPractice}
@@ -262,6 +310,7 @@ export function DashboardPageClient() {
               <AppIcon name="planner" className="h-4 w-4" />
               {t.openPlanner}
             </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -335,14 +384,18 @@ export function DashboardPageClient() {
         ))}
       </section>
 
-      <ExamPreferenceSelector
-        activeExams={data.activeExams ?? []}
-        tracks={data.examTracks ?? []}
-        currentExamId={preferredExam._id}
-        title={t.currentExamFocus}
-        description={t.currentExamBody}
-        compact
-      />
+      <section className="card p-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t.currentExamFocus}</h2>
+            <p className="text-sm text-[var(--muted)] mt-1">{t.currentExamBody}</p>
+          </div>
+          <Link href="/settings" className="btn-secondary inline-flex items-center gap-2">
+            <AppIcon name="settings" className="h-4 w-4" />
+            {t.updateExamFocus}
+          </Link>
+        </div>
+      </section>
 
       <section className="card p-5">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">

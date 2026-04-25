@@ -127,6 +127,7 @@ export function LandingPageClient({
 }) {
   const [language, setLanguage] = useState<'en' | 'ne'>('en');
   const [openFaq, setOpenFaq] = useState(0);
+  const [requestedTrack, setRequestedTrack] = useState<{ name: string; slug: string } | null>(null);
   const englishCopy = {
     ...COPY.en,
     builtFor: settings.heroBadge,
@@ -282,7 +283,11 @@ export function LandingPageClient({
                   </Link>
                 </div>
               ) : (
-                <a href="#feedback" className="mt-4 inline-flex text-sm font-semibold text-[var(--brand)] hover:underline">
+                <a
+                  href="#feedback"
+                  onClick={() => setRequestedTrack({ name: track.name, slug: track.slug })}
+                  className="mt-4 inline-flex text-sm font-semibold text-[var(--brand)] hover:underline"
+                >
                   {t.requestExam}
                 </a>
               )}
@@ -316,7 +321,19 @@ export function LandingPageClient({
           </div>
 
           <div id="feedback">
-            <FeedbackForm title={t.feedbackTitle} description={t.feedbackBody} compact />
+            <FeedbackForm
+              title={t.feedbackTitle}
+              description={t.feedbackBody}
+              defaultCategory={requestedTrack ? 'exam_request' : 'general'}
+              defaultExamName={requestedTrack?.name ?? ''}
+              defaultExamSlug={requestedTrack?.slug ?? ''}
+              defaultMessage={
+                requestedTrack
+                  ? `Please add ${requestedTrack.name} with syllabus, notes, practice sets, mock tests, and performance tracking.`
+                  : ''
+              }
+              compact
+            />
           </div>
         </div>
       </section>

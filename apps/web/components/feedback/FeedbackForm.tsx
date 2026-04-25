@@ -1,30 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function FeedbackForm({
   title = 'Share feedback',
   description = 'Tell us what is working, what feels slow, or which exam track you want next.',
   defaultCategory = 'general',
   defaultMessage = '',
+  defaultExamName = '',
+  defaultExamSlug = '',
+  initialName = '',
+  initialEmail = '',
+  hideIdentityFields = false,
   compact = false,
 }: {
   title?: string;
   description?: string;
   defaultCategory?: 'general' | 'bug' | 'feature' | 'exam_request';
   defaultMessage?: string;
+  defaultExamName?: string;
+  defaultExamSlug?: string;
+  initialName?: string;
+  initialEmail?: string;
+  hideIdentityFields?: boolean;
   compact?: boolean;
 }) {
   const [form, setForm] = useState({
-    name: '',
-    email: '',
+    name: initialName,
+    email: initialEmail,
     category: defaultCategory,
-    exam_name: '',
+    exam_name: defaultExamName,
+    exam_slug: defaultExamSlug,
     message: defaultMessage,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    setForm((current) => ({
+      ...current,
+      name: initialName,
+      email: initialEmail,
+    }));
+  }, [initialEmail, initialName]);
+
+  useEffect(() => {
+    setForm((current) => ({
+      ...current,
+      category: defaultCategory,
+      exam_name: defaultExamName,
+      exam_slug: defaultExamSlug,
+      message: defaultMessage,
+    }));
+  }, [defaultCategory, defaultExamName, defaultExamSlug, defaultMessage]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -44,8 +73,9 @@ export function FeedbackForm({
       setNotice('Thanks. Your feedback was sent successfully.');
       setForm((current) => ({
         ...current,
-        exam_name: '',
-        message: '',
+        exam_name: defaultExamName,
+        exam_slug: defaultExamSlug,
+        message: defaultMessage,
       }));
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Could not send feedback');
@@ -61,20 +91,27 @@ export function FeedbackForm({
         <p className="mt-1 text-sm text-[var(--muted)]">{description}</p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <input
-          className="input"
-          placeholder="Your name"
-          value={form.name}
-          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-        />
-        <input
-          className="input"
-          placeholder="Email"
-          value={form.email}
-          onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-        />
-      </div>
+      {!hideIdentityFields ? (
+        <div className="grid gap-3 md:grid-cols-2">
+          <input
+            className="input"
+            placeholder="Your name"
+            value={form.name}
+            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+          />
+          <input
+            className="input"
+            placeholder="Email"
+            value={form.email}
+            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+          />
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] px-4 py-3 text-sm text-[var(--muted)]">
+          Signed in as <span className="font-semibold text-[var(--text)]">{form.name || 'your account'}</span>
+          {form.email ? ` (${form.email})` : ''}.
+        </div>
+      )}
 
       <div className="grid gap-3 md:grid-cols-[0.9fr,1.1fr]">
         <select
@@ -96,7 +133,13 @@ export function FeedbackForm({
           className="input"
           placeholder="Requested exam (optional)"
           value={form.exam_name}
-          onChange={(event) => setForm((current) => ({ ...current, exam_name: event.target.value }))}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              exam_name: event.target.value,
+              exam_slug: event.target.value.trim().toLowerCase().replace(/\s+/g, '-'),
+            }))
+          }
         />
       </div>
 

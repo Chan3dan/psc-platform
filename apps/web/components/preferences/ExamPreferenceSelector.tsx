@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppIcon } from '@/components/icons/AppIcon';
 
@@ -23,6 +23,8 @@ export function ExamPreferenceSelector({
   activeExams,
   tracks,
   currentExamId,
+  userName = '',
+  userEmail = '',
   title = 'Choose your target exam',
   description = 'We will tailor your dashboard, practice, mocks, notes, and planner to the exam you are actually preparing for.',
   compact = false,
@@ -30,19 +32,24 @@ export function ExamPreferenceSelector({
   activeExams: ActiveExam[];
   tracks: Track[];
   currentExamId?: string | null;
+  userName?: string;
+  userEmail?: string;
   title?: string;
   description?: string;
   compact?: boolean;
 }) {
   const router = useRouter();
   const [selectedExamId, setSelectedExamId] = useState(currentExamId ?? activeExams[0]?._id ?? '');
-  const [requestName, setRequestName] = useState('');
-  const [requestEmail, setRequestEmail] = useState('');
+  const [requestExamName, setRequestExamName] = useState('');
   const [requestMessage, setRequestMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setSelectedExamId(currentExamId ?? activeExams[0]?._id ?? '');
+  }, [activeExams, currentExamId]);
 
   async function saveSelection() {
     if (!selectedExamId) return;
@@ -80,8 +87,8 @@ export function ExamPreferenceSelector({
           category: 'exam_request',
           exam_slug: examName.toLowerCase().replace(/\s+/g, '-'),
           exam_name: examName,
-          name: requestName.trim(),
-          email: requestEmail.trim(),
+          name: userName.trim(),
+          email: userEmail.trim(),
           message:
             requestMessage.trim() ||
             `Please add ${examName} as a preparation track with practice, notes, mock tests, and analytics.`,
@@ -92,8 +99,7 @@ export function ExamPreferenceSelector({
         throw new Error(payload?.error ?? 'Could not submit your request');
       }
       setNotice(`Request sent for ${examName}. We will review it from the admin panel.`);
-      setRequestName('');
-      setRequestEmail('');
+      setRequestExamName(examName);
       setRequestMessage('');
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Could not submit your request');
@@ -154,7 +160,7 @@ export function ExamPreferenceSelector({
               {saving ? 'Saving...' : currentExamId ? 'Update my exam' : 'Continue with this exam'}
             </button>
             {currentExamId ? (
-              <p className="text-xs text-[var(--muted)]">You can switch later from the dashboard at any time.</p>
+              <p className="text-xs text-[var(--muted)]">You can switch your target exam here whenever your preparation changes.</p>
             ) : (
               <p className="text-xs text-[var(--muted)]">This sets your default dashboard and study experience.</p>
             )}
@@ -179,11 +185,10 @@ export function ExamPreferenceSelector({
                     <button
                       type="button"
                       onClick={() => {
+                        setRequestExamName(track.name);
                         setRequestMessage(`Please add ${track.name} as an exam preparation track.`);
-                        void submitRequest(track.name);
                       }}
-                      disabled={submittingRequest || !requestName.trim() || !requestEmail.trim()}
-                      className="mt-3 text-xs font-semibold text-[var(--brand)] hover:underline disabled:opacity-50 disabled:no-underline"
+                      className="mt-3 text-xs font-semibold text-[var(--brand)] hover:underline"
                     >
                       Request this exam
                     </button>
@@ -197,17 +202,15 @@ export function ExamPreferenceSelector({
             <p className="text-xs text-[var(--muted)]">
               Ask the admin to add your target exam. Mention the post name so the platform can prioritize demand.
             </p>
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/25 px-3 py-2 text-xs text-[var(--muted)]">
+              Request will be sent as <span className="font-semibold text-[var(--text)]">{userName || 'your account'}</span>
+              {userEmail ? ` (${userEmail})` : ''}.
+            </div>
             <input
               className="input"
-              placeholder="Your name"
-              value={requestName}
-              onChange={(event) => setRequestName(event.target.value)}
-            />
-            <input
-              className="input"
-              placeholder="Email"
-              value={requestEmail}
-              onChange={(event) => setRequestEmail(event.target.value)}
+              placeholder="Requested exam name"
+              value={requestExamName}
+              onChange={(event) => setRequestExamName(event.target.value)}
             />
             <textarea
               className="input min-h-[112px]"
@@ -217,8 +220,8 @@ export function ExamPreferenceSelector({
             />
             <button
               type="button"
-              onClick={() => void submitRequest('Requested Exam')}
-              disabled={submittingRequest || !requestName.trim() || !requestEmail.trim() || !requestMessage.trim()}
+              onClick={() => void submitRequest(requestExamName.trim())}
+              disabled={submittingRequest || !requestExamName.trim() || !requestMessage.trim()}
               className="btn-secondary w-full"
             >
               {submittingRequest ? 'Sending request...' : 'Send exam request'}

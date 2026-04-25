@@ -34,8 +34,10 @@ export async function POST(req: Request) {
       fallbackEmail = user?.email ?? '';
     }
 
-    const name = String((body as any).name ?? fallbackName).trim();
-    const email = String((body as any).email ?? fallbackEmail).trim().toLowerCase();
+    const providedName = String((body as any).name ?? '').trim();
+    const providedEmail = String((body as any).email ?? '').trim().toLowerCase();
+    const name = providedName || fallbackName;
+    const email = providedEmail || fallbackEmail;
     const message = String((body as any).message ?? '').trim();
     const examSlug = String((body as any).exam_slug ?? '').trim().toLowerCase();
     const examName = String((body as any).exam_name ?? '').trim();
