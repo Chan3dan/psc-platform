@@ -6,6 +6,7 @@ import { generateAnalytics } from '@psc/shared/utils/analytics';
 import { ok, serverError, unauthorized } from '@/lib/apiResponse';
 import { CacheKeys, cacheGet, cacheSet } from '@/lib/redis';
 import { UPCOMING_EXAM_TRACKS } from '@/lib/exam-tracks';
+import { getOrCreateQuestionOfDay, getQuestionOfDayAttempt, serializeQuestionOfDay } from '@/lib/question-of-day';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,6 +114,61 @@ function buildMilestones(analytics: any, results: any[], readinessScore: number,
   ];
 }
 
+function buildDailyFeed({
+  preferredExam,
+  questionOfDay,
+  plan,
+  reviewQueueCount,
+}: {
+  preferredExam: any;
+  questionOfDay: any;
+  plan: any;
+  reviewQueueCount: number;
+}) {
+  const feed = [];
+
+  if (questionOfDay) {
+    feed.push({
+      id: 'question-of-day',
+      type: 'question',
+      title: questionOfDay.attempt ? 'Question of the day completed' : 'Question of the day is ready',
+      body: questionOfDay.attempt
+        ? `You answered today’s ${questionOfDay.subject?.name ?? preferredExam?.name ?? 'exam'} question.`
+        : `Today’s ${questionOfDay.subject?.name ?? preferredExam?.name ?? 'exam'} question is waiting for you.`,
+      href: '#question-of-day',
+      status: questionOfDay.attempt ? 'Completed' : 'Answer now',
+    });
+  }
+
+  if (plan) {
+    feed.push({
+      id: 'study-plan',
+      type: 'planner',
+      title: `${plan.verifiedDays}/${plan.totalDays} plan days verified`,
+      body:
+        plan.overdueDays > 0
+          ? `${plan.overdueDays} past day${plan.overdueDays > 1 ? 's are' : ' is'} still unverified.`
+          : 'Your current study plan is staying on track.',
+      href: '/planner',
+      status: `${plan.complianceScore}% compliance`,
+    });
+  }
+
+  feed.push({
+    id: 'review-queue',
+    type: 'review',
+    title: reviewQueueCount > 0 ? 'Review backlog needs attention' : 'Review queue is clear',
+    body:
+      reviewQueueCount > 0
+        ? `${reviewQueueCount} flagged, wrong, or skipped questions are ready for revision.`
+        : 'No urgent review leaks detected right now.',
+    href: '/review',
+    status: reviewQueueCount > 0 ? 'Open review' : 'Healthy',
+  });
+
+  return feed;
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -149,12 +205,12 @@ export async function GET() {
         .sort({ created_at: -1 })
         .limit(20)
         .select(
-          'test_type score max_score accuracy_percent correct_count wrong_count skipped_count total_time_seconds created_at subject_breakdown answers.question_id answers.selected_option answers.is_correct answers.flagged answers.time_spent_seconds test_id'
+          'test_type score max_score accuracy_percent correct_count wrong_count skipped_count total_time_seconds created_at subject_breakdown answers.question_id answers.selected_option answers.is_correct answers.flagged answers.time_spent_seconds test_id result_context'
         )
         .populate('test_id', 'title')
         .lean(),
       StudyPlan.findOne({ user_id: userId, is_active: true })
-        .select('exam_id streak_days target_date')
+        .select('exam_id streak_days target_date daily_schedule')
         .populate('exam_id', 'name')
         .lean(),
       Result.countDocuments({
@@ -174,6 +230,48 @@ export async function GET() {
     const readinessScore = buildReadinessScore(analytics, results as any[], reviewQueueCount, streak);
     const dailyMissions = buildDailyMissions({ drillsToday, reviewCount: reviewQueueCount, weeklyMockCount });
     const milestones = buildMilestones(analytics, results as any[], readinessScore, streak);
+    const preferredExam = targetExamId
+      ? {
+          _id: targetExamId,
+          name: user.preferences.target_exam_id.name,
+          slug: user.preferences.target_exam_id.slug,
+          description: user.preferences.target_exam_id.description ?? '',
+        }
+      : null;
+    const planSummary = plan
+      ? {
+          examName: (plan as any).exam_id?.name ?? '',
+          streakDays: (plan as any).streak_days ?? 0,
+          targetDate: (plan as any).target_date ?? null,
+          totalDays: Array.isArray((plan as any).daily_schedule) ? (plan as any).daily_schedule.length : 0,
+          verifiedDays: Array.isArray((plan as any).daily_schedule)
+            ? (plan as any).daily_schedule.filter((item: any) => item.is_completed).length
+            : 0,
+          overdueDays: Array.isArray((plan as any).daily_schedule)
+            ? (plan as any).daily_schedule.filter((item: any) => new Date(item.date) < start && !item.is_completed).length
+            : 0,
+          complianceScore: Array.isArray((plan as any).daily_schedule) && (plan as any).daily_schedule.length > 0
+            ? Math.round(
+                ((plan as any).daily_schedule.filter((item: any) => item.is_completed).length / (plan as any).daily_schedule.length) * 100
+              )
+            : 0,
+        }
+      : null;
+    const questionOfDayRecord = preferredExam
+      ? await getOrCreateQuestionOfDay({ examId: preferredExam._id })
+      : null;
+    const questionOfDayAttempt = questionOfDayRecord
+      ? await getQuestionOfDayAttempt(String(questionOfDayRecord._id), userId)
+      : null;
+    const questionOfDay = questionOfDayRecord
+      ? serializeQuestionOfDay(questionOfDayRecord, questionOfDayAttempt)
+      : null;
+    const dailyFeed = buildDailyFeed({
+      preferredExam,
+      questionOfDay,
+      plan: planSummary,
+      reviewQueueCount,
+    });
 
     const data = {
       analytics,
@@ -183,6 +281,7 @@ export async function GET() {
         weeklyMockCount,
         dailyMissions,
         milestones,
+        dailyFeed,
         dailyChallenge: {
           title: 'Daily 5-minute challenge',
           completedToday: drillsToday > 0,
@@ -198,14 +297,7 @@ export async function GET() {
             },
           }
         : null,
-      preferredExam: targetExamId
-        ? {
-            _id: targetExamId,
-            name: user.preferences.target_exam_id.name,
-            slug: user.preferences.target_exam_id.slug,
-            description: user.preferences.target_exam_id.description ?? '',
-          }
-        : null,
+      preferredExam,
       activeExams: (activeExams as any[]).map((exam) => ({
         _id: String(exam._id),
         name: exam.name,
@@ -213,17 +305,12 @@ export async function GET() {
         description: exam.description ?? '',
       })),
       examTracks: UPCOMING_EXAM_TRACKS,
-      plan: plan
-        ? {
-            examName: (plan as any).exam_id?.name ?? '',
-            streakDays: (plan as any).streak_days ?? 0,
-            targetDate: (plan as any).target_date ?? null,
-          }
-        : null,
+      plan: planSummary,
+      questionOfDay,
       drillsToday,
       recentResults: (results as any[]).slice(0, 5).map((result) => ({
         _id: String(result._id),
-        title: result.test_id?.title ?? 'Practice Session',
+        title: result.test_id?.title ?? result.result_context?.label ?? 'Practice Session',
         testType: result.test_type,
         score: result.score,
         maxScore: result.max_score,

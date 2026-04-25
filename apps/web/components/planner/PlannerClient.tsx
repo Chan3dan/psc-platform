@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
 
@@ -24,6 +24,7 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
     },
   });
   const [selDay, setSelDay] = useState(0);
+  const initialSyncDone = useRef(false);
 
   const generate = useMutation({
     mutationFn: async () => {
@@ -37,18 +38,19 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
       return d.data;
     },
     onSuccess: (d) => {
+      initialSyncDone.current = false;
       setPlan(d);
       setCreating(false);
       setSelDay(0);
     },
   });
 
-  const complete = useMutation({
-    mutationFn: async ({ di, ti }: { di: number; ti: number }) => {
+  const syncProgress = useMutation({
+    mutationFn: async ({ dayIndex }: { dayIndex?: number } = {}) => {
       const r = await fetch(`/api/planner/${plan._id}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day_index: di, task_index: ti }),
+        body: JSON.stringify(typeof dayIndex === 'number' ? { day_index: dayIndex } : {}),
       });
       const d = await r.json();
       if (!d.success) throw new Error(d.error);
@@ -56,6 +58,12 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
     },
     onSuccess: (d) => setPlan(d),
   });
+
+  useEffect(() => {
+    if (!plan?._id || creating || initialSyncDone.current) return;
+    initialSyncDone.current = true;
+    syncProgress.mutate({});
+  }, [creating, plan?._id, syncProgress]);
 
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 7);
@@ -197,35 +205,95 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
   const done = plan.daily_schedule?.filter((d: any) => d.is_completed).length ?? 0;
   const total = plan.daily_schedule?.length ?? 0;
   const day = plan.daily_schedule?.[selDay];
+  const overdueDays = (plan.daily_schedule ?? []).filter((item: any) => {
+    const date = new Date(item.date);
+    date.setHours(0, 0, 0, 0);
+    return date < today && !item.is_completed;
+  }).length;
+  const complianceScore = total > 0 ? Math.round((done / total) * 100) : 0;
+  const totalVerifiedQuestions = (plan.daily_schedule ?? []).reduce(
+    (sum: number, item: any) => sum + Number(item.verified_question_count ?? 0),
+    0
+  );
+  const totalVerifiedMinutes = (plan.daily_schedule ?? []).reduce(
+    (sum: number, item: any) => sum + Number(item.verified_minutes ?? 0),
+    0
+  );
+  const currentDayProgress = day?.tasks?.length
+    ? Math.round((day.tasks.filter((task: any) => task.is_completed).length / day.tasks.length) * 100)
+    : 0;
 
   return (
     <div className="space-y-6">
-      <div className="card glass p-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-semibold text-[var(--text)]">{plan.title}</h2>
-          <p className="text-sm text-[var(--muted)] mt-0.5">
-            {plan.exam_id?.name} · Target: {new Date(plan.target_date).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-          <div className="flex items-center gap-4 mt-2 text-sm">
-            <span className="inline-flex items-center gap-1.5 text-orange-500 font-semibold">
-              <AppIcon name="leaderboard" className="h-4 w-4" />
-              {plan.streak_days} day streak
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--muted)]">
-              <AppIcon name="planner" className="h-4 w-4" />
-              {daysLeft} days left
-            </span>
+      <div className="card glass p-5 space-y-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">
+              <AppIcon name="planner" className="h-3.5 w-3.5" />
+              Strict study planning
+            </div>
+            <h2 className="mt-3 font-semibold text-[var(--text)] text-xl">{plan.title}</h2>
+            <p className="text-sm text-[var(--muted)] mt-1">
+              {plan.exam_id?.name} · Target: {new Date(plan.target_date).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
+              <span className="badge-amber inline-flex items-center gap-1.5">
+                <AppIcon name="leaderboard" className="h-4 w-4" />
+                {plan.streak_days} day streak
+              </span>
+              <span className="badge-gray inline-flex items-center gap-1.5">
+                <AppIcon name="planner" className="h-4 w-4" />
+                {daysLeft} days left
+              </span>
+              <span className={`${overdueDays > 0 ? 'badge-red' : 'badge-green'} inline-flex items-center gap-1.5`}>
+                <AppIcon name={overdueDays > 0 ? 'alert' : 'check'} className="h-4 w-4" />
+                {overdueDays > 0 ? `${overdueDays} overdue day${overdueDays > 1 ? 's' : ''}` : 'On track'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => syncProgress.mutate({})}
+              disabled={syncProgress.isPending}
+              className="btn-primary disabled:opacity-50"
+            >
+              {syncProgress.isPending ? 'Checking…' : 'Run strict check'}
+            </button>
+            <button
+              onClick={() => {
+                setPlan(null);
+                setCreating(true);
+              }}
+              className="btn-secondary"
+            >
+              New plan
+            </button>
           </div>
         </div>
-        <button
-          onClick={() => {
-            setPlan(null);
-            setCreating(true);
-          }}
-          className="text-xs text-[var(--muted)] hover:text-[var(--text)]"
-        >
-          New plan
-        </button>
+
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Verified days</p>
+            <p className="mt-2 text-2xl font-bold text-emerald-600">{done}/{total}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Compliance</p>
+            <p className="mt-2 text-2xl font-bold text-blue-600">{complianceScore}%</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Verified questions</p>
+            <p className="mt-2 text-2xl font-bold text-indigo-600">{totalVerifiedQuestions}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Verified hours</p>
+            <p className="mt-2 text-2xl font-bold text-amber-600">{(totalVerifiedMinutes / 60).toFixed(1)}h</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/18 p-4 text-sm text-[var(--muted)]">
+          This planner no longer trusts manual checkmarks. Tasks auto-complete only after real solved questions, revision activity, or a verified mock attempt matches the day’s workload.
+        </div>
       </div>
 
       <div>
@@ -280,11 +348,28 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
 
       {day && (
         <div className="card p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--text)]">
-              Day {day.day} — {new Date(day.date).toLocaleDateString('en-NP', { weekday: 'long', month: 'short', day: 'numeric' })}
-            </h3>
-            <span className="text-xs text-[var(--muted)]">{day.total_minutes}min total</span>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="font-semibold text-[var(--text)]">
+                Day {day.day} — {new Date(day.date).toLocaleDateString('en-NP', { weekday: 'long', month: 'short', day: 'numeric' })}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {day.total_minutes}min planned · {Number(day.verified_question_count ?? 0)} questions verified · {Number(day.verified_minutes ?? 0)} minutes verified
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className={`${day.is_completed ? 'badge-green' : 'badge-gray'} inline-flex items-center gap-1.5`}>
+                <AppIcon name={day.is_completed ? 'check' : 'alert'} className="h-3.5 w-3.5" />
+                {day.is_completed ? 'Verified complete' : `${currentDayProgress}% verified`}
+              </span>
+              <button
+                onClick={() => syncProgress.mutate({ dayIndex: selDay })}
+                disabled={syncProgress.isPending}
+                className="btn-secondary text-xs"
+              >
+                {syncProgress.isPending ? 'Checking…' : 'Verify this day'}
+              </button>
+            </div>
           </div>
           {day.tasks.map((task: any, ti: number) => (
             <div
@@ -293,13 +378,12 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
                 task.is_completed ? 'bg-emerald-50 dark:bg-emerald-950' : 'bg-[var(--brand-soft)]/20'
               }`}
             >
-              <button
-                onClick={() => complete.mutate({ di: selDay, ti })}
+              <span
                 className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors
-                  ${task.is_completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-blue-500'}`}
+                  ${task.is_completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 text-transparent'}`}
               >
                 {task.is_completed && <AppIcon name="check" className="h-3 w-3" />}
-              </button>
+              </span>
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${task.is_completed ? 'line-through text-[var(--muted)]' : 'text-[var(--text)]'}`}>
                   {task.subject_name}
@@ -308,12 +392,28 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
                   {task.task_type.charAt(0).toUpperCase() + task.task_type.slice(1)} · {task.duration_minutes}min
                   {task.question_count > 0 && ` · ${task.question_count}q`}
                 </p>
+                <p className="text-[11px] text-[var(--muted)] mt-1">
+                  Strict checkpoint:
+                  {' '}
+                  {task.task_type === 'mock'
+                    ? `${task.minimum_minutes ?? 0}+ verified minutes in one mock`
+                    : `${task.minimum_questions ?? task.question_count ?? 0}+ real questions in this subject`}
+                  {' · '}
+                  Progress:
+                  {' '}
+                  {Number(task.verified_questions ?? 0)}q / {Number(task.verified_minutes ?? 0)}min
+                </p>
               </div>
               <span className={`badge text-xs ${task.task_type === 'mock' ? 'badge-red' : task.task_type === 'revision' ? 'badge-amber' : 'badge-blue'}`}>
                 {task.task_type}
               </span>
             </div>
           ))}
+          {syncProgress.isError && (
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950">
+              {(syncProgress.error as Error).message}
+            </p>
+          )}
         </div>
       )}
     </div>

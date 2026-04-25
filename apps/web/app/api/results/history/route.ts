@@ -23,7 +23,7 @@ export async function GET() {
       .sort({ created_at: -1 })
       .limit(150)
       .select(
-        'test_type score max_score accuracy_percent total_time_seconds correct_count wrong_count skipped_count created_at exam_id test_id answers.flagged'
+        'test_type score max_score accuracy_percent total_time_seconds correct_count wrong_count skipped_count created_at exam_id test_id answers.flagged result_context'
       )
       .populate('test_id', 'title')
       .populate('exam_id', 'name')
@@ -55,6 +55,13 @@ export async function GET() {
       flagged_count: Array.isArray(result.answers)
         ? result.answers.filter((answer: any) => answer?.flagged).length
         : 0,
+      result_context: result.result_context
+        ? {
+            kind: result.result_context.kind ?? null,
+            label: result.result_context.label ?? '',
+            submitted_for_date: result.result_context.submitted_for_date ?? '',
+          }
+        : null,
     }));
 
     await cacheSet(cacheKey, data, 90);

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { DashboardCharts } from '@/components/analytics/DashboardCharts';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { formatDuration } from '@/lib/results';
@@ -35,6 +35,16 @@ const DASHBOARD_COPY = {
     mocksThisWeek: 'mocks this week',
     learningMissions: 'Today’s Learning Missions',
     learningMissionsBody: 'Small daily actions that compound into exam confidence.',
+    dailyFeed: 'Daily Updates',
+    dailyFeedBody: 'Your exam feed combines today’s question, planner status, and urgent review signals.',
+    questionOfDay: 'Question of the Day',
+    questionOfDayBody: 'A focused daily question pulled from your selected exam track.',
+    answerNow: 'Answer now',
+    submitAnswer: 'Submit answer',
+    correctAnswer: 'Correct answer',
+    explanation: 'Explanation',
+    alreadyAnswered: 'Already answered today',
+    chooseOption: 'Choose one option to submit today’s answer.',
     smartReview: 'Smart review',
     testsTaken: 'Tests Taken',
     avgScore: 'Avg Score',
@@ -101,6 +111,16 @@ const DASHBOARD_COPY = {
     mocksThisWeek: 'यो हप्ता mock',
     learningMissions: 'आजका अध्ययन लक्ष्य',
     learningMissionsBody: 'सानो दैनिक कामले ठूलो तयारी बनाउँछ।',
+    dailyFeed: 'दैनिक अपडेट',
+    dailyFeedBody: 'आजको प्रश्न, planner status र urgent review संकेत यहीँ देखिन्छन्।',
+    questionOfDay: 'आजको प्रश्न',
+    questionOfDayBody: 'तपाईंको चयन गरिएको परीक्षाबाट आजको focused question।',
+    answerNow: 'अहिले उत्तर दिनुहोस्',
+    submitAnswer: 'उत्तर पठाउनुहोस्',
+    correctAnswer: 'सही उत्तर',
+    explanation: 'व्याख्या',
+    alreadyAnswered: 'आजको उत्तर दिइसक्नुभयो',
+    chooseOption: 'आजको प्रश्न पठाउन एउटा option छान्नुहोस्।',
     smartReview: 'स्मार्ट review',
     testsTaken: 'दिएका टेस्ट',
     avgScore: 'औसत स्कोर',
@@ -168,6 +188,8 @@ function DashboardLoadingState() {
 export function DashboardPageClient() {
   const [language, setLanguage] = useState<'en' | 'ne'>('en');
   const [savingLanguage, setSavingLanguage] = useState(false);
+  const [questionOfDay, setQuestionOfDay] = useState<any>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
@@ -179,22 +201,18 @@ export function DashboardPageClient() {
     gcTime: 5 * 60_000,
   });
 
+  const t = DASHBOARD_COPY[language];
+  const preferredExam = data?.preferredExam ?? null;
+
   useEffect(() => {
     if (!data) return;
     setLanguage(data.user?.preferences?.language === 'ne' ? 'ne' : 'en');
   }, [data]);
 
-  if (isLoading || !data) {
-    return <DashboardLoadingState />;
-  }
-
-  const analytics = data.analytics;
-  const engagement = data.engagement ?? {};
-  const firstName = data.user?.name?.split?.(' ')?.[0] ?? 'there';
-  const streak = data.user?.stats?.current_streak ?? 0;
-  const readinessScore = Number(engagement.readinessScore ?? 0);
-  const preferredExam = data.preferredExam;
-  const t = DASHBOARD_COPY[language];
+  useEffect(() => {
+    setQuestionOfDay(data.questionOfDay ?? null);
+    setSelectedOption(data.questionOfDay?.attempt?.selected_option ?? null);
+  }, [data?.questionOfDay]);
 
   async function updateLanguage(nextLanguage: 'en' | 'ne') {
     if (nextLanguage === language) return;
@@ -216,6 +234,43 @@ export function DashboardPageClient() {
       setSavingLanguage(false);
     }
   }
+
+  const submitQuestionOfDay = useMutation({
+    mutationFn: async () => {
+      if (!questionOfDay?._id || selectedOption === null) {
+        throw new Error(t.chooseOption);
+      }
+
+      const response = await fetch('/api/question-of-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question_of_day_id: questionOfDay._id,
+          selected_option: selectedOption,
+          time_spent_seconds: 45,
+        }),
+      });
+      const payload = await response.json();
+      if (!payload?.success) {
+        throw new Error(payload?.error ?? 'Could not submit today’s question');
+      }
+      return payload.data.questionOfDay;
+    },
+    onSuccess: (nextQuestion) => {
+      setQuestionOfDay(nextQuestion);
+      setSelectedOption(nextQuestion?.attempt?.selected_option ?? null);
+    },
+  });
+
+  if (isLoading || !data) {
+    return <DashboardLoadingState />;
+  }
+
+  const analytics = data.analytics;
+  const engagement = data.engagement ?? {};
+  const firstName = data.user?.name?.split?.(' ')?.[0] ?? 'there';
+  const streak = data.user?.stats?.current_streak ?? 0;
+  const readinessScore = Number(engagement.readinessScore ?? 0);
 
   if (!preferredExam) {
     return (
@@ -372,6 +427,118 @@ export function DashboardPageClient() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 xl:grid-cols-[0.95fr,1.05fr] gap-4">
+        <div className="card p-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--text)]">{t.dailyFeed}</h2>
+              <p className="text-xs text-[var(--muted)] mt-0.5">{t.dailyFeedBody}</p>
+            </div>
+            <span className="badge-blue">{(engagement.dailyFeed ?? []).length}</span>
+          </div>
+          <div className="space-y-3">
+            {(engagement.dailyFeed ?? []).map((item: any) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="block rounded-2xl border border-[var(--line)] p-3 hover:border-[var(--brand)]/45 hover:bg-[var(--brand-soft)]/25 transition-colors"
+              >
+                <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{item.body}</p>
+                <p className="mt-2 text-xs font-semibold text-[var(--brand)]">{item.status}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div id="question-of-day" className="card p-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--text)]">{t.questionOfDay}</h2>
+              <p className="text-xs text-[var(--muted)] mt-0.5">{t.questionOfDayBody}</p>
+            </div>
+            {questionOfDay?.subject?.name && <span className="badge-blue">{questionOfDay.subject.name}</span>}
+          </div>
+
+          {questionOfDay ? (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
+                <p className="text-sm font-medium text-[var(--text)]">{questionOfDay.question.question_text}</p>
+              </div>
+
+              <div className="space-y-2">
+                {(questionOfDay.question.options ?? []).map((option: any) => {
+                  const isSelected = selectedOption === option.index;
+                  const isLocked = Boolean(questionOfDay.attempt);
+                  const isCorrect =
+                    questionOfDay.attempt && questionOfDay.question.correct_answer === option.index;
+                  const isWrongPick =
+                    questionOfDay.attempt &&
+                    questionOfDay.attempt.selected_option === option.index &&
+                    questionOfDay.question.correct_answer !== option.index;
+
+                  return (
+                    <button
+                      key={option.index}
+                      type="button"
+                      disabled={isLocked}
+                      onClick={() => setSelectedOption(option.index)}
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
+                        isCorrect
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                          : isWrongPick
+                            ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                            : isSelected
+                              ? 'border-[var(--brand)] bg-[var(--brand-soft)]/45 text-[var(--text)]'
+                              : 'border-[var(--line)] bg-[var(--bg-elev)]/75 text-[var(--text)]'
+                      } ${isLocked ? 'cursor-default' : 'hover:border-[var(--brand)]/45'}`}
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                        Option {String.fromCharCode(65 + Number(option.index))}
+                      </span>
+                      <span className="mt-1 block text-sm">{option.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {questionOfDay.attempt ? (
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/20 p-4 space-y-2">
+                  <p className="text-sm font-semibold text-[var(--text)]">{t.alreadyAnswered}</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {t.correctAnswer}: Option {String.fromCharCode(65 + Number(questionOfDay.question.correct_answer ?? 0))}
+                  </p>
+                  {questionOfDay.question.explanation && (
+                    <p className="text-sm text-[var(--muted)]">
+                      <span className="font-semibold text-[var(--text)]">{t.explanation}: </span>
+                      {questionOfDay.question.explanation}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  {submitQuestionOfDay.isError ? (
+                    <p className="text-sm text-red-500">{(submitQuestionOfDay.error as Error).message}</p>
+                  ) : (
+                    <p className="text-xs text-[var(--muted)]">{t.answerNow}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => submitQuestionOfDay.mutate()}
+                    disabled={selectedOption === null || submitQuestionOfDay.isPending}
+                    className="btn-primary disabled:opacity-50"
+                  >
+                    {submitQuestionOfDay.isPending ? 'Submitting…' : t.submitAnswer}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">Question of the day will appear once your exam focus is available.</p>
+          )}
         </div>
       </section>
 

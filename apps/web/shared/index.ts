@@ -9,6 +9,8 @@ export {
   StudyPlan,
   Bookmark,
   Note,
+  Feedback,
+  QuestionOfDay,
 } from './models/index';
 export type {
   Difficulty as QuestionDifficulty,

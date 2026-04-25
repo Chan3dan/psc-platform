@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { formatDuration, formatResultDate } from '@/lib/results';
 
-type ResultFilter = 'all' | 'flagged' | 'mock' | 'practice';
+type ResultFilter = 'all' | 'flagged' | 'mock' | 'practice' | 'daily_question';
 
 export function ResultsHistoryClient({ results, isLoading = false }: { results: any[]; isLoading?: boolean }) {
   const [filter, setFilter] = useState<ResultFilter>('all');
@@ -18,7 +18,7 @@ export function ResultsHistoryClient({ results, isLoading = false }: { results: 
     if (filter === 'flagged') {
       return results.filter((result) => Number(result.flagged_count ?? 0) > 0);
     }
-    if (filter === 'mock' || filter === 'practice') {
+    if (filter === 'mock' || filter === 'practice' || filter === 'daily_question') {
       return results.filter((result) => result.test_type === filter);
     }
     return results;
@@ -29,6 +29,7 @@ export function ResultsHistoryClient({ results, isLoading = false }: { results: 
     { key: 'mock' as const, label: 'Mock Attempts', value: results.filter((result) => result.test_type === 'mock').length, tone: 'text-emerald-600' },
     { key: 'flagged' as const, label: 'Flagged Attempts', value: flaggedAttempts, tone: 'text-amber-600' },
     { key: 'practice' as const, label: 'Practice Attempts', value: results.filter((result) => result.test_type === 'practice').length, tone: 'text-purple-600' },
+    { key: 'daily_question' as const, label: 'Daily Questions', value: results.filter((result) => result.test_type === 'daily_question').length, tone: 'text-indigo-600' },
   ];
 
   return (
@@ -90,11 +91,13 @@ export function ResultsHistoryClient({ results, isLoading = false }: { results: 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        <span className="badge-gray">{result.test_type}</span>
+                        <span className="badge-gray">{result.result_context?.label ?? result.test_type}</span>
                         {flaggedCount > 0 && <span className="badge-amber">{flaggedCount} flagged</span>}
                         <span className="text-xs text-[var(--muted)]">{result.exam_id?.name ?? 'Unknown exam'}</span>
                       </div>
-                      <p className="text-sm font-medium text-[var(--text)]">{result.test_id?.title ?? 'Practice Session'}</p>
+                      <p className="text-sm font-medium text-[var(--text)]">
+                        {result.test_id?.title ?? result.result_context?.label ?? 'Practice Session'}
+                      </p>
                       <p className="text-xs text-[var(--muted)] mt-1">
                         {formatDuration(result.total_time_seconds)} · {result.correct_count} correct · {result.wrong_count} wrong · {result.skipped_count} skipped
                       </p>

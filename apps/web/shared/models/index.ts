@@ -316,7 +316,7 @@ export interface ISubjectBreakdown {
 export interface IResult extends Document {
   user_id: Types.ObjectId;
   test_id?: Types.ObjectId | null;
-  test_type: 'mock' | 'practice';
+  test_type: 'mock' | 'practice' | 'daily_question';
   exam_id: Types.ObjectId;
   answers: IAnswer[];
   score: number;
@@ -328,6 +328,12 @@ export interface IResult extends Document {
   total_time_seconds: number;
   subject_breakdown: ISubjectBreakdown[];
   percentile?: number;
+  result_context?: {
+    kind?: 'question_of_day';
+    question_of_day_id?: Types.ObjectId;
+    label?: string;
+    submitted_for_date?: string;
+  };
   created_at: Date;
 }
 
@@ -347,7 +353,7 @@ const ResultSchema = new Schema<IResult>(
   {
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     test_id: { type: Schema.Types.ObjectId, ref: 'MockTest', required: false, default: null },
-    test_type: { type: String, enum: ['mock', 'practice'], default: 'mock' },
+    test_type: { type: String, enum: ['mock', 'practice', 'daily_question'], default: 'mock' },
     exam_id: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
     answers: [AnswerSchema],
     score: { type: Number, required: true },
@@ -371,11 +377,18 @@ const ResultSchema = new Schema<IResult>(
       },
     ],
     percentile: Number,
+    result_context: {
+      kind: { type: String, enum: ['question_of_day'] },
+      question_of_day_id: { type: Schema.Types.ObjectId, ref: 'QuestionOfDay' },
+      label: String,
+      submitted_for_date: String,
+    },
   },
   { timestamps: { createdAt: 'created_at' } }
 );
 ResultSchema.index({ user_id: 1, created_at: -1 });
 ResultSchema.index({ test_id: 1 });
+ResultSchema.index({ user_id: 1, 'result_context.question_of_day_id': 1 }, { sparse: true });
 
 export interface ISiteSetting extends Document {
   key: string;
@@ -418,6 +431,12 @@ export interface IDailyTask {
   task_type: 'practice' | 'revision' | 'mock';
   duration_minutes: number;
   question_count?: number;
+  verification_mode?: 'questions' | 'mock';
+  minimum_questions?: number;
+  minimum_minutes?: number;
+  verified_questions?: number;
+  verified_minutes?: number;
+  verification_source?: string;
   is_completed: boolean;
   completed_at?: Date;
 }
@@ -428,13 +447,15 @@ export interface IStudyPlan extends Document {
   title: string;
   target_date: Date;
   daily_hours: number;
-  daily_schedule: Array<{
-    day: number;
-    date: Date;
-    tasks: IDailyTask[];
-    total_minutes: number;
-    is_completed: boolean;
-  }>;
+    daily_schedule: Array<{
+      day: number;
+      date: Date;
+      tasks: IDailyTask[];
+      total_minutes: number;
+      verified_question_count?: number;
+      verified_minutes?: number;
+      is_completed: boolean;
+    }>;
   streak_days: number;
   last_active_date?: Date;
   is_active: boolean;
@@ -459,11 +480,19 @@ const StudyPlanSchema = new Schema<IStudyPlan>(
             task_type: { type: String, enum: ['practice', 'revision', 'mock'] },
             duration_minutes: Number,
             question_count: Number,
+            verification_mode: { type: String, enum: ['questions', 'mock'], default: 'questions' },
+            minimum_questions: Number,
+            minimum_minutes: Number,
+            verified_questions: { type: Number, default: 0 },
+            verified_minutes: { type: Number, default: 0 },
+            verification_source: String,
             is_completed: { type: Boolean, default: false },
             completed_at: Date,
           },
         ],
         total_minutes: Number,
+        verified_question_count: { type: Number, default: 0 },
+        verified_minutes: { type: Number, default: 0 },
         is_completed: { type: Boolean, default: false },
       },
     ],
@@ -500,6 +529,28 @@ const NoteSchema = new Schema(
 );
 NoteSchema.index({ exam_id: 1, subject_id: 1 });
 
+export interface IQuestionOfDay extends Document {
+  exam_id: Types.ObjectId;
+  subject_id: Types.ObjectId;
+  question_id: Types.ObjectId;
+  prompt_date_key: string;
+  prompt_date: Date;
+  created_at: Date;
+}
+
+const QuestionOfDaySchema = new Schema<IQuestionOfDay>(
+  {
+    exam_id: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
+    subject_id: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
+    question_id: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
+    prompt_date_key: { type: String, required: true },
+    prompt_date: { type: Date, required: true },
+  },
+  { timestamps: { createdAt: 'created_at' } }
+);
+QuestionOfDaySchema.index({ exam_id: 1, prompt_date_key: 1 }, { unique: true });
+QuestionOfDaySchema.index({ exam_id: 1, created_at: -1 });
+
 export const Exam = mongoose.models.Exam || mongoose.model<IExam>('Exam', ExamSchema);
 export const Subject = mongoose.models.Subject || mongoose.model<ISubject>('Subject', SubjectSchema);
 export const Question = mongoose.models.Question || mongoose.model<IQuestion>('Question', QuestionSchema);
@@ -521,3 +572,5 @@ export const Bookmark = mongoose.models.Bookmark || mongoose.model('Bookmark', B
 export const Note = mongoose.models.Note || mongoose.model('Note', NoteSchema);
 export const Feedback =
   mongoose.models.Feedback || mongoose.model<IFeedback>('Feedback', FeedbackSchema);
+export const QuestionOfDay =
+  mongoose.models.QuestionOfDay || mongoose.model<IQuestionOfDay>('QuestionOfDay', QuestionOfDaySchema);

@@ -146,6 +146,7 @@ export async function POST(req: NextRequest) {
     Promise.all([
       cacheDel(CacheKeys.dashboardSummary(session.user.id)),
       cacheDel(CacheKeys.resultsHistory(session.user.id)),
+      cacheDel(CacheKeys.adminResults()),
     ]).catch(console.error);
 
     // Build correct answers and explanations map for result display

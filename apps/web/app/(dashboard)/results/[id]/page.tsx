@@ -27,8 +27,8 @@ export default async function ResultPage({ params }: { params: { id: string } })
       result={result}
       backHref="/dashboard"
       backLabel="Dashboard"
-      heading="Test Result"
-      subtitle={result.test_id?.title ?? 'Practice Session'}
+      heading={result.test_type === 'daily_question' ? 'Question of the Day Result' : 'Test Result'}
+      subtitle={result.test_id?.title ?? result.result_context?.label ?? 'Practice Session'}
       metaItems={[
         { label: 'Type', value: result.test_type ?? 'unknown' },
         { label: 'Duration', value: formatDuration(result.total_time_seconds) },

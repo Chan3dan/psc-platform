@@ -29,6 +29,9 @@ interface DailyTask {
   task_type: 'practice' | 'revision' | 'mock';
   duration_minutes: number;
   question_count: number;
+  verification_mode?: 'questions' | 'mock';
+  minimum_questions?: number;
+  minimum_minutes?: number;
 }
 
 interface DayPlan {
@@ -36,6 +39,8 @@ interface DayPlan {
   date: Date;
   tasks: DailyTask[];
   total_minutes: number;
+  verified_question_count?: number;
+  verified_minutes?: number;
   is_completed: boolean;
 }
 
@@ -113,6 +118,9 @@ export function generateStudyPlan(input: PlannerInput): GeneratedPlan {
           task_type: 'mock',
           duration_minutes: mockDuration,
           question_count: 100,
+          verification_mode: 'mock',
+          minimum_questions: 0,
+          minimum_minutes: Math.max(30, Math.round(mockDuration * 0.55)),
         },
         {
           subject_id: fallbackSubjectId,
@@ -120,6 +128,9 @@ export function generateStudyPlan(input: PlannerInput): GeneratedPlan {
           task_type: 'revision',
           duration_minutes: Math.max(20, Math.min(dayMinutes - mockDuration, 75)),
           question_count: 0,
+          verification_mode: 'questions',
+          minimum_questions: 5,
+          minimum_minutes: 15,
         },
       ];
     } else if (is_revision_day) {
@@ -131,6 +142,9 @@ export function generateStudyPlan(input: PlannerInput): GeneratedPlan {
         task_type: 'revision' as const,
         duration_minutes: minutesPer,
         question_count: Math.floor(minutesPer / 2),
+        verification_mode: 'questions' as const,
+        minimum_questions: Math.max(5, Math.floor(minutesPer / 3)),
+        minimum_minutes: Math.max(15, Math.round(minutesPer * 0.6)),
       }));
     } else {
       const subjectsPerDay = strategy === 'intensive' ? 3 : 2;
@@ -141,6 +155,14 @@ export function generateStudyPlan(input: PlannerInput): GeneratedPlan {
         task_type: day % 3 === 0 ? ('revision' as const) : ('practice' as const),
         duration_minutes: Math.round(s.allocated_minutes),
         question_count: Math.max(5, Math.floor(s.allocated_minutes / Math.max(1, preferredSessionMinutes / 30))),
+        verification_mode: 'questions' as const,
+        minimum_questions: Math.max(
+          5,
+          Math.floor(
+            Math.max(5, Math.floor(s.allocated_minutes / Math.max(1, preferredSessionMinutes / 30))) * 0.75
+          )
+        ),
+        minimum_minutes: Math.max(15, Math.round(s.allocated_minutes * 0.6)),
       }));
     }
 
@@ -150,6 +172,8 @@ export function generateStudyPlan(input: PlannerInput): GeneratedPlan {
       date,
       tasks,
       total_minutes: total,
+      verified_question_count: 0,
+      verified_minutes: 0,
       is_completed: false,
     });
   }
