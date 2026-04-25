@@ -7,10 +7,10 @@ import { USER_PREFETCH_ROUTES, prefetchRoutes } from '@/lib/route-prefetch';
 
 const PRIMARY_TABS = [
   { href: '/dashboard', label: 'Home', icon: 'dashboard' },
+  { href: '/feed', label: 'Feed', icon: 'idea' },
   { href: '/practice', label: 'Practice', icon: 'practice' },
   { href: '/mock', label: 'Mock', icon: 'mock' },
   { href: '/planner', label: 'Planner', icon: 'planner' },
-  { href: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
 ];
 
 export function MobileNav() {

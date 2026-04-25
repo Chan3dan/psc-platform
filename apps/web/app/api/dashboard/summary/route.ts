@@ -6,7 +6,6 @@ import { generateAnalytics } from '@psc/shared/utils/analytics';
 import { ok, serverError, unauthorized } from '@/lib/apiResponse';
 import { CacheKeys, cacheGet, cacheSet } from '@/lib/redis';
 import { UPCOMING_EXAM_TRACKS } from '@/lib/exam-tracks';
-import { getOrCreateQuestionOfDay, getQuestionOfDayAttempt, serializeQuestionOfDay } from '@/lib/question-of-day';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,29 +115,23 @@ function buildMilestones(analytics: any, results: any[], readinessScore: number,
 
 function buildDailyFeed({
   preferredExam,
-  questionOfDay,
   plan,
   reviewQueueCount,
 }: {
   preferredExam: any;
-  questionOfDay: any;
   plan: any;
   reviewQueueCount: number;
 }) {
   const feed = [];
 
-  if (questionOfDay) {
-    feed.push({
-      id: 'question-of-day',
-      type: 'question',
-      title: questionOfDay.attempt ? 'Question of the day completed' : 'Question of the day is ready',
-      body: questionOfDay.attempt
-        ? `You answered today’s ${questionOfDay.subject?.name ?? preferredExam?.name ?? 'exam'} question.`
-        : `Today’s ${questionOfDay.subject?.name ?? preferredExam?.name ?? 'exam'} question is waiting for you.`,
-      href: '#question-of-day',
-      status: questionOfDay.attempt ? 'Completed' : 'Answer now',
-    });
-  }
+  feed.push({
+    id: 'question-of-day',
+    type: 'question',
+    title: 'Question of the day',
+    body: `Open your ${preferredExam?.name ?? 'exam'} feed for today’s focused question and study updates.`,
+    href: '/feed',
+    status: 'Open feed',
+  });
 
   if (plan) {
     feed.push({
@@ -257,23 +250,8 @@ export async function GET() {
             : 0,
         }
       : null;
-    let questionOfDay = null;
-    try {
-      const questionOfDayRecord = preferredExam
-        ? await getOrCreateQuestionOfDay({ examId: preferredExam._id })
-        : null;
-      const questionOfDayAttempt = questionOfDayRecord
-        ? await getQuestionOfDayAttempt(String(questionOfDayRecord._id), userId)
-        : null;
-      questionOfDay = questionOfDayRecord
-        ? serializeQuestionOfDay(questionOfDayRecord, questionOfDayAttempt)
-        : null;
-    } catch (error) {
-      console.warn('[dashboard-summary] question of the day unavailable', error);
-    }
     const dailyFeed = buildDailyFeed({
       preferredExam,
-      questionOfDay,
       plan: planSummary,
       reviewQueueCount,
     });
@@ -311,7 +289,6 @@ export async function GET() {
       })),
       examTracks: UPCOMING_EXAM_TRACKS,
       plan: planSummary,
-      questionOfDay,
       drillsToday,
       recentResults: (results as any[]).slice(0, 5).map((result) => ({
         _id: String(result._id),

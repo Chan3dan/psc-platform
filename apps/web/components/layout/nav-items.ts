@@ -6,6 +6,7 @@ export interface AppNavItem {
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { href: '/feed', label: 'Newsfeed', icon: 'idea' },
   { href: '/exams', label: 'Exams', icon: 'exams' },
   { href: '/practice', label: 'Practice', icon: 'practice' },
   { href: '/mock', label: 'Mock Tests', icon: 'mock' },

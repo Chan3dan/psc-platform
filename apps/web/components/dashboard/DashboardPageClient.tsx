@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardCharts } from '@/components/analytics/DashboardCharts';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { formatDuration } from '@/lib/results';
@@ -205,8 +205,6 @@ function getJsonErrorMessage(payload: any, fallback: string) {
 export function DashboardPageClient() {
   const [language, setLanguage] = useState<'en' | 'ne'>('en');
   const [savingLanguage, setSavingLanguage] = useState(false);
-  const [questionOfDay, setQuestionOfDay] = useState<any>(null);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
@@ -234,11 +232,6 @@ export function DashboardPageClient() {
     setLanguage(data.user?.preferences?.language === 'ne' ? 'ne' : 'en');
   }, [data]);
 
-  useEffect(() => {
-    setQuestionOfDay(data.questionOfDay ?? null);
-    setSelectedOption(data.questionOfDay?.attempt?.selected_option ?? null);
-  }, [data?.questionOfDay]);
-
   async function updateLanguage(nextLanguage: 'en' | 'ne') {
     if (nextLanguage === language) return;
     setLanguage(nextLanguage);
@@ -259,33 +252,6 @@ export function DashboardPageClient() {
       setSavingLanguage(false);
     }
   }
-
-  const submitQuestionOfDay = useMutation({
-    mutationFn: async () => {
-      if (!questionOfDay?._id || selectedOption === null) {
-        throw new Error(t.chooseOption);
-      }
-
-      const response = await fetch('/api/question-of-day', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question_of_day_id: questionOfDay._id,
-          selected_option: selectedOption,
-          time_spent_seconds: 45,
-        }),
-      });
-      const payload = await response.json();
-      if (!payload?.success) {
-        throw new Error(payload?.error ?? 'Could not submit today’s question');
-      }
-      return payload?.data?.questionOfDay ?? null;
-    },
-    onSuccess: (nextQuestion) => {
-      setQuestionOfDay(nextQuestion);
-      setSelectedOption(nextQuestion?.attempt?.selected_option ?? null);
-    },
-  });
 
   if (isLoading || !data) {
     if (isError) {
@@ -320,8 +286,6 @@ export function DashboardPageClient() {
   const scoreHistory = Array.isArray(analytics.score_history) ? analytics.score_history : [];
   const subjectPerformance = Array.isArray(analytics.subject_performance) ? analytics.subject_performance : [];
   const recentResults = Array.isArray(data.recentResults) ? data.recentResults : [];
-  const dailyQuestion = questionOfDay?.question ?? null;
-  const dailyQuestionOptions = Array.isArray(dailyQuestion?.options) ? dailyQuestion.options : [];
   const firstName = data.user?.name?.split?.(' ')?.[0] ?? 'there';
   const streak = data.user?.stats?.current_streak ?? 0;
   const readinessScore = Number(engagement.readinessScore ?? 0);
@@ -508,92 +472,29 @@ export function DashboardPageClient() {
           </div>
         </div>
 
-        <div id="question-of-day" className="card p-5">
-          <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="card p-5 overflow-hidden">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-[var(--text)]">{t.questionOfDay}</h2>
-              <p className="text-xs text-[var(--muted)] mt-0.5">{t.questionOfDayBody}</p>
+              <p className="text-xs uppercase tracking-wide font-semibold text-[var(--muted)]">Newsfeed</p>
+              <h2 className="mt-1 text-xl font-bold text-[var(--text)]">Daily learning feed</h2>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Latest updates, question of the day, planner nudges, and revision signals now live in one lightweight feed.
+              </p>
             </div>
-            {questionOfDay?.subject?.name && <span className="badge-blue">{questionOfDay.subject.name}</span>}
+            <span className="rounded-2xl bg-[var(--brand-soft)] p-3 text-[var(--brand)]">
+              <AppIcon name="idea" className="h-5 w-5" />
+            </span>
           </div>
-
-          {questionOfDay && dailyQuestion ? (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
-                <p className="text-sm font-medium text-[var(--text)]">{dailyQuestion.question_text}</p>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {['Latest', 'Question', 'More'].map((label) => (
+              <div key={label} className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/75 px-3 py-3 text-center text-xs font-semibold text-[var(--muted)]">
+                {label}
               </div>
-
-              <div className="space-y-2">
-                {dailyQuestionOptions.map((option: any, index: number) => {
-                  const optionIndex = Number.isFinite(Number(option?.index)) ? Number(option.index) : index;
-                  const isSelected = selectedOption === optionIndex;
-                  const isLocked = Boolean(questionOfDay.attempt);
-                  const isCorrect =
-                    questionOfDay.attempt && dailyQuestion.correct_answer === optionIndex;
-                  const isWrongPick =
-                    questionOfDay.attempt &&
-                    questionOfDay.attempt.selected_option === optionIndex &&
-                    dailyQuestion.correct_answer !== optionIndex;
-
-                  return (
-                    <button
-                      key={`${optionIndex}-${option?.text ?? index}`}
-                      type="button"
-                      disabled={isLocked}
-                      onClick={() => setSelectedOption(optionIndex)}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
-                        isCorrect
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                          : isWrongPick
-                            ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-                            : isSelected
-                              ? 'border-[var(--brand)] bg-[var(--brand-soft)]/45 text-[var(--text)]'
-                              : 'border-[var(--line)] bg-[var(--bg-elev)]/75 text-[var(--text)]'
-                      } ${isLocked ? 'cursor-default' : 'hover:border-[var(--brand)]/45'}`}
-                    >
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        Option {String.fromCharCode(65 + optionIndex)}
-                      </span>
-                      <span className="mt-1 block text-sm">{String(option?.text ?? '')}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {questionOfDay.attempt ? (
-                <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/20 p-4 space-y-2">
-                  <p className="text-sm font-semibold text-[var(--text)]">{t.alreadyAnswered}</p>
-                  <p className="text-xs text-[var(--muted)]">
-                    {t.correctAnswer}: Option {String.fromCharCode(65 + Number(dailyQuestion.correct_answer ?? 0))}
-                  </p>
-                  {dailyQuestion.explanation && (
-                    <p className="text-sm text-[var(--muted)]">
-                      <span className="font-semibold text-[var(--text)]">{t.explanation}: </span>
-                      {dailyQuestion.explanation}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  {submitQuestionOfDay.isError ? (
-                    <p className="text-sm text-red-500">{(submitQuestionOfDay.error as Error).message}</p>
-                  ) : (
-                    <p className="text-xs text-[var(--muted)]">{t.answerNow}</p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => submitQuestionOfDay.mutate()}
-                    disabled={selectedOption === null || submitQuestionOfDay.isPending}
-                    className="btn-primary disabled:opacity-50"
-                  >
-                    {submitQuestionOfDay.isPending ? 'Submitting…' : t.submitAnswer}
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-[var(--muted)]">Question of the day will appear once your exam focus is available.</p>
-          )}
+            ))}
+          </div>
+          <Link href="/feed" className="btn-primary mt-5 w-full justify-center">
+            Open Newsfeed
+          </Link>
         </div>
       </section>
 

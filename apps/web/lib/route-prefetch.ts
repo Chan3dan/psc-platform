@@ -4,6 +4,7 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 
 export const USER_PREFETCH_ROUTES = [
   '/dashboard',
+  '/feed',
   '/exams',
   '/practice',
   '/mock',
