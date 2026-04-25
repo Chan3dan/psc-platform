@@ -257,15 +257,20 @@ export async function GET() {
             : 0,
         }
       : null;
-    const questionOfDayRecord = preferredExam
-      ? await getOrCreateQuestionOfDay({ examId: preferredExam._id })
-      : null;
-    const questionOfDayAttempt = questionOfDayRecord
-      ? await getQuestionOfDayAttempt(String(questionOfDayRecord._id), userId)
-      : null;
-    const questionOfDay = questionOfDayRecord
-      ? serializeQuestionOfDay(questionOfDayRecord, questionOfDayAttempt)
-      : null;
+    let questionOfDay = null;
+    try {
+      const questionOfDayRecord = preferredExam
+        ? await getOrCreateQuestionOfDay({ examId: preferredExam._id })
+        : null;
+      const questionOfDayAttempt = questionOfDayRecord
+        ? await getQuestionOfDayAttempt(String(questionOfDayRecord._id), userId)
+        : null;
+      questionOfDay = questionOfDayRecord
+        ? serializeQuestionOfDay(questionOfDayRecord, questionOfDayAttempt)
+        : null;
+    } catch (error) {
+      console.warn('[dashboard-summary] question of the day unavailable', error);
+    }
     const dailyFeed = buildDailyFeed({
       preferredExam,
       questionOfDay,

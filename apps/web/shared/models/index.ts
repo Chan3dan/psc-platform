@@ -62,7 +62,6 @@ const ExamSchema = new Schema<IExam>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
-ExamSchema.index({ slug: 1 });
 ExamSchema.index({ name: 'text', description: 'text' });
 
 export interface ISubject extends Document {
@@ -250,7 +249,6 @@ const UserSchema = new Schema<IUser>(
   },
   { timestamps: { createdAt: 'created_at' } }
 );
-UserSchema.index({ email: 1 });
 
 export interface IFeedback extends Document {
   user_id?: Types.ObjectId;

@@ -23,6 +23,12 @@ export async function connectDB() {
       maxPoolSize: 10,
     });
   }
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (error) {
+    cached.promise = null;
+    cached.conn = null;
+    throw error;
+  }
   return cached.conn;
 }

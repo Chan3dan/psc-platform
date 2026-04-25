@@ -45,15 +45,20 @@ function mapSettings(record: any): SiteSettings {
 }
 
 export const getSiteSettings = cache(async () => {
-  const record = await unstable_cache(
-    async () => {
-      await connectDB();
-      return SiteSetting.findOne({ key: 'site' }).lean();
-    },
-    ['site-settings:record'],
-    { revalidate: 300, tags: ['site-settings'] }
-  )();
-  return mapSettings(record);
+  try {
+    const record = await unstable_cache(
+      async () => {
+        await connectDB();
+        return SiteSetting.findOne({ key: 'site' }).lean();
+      },
+      ['site-settings:record'],
+      { revalidate: 300, tags: ['site-settings'] }
+    )();
+    return mapSettings(record);
+  } catch (error) {
+    console.warn('[site-settings] falling back to default branding', error);
+    return DEFAULT_SITE_SETTINGS;
+  }
 });
 
 export async function saveSiteSettings(input: Record<string, unknown>) {

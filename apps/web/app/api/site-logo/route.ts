@@ -3,6 +3,8 @@ import { unstable_cache } from 'next/cache';
 import { SiteSetting } from '@psc/shared/models';
 import { DEFAULT_LOGO_URL } from '@/lib/site-settings-config';
 
+export const dynamic = 'force-dynamic';
+
 function decodeDataUrl(dataUrl: string) {
   const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
   if (!match) return null;
@@ -42,14 +44,19 @@ function isLikelyImagePayload(contentType: string, buffer: Buffer) {
 }
 
 export async function GET(req: Request) {
-  const record: any = await unstable_cache(
-    async () => {
-      await connectDB();
-      return SiteSetting.findOne({ key: 'site' }).select('logo_data_url logo_url').lean();
-    },
-    ['site-settings:logo-record'],
-    { revalidate: 300, tags: ['site-settings'] }
-  )();
+  let record: any = null;
+  try {
+    record = await unstable_cache(
+      async () => {
+        await connectDB();
+        return SiteSetting.findOne({ key: 'site' }).select('logo_data_url logo_url').lean();
+      },
+      ['site-settings:logo-record'],
+      { revalidate: 300, tags: ['site-settings'] }
+    )();
+  } catch (error) {
+    console.warn('[site-logo] falling back to bundled logo', error);
+  }
   const rawLogoDataUrl =
     record?.logo_data_url ||
     (typeof record?.logo_url === 'string' && record.logo_url.startsWith('data:image/')

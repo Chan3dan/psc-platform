@@ -56,6 +56,34 @@ async function pickSubjectForDailyQuestion(examId: string) {
   return sortedSubjects[0] as any;
 }
 
+async function getSubjectsForDailyQuestion(examId: string) {
+  const subjects = await Subject.find({ exam_id: examId, is_active: true })
+    .select('_id name')
+    .sort({ name: 1 })
+    .lean() as any[];
+
+  if (!subjects.length) return [];
+
+  const recent = await QuestionOfDay.find({ exam_id: examId })
+    .sort({ prompt_date: -1 })
+    .limit(subjects.length * 2)
+    .select('subject_id')
+    .lean() as any[];
+
+  const recentCounts = new Map<string, number>();
+  for (const item of recent) {
+    const subjectId = String(item.subject_id);
+    recentCounts.set(subjectId, (recentCounts.get(subjectId) ?? 0) + 1);
+  }
+
+  return [...subjects].sort((a: any, b: any) => {
+    const countA = recentCounts.get(String(a._id)) ?? 0;
+    const countB = recentCounts.get(String(b._id)) ?? 0;
+    if (countA !== countB) return countA - countB;
+    return String(a.name).localeCompare(String(b.name));
+  });
+}
+
 async function pickQuestionForDailyQuestion(examId: string, subjectId: string, dateKey: string) {
   const recent = await QuestionOfDay.find({ exam_id: examId })
     .sort({ prompt_date: -1 })
@@ -106,29 +134,49 @@ export async function getOrCreateQuestionOfDay(input: { examId?: string | null }
   const exam = await Exam.findById(examId).select('_id name slug').lean() as any;
   if (!exam) return null;
 
-  const subject = await pickSubjectForDailyQuestion(examId);
-  if (!subject) return null;
+  const subjects = await getSubjectsForDailyQuestion(examId);
+  const fallbackSubject = subjects.length ? null : await pickSubjectForDailyQuestion(examId);
+  const candidates = subjects.length ? subjects : fallbackSubject ? [fallbackSubject] : [];
 
-  const question = await pickQuestionForDailyQuestion(examId, String(subject._id), promptDateKey);
-  if (!question) return null;
+  let subject = null;
+  let question = null;
+  for (const candidate of candidates) {
+    question = await pickQuestionForDailyQuestion(examId, String(candidate._id), promptDateKey);
+    if (question) {
+      subject = candidate;
+      break;
+    }
+  }
 
-  const created = await QuestionOfDay.findOneAndUpdate(
-    { exam_id: examId, prompt_date_key: promptDateKey },
-    {
-      $setOnInsert: {
-        exam_id: exam._id,
-        subject_id: subject._id,
-        question_id: question._id,
-        prompt_date_key: promptDateKey,
-        prompt_date: new Date(),
+  if (!subject || !question) return null;
+
+  let created;
+  try {
+    created = await QuestionOfDay.findOneAndUpdate(
+      { exam_id: examId, prompt_date_key: promptDateKey },
+      {
+        $setOnInsert: {
+          exam_id: exam._id,
+          subject_id: subject._id,
+          question_id: question._id,
+          prompt_date_key: promptDateKey,
+          prompt_date: new Date(),
+        },
       },
-    },
-    { upsert: true, new: true }
-  )
-    .populate('exam_id', 'name slug')
-    .populate('subject_id', 'name')
-    .populate('question_id', 'question_text options correct_answer explanation difficulty')
-    .lean() as any;
+      { upsert: true, new: true }
+    )
+      .populate('exam_id', 'name slug')
+      .populate('subject_id', 'name')
+      .populate('question_id', 'question_text options correct_answer explanation difficulty')
+      .lean() as any;
+  } catch (error: any) {
+    if (error?.code !== 11000) throw error;
+    created = await QuestionOfDay.findOne({ exam_id: examId, prompt_date_key: promptDateKey })
+      .populate('exam_id', 'name slug')
+      .populate('subject_id', 'name')
+      .populate('question_id', 'question_text options correct_answer explanation difficulty')
+      .lean() as any;
+  }
 
   return created as any;
 }
@@ -149,6 +197,23 @@ export function serializeQuestionOfDay(questionOfDay: any, attempt?: any) {
 
   const question = questionOfDay.question_id;
   const answer = attempt?.answers?.[0];
+  const options = Array.isArray(question.options)
+    ? question.options
+        .map((option: any, index: number) => {
+          if (typeof option === 'string') {
+            return { index, text: option };
+          }
+
+          const optionIndex = Number(option?.index);
+          return {
+            index: Number.isFinite(optionIndex) ? optionIndex : index,
+            text: String(option?.text ?? option?.label ?? ''),
+            image_url: option?.image_url,
+          };
+        })
+        .filter((option: any) => option.text)
+    : [];
+  const correctAnswer = Number(question.correct_answer);
 
   return {
     _id: String(questionOfDay._id),
@@ -168,11 +233,11 @@ export function serializeQuestionOfDay(questionOfDay: any, attempt?: any) {
       : null,
     question: {
       _id: String(question._id),
-      question_text: question.question_text,
-      options: question.options ?? [],
+      question_text: String(question.question_text ?? ''),
+      options,
       difficulty: question.difficulty ?? 'medium',
       explanation: answer ? question.explanation ?? '' : '',
-      correct_answer: answer ? question.correct_answer : undefined,
+      correct_answer: answer && Number.isFinite(correctAnswer) ? correctAnswer : undefined,
     },
     attempt: attempt
       ? {

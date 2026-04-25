@@ -185,18 +185,43 @@ function DashboardLoadingState() {
   );
 }
 
+const EMPTY_ANALYTICS = {
+  total_tests: 0,
+  avg_score_percent: 0,
+  overall_accuracy: 0,
+  total_questions: 0,
+  insights: [],
+  score_history: [],
+  subject_performance: [],
+  weak_topics: [],
+};
+
+function getJsonErrorMessage(payload: any, fallback: string) {
+  if (payload?.error) return String(payload.error);
+  if (payload?.message) return String(payload.message);
+  return fallback;
+}
+
 export function DashboardPageClient() {
   const [language, setLanguage] = useState<'en' | 'ne'>('en');
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [questionOfDay, setQuestionOfDay] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
-      const response = await fetch('/api/dashboard/summary');
-      const payload = await response.json();
+      const response = await fetch('/api/dashboard/summary', {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      const text = await response.text();
+      const payload = text ? JSON.parse(text) : null;
+      if (!response.ok || !payload?.success) {
+        throw new Error(getJsonErrorMessage(payload, 'Dashboard summary could not be loaded.'));
+      }
       return payload.data;
     },
+    retry: 1,
     staleTime: 45_000,
     gcTime: 5 * 60_000,
   });
@@ -254,7 +279,7 @@ export function DashboardPageClient() {
       if (!payload?.success) {
         throw new Error(payload?.error ?? 'Could not submit today’s question');
       }
-      return payload.data.questionOfDay;
+      return payload?.data?.questionOfDay ?? null;
     },
     onSuccess: (nextQuestion) => {
       setQuestionOfDay(nextQuestion);
@@ -263,11 +288,40 @@ export function DashboardPageClient() {
   });
 
   if (isLoading || !data) {
+    if (isError) {
+      return (
+        <div className="page-wrap">
+          <section className="card glass p-6 md:p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 dark:bg-red-950/50">
+              <AppIcon name="alert" className="h-7 w-7" />
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-500">Dashboard temporarily unavailable</p>
+            <h1 className="mt-2 text-2xl font-bold text-[var(--text)]">We could not load your dashboard yet.</h1>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--muted)]">
+              {(error as Error)?.message || 'Please retry once. Your account and progress are safe.'}
+            </p>
+            <button type="button" onClick={() => void refetch()} className="btn-primary mt-5">
+              Try again
+            </button>
+          </section>
+        </div>
+      );
+    }
     return <DashboardLoadingState />;
   }
 
-  const analytics = data.analytics;
+  const analytics = { ...EMPTY_ANALYTICS, ...(data.analytics ?? {}) };
   const engagement = data.engagement ?? {};
+  const dailyMissions = Array.isArray(engagement.dailyMissions) ? engagement.dailyMissions : [];
+  const dailyFeed = Array.isArray(engagement.dailyFeed) ? engagement.dailyFeed : [];
+  const milestones = Array.isArray(engagement.milestones) ? engagement.milestones : [];
+  const insights = Array.isArray(analytics.insights) ? analytics.insights : [];
+  const weakTopics = Array.isArray(analytics.weak_topics) ? analytics.weak_topics : [];
+  const scoreHistory = Array.isArray(analytics.score_history) ? analytics.score_history : [];
+  const subjectPerformance = Array.isArray(analytics.subject_performance) ? analytics.subject_performance : [];
+  const recentResults = Array.isArray(data.recentResults) ? data.recentResults : [];
+  const dailyQuestion = questionOfDay?.question ?? null;
+  const dailyQuestionOptions = Array.isArray(dailyQuestion?.options) ? dailyQuestion.options : [];
   const firstName = data.user?.name?.split?.(' ')?.[0] ?? 'there';
   const streak = data.user?.stats?.current_streak ?? 0;
   const readinessScore = Number(engagement.readinessScore ?? 0);
@@ -309,10 +363,10 @@ export function DashboardPageClient() {
   }
 
   const statCards = [
-    { label: t.testsTaken, value: analytics.total_tests, tone: 'text-blue-600' },
-    { label: t.avgScore, value: `${analytics.avg_score_percent}%`, tone: 'text-emerald-600' },
-    { label: t.accuracy, value: `${analytics.overall_accuracy}%`, tone: 'text-indigo-600' },
-    { label: t.questionsSolved, value: analytics.total_questions.toLocaleString(), tone: 'text-amber-600' },
+    { label: t.testsTaken, value: Number(analytics.total_tests ?? 0), tone: 'text-blue-600' },
+    { label: t.avgScore, value: `${Number(analytics.avg_score_percent ?? 0)}%`, tone: 'text-emerald-600' },
+    { label: t.accuracy, value: `${Number(analytics.overall_accuracy ?? 0)}%`, tone: 'text-indigo-600' },
+    { label: t.questionsSolved, value: Number(analytics.total_questions ?? 0).toLocaleString(), tone: 'text-amber-600' },
   ];
 
   return (
@@ -409,7 +463,7 @@ export function DashboardPageClient() {
             <Link href="/review" className="hidden sm:inline-flex text-xs text-[var(--brand)] hover:underline">{t.smartReview}</Link>
           </div>
           <div className="space-y-3">
-            {(engagement.dailyMissions ?? []).map((mission: any) => (
+            {dailyMissions.map((mission: any) => (
               <Link key={mission.id} href={mission.href} className="block rounded-2xl border border-[var(--line)] p-3 hover:border-[var(--brand)]/50 hover:bg-[var(--brand-soft)]/25 transition-colors">
                 <div className="flex items-start gap-3">
                   <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl ${mission.completed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>
@@ -437,10 +491,10 @@ export function DashboardPageClient() {
               <h2 className="text-sm font-semibold text-[var(--text)]">{t.dailyFeed}</h2>
               <p className="text-xs text-[var(--muted)] mt-0.5">{t.dailyFeedBody}</p>
             </div>
-            <span className="badge-blue">{(engagement.dailyFeed ?? []).length}</span>
+            <span className="badge-blue">{dailyFeed.length}</span>
           </div>
           <div className="space-y-3">
-            {(engagement.dailyFeed ?? []).map((item: any) => (
+            {dailyFeed.map((item: any) => (
               <Link
                 key={item.id}
                 href={item.href}
@@ -463,29 +517,30 @@ export function DashboardPageClient() {
             {questionOfDay?.subject?.name && <span className="badge-blue">{questionOfDay.subject.name}</span>}
           </div>
 
-          {questionOfDay ? (
+          {questionOfDay && dailyQuestion ? (
             <div className="space-y-4">
               <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4">
-                <p className="text-sm font-medium text-[var(--text)]">{questionOfDay.question.question_text}</p>
+                <p className="text-sm font-medium text-[var(--text)]">{dailyQuestion.question_text}</p>
               </div>
 
               <div className="space-y-2">
-                {(questionOfDay.question.options ?? []).map((option: any) => {
-                  const isSelected = selectedOption === option.index;
+                {dailyQuestionOptions.map((option: any, index: number) => {
+                  const optionIndex = Number.isFinite(Number(option?.index)) ? Number(option.index) : index;
+                  const isSelected = selectedOption === optionIndex;
                   const isLocked = Boolean(questionOfDay.attempt);
                   const isCorrect =
-                    questionOfDay.attempt && questionOfDay.question.correct_answer === option.index;
+                    questionOfDay.attempt && dailyQuestion.correct_answer === optionIndex;
                   const isWrongPick =
                     questionOfDay.attempt &&
-                    questionOfDay.attempt.selected_option === option.index &&
-                    questionOfDay.question.correct_answer !== option.index;
+                    questionOfDay.attempt.selected_option === optionIndex &&
+                    dailyQuestion.correct_answer !== optionIndex;
 
                   return (
                     <button
-                      key={option.index}
+                      key={`${optionIndex}-${option?.text ?? index}`}
                       type="button"
                       disabled={isLocked}
-                      onClick={() => setSelectedOption(option.index)}
+                      onClick={() => setSelectedOption(optionIndex)}
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
                         isCorrect
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
@@ -497,9 +552,9 @@ export function DashboardPageClient() {
                       } ${isLocked ? 'cursor-default' : 'hover:border-[var(--brand)]/45'}`}
                     >
                       <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        Option {String.fromCharCode(65 + Number(option.index))}
+                        Option {String.fromCharCode(65 + optionIndex)}
                       </span>
-                      <span className="mt-1 block text-sm">{option.text}</span>
+                      <span className="mt-1 block text-sm">{String(option?.text ?? '')}</span>
                     </button>
                   );
                 })}
@@ -509,12 +564,12 @@ export function DashboardPageClient() {
                 <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/20 p-4 space-y-2">
                   <p className="text-sm font-semibold text-[var(--text)]">{t.alreadyAnswered}</p>
                   <p className="text-xs text-[var(--muted)]">
-                    {t.correctAnswer}: Option {String.fromCharCode(65 + Number(questionOfDay.question.correct_answer ?? 0))}
+                    {t.correctAnswer}: Option {String.fromCharCode(65 + Number(dailyQuestion.correct_answer ?? 0))}
                   </p>
-                  {questionOfDay.question.explanation && (
+                  {dailyQuestion.explanation && (
                     <p className="text-sm text-[var(--muted)]">
                       <span className="font-semibold text-[var(--text)]">{t.explanation}: </span>
-                      {questionOfDay.question.explanation}
+                      {dailyQuestion.explanation}
                     </p>
                   )}
                 </div>
@@ -568,7 +623,7 @@ export function DashboardPageClient() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="space-y-1">
             <h2 className="text-sm font-semibold text-[var(--text)]">{t.quickDrill}</h2>
-            <p className="text-sm text-[var(--muted)] mt-1">{t.quickDrillBody(data.drillsToday)}</p>
+            <p className="text-sm text-[var(--muted)] mt-1">{t.quickDrillBody(Number(data.drillsToday ?? 0))}</p>
           </div>
           <Link href="/drill" className="btn-primary inline-flex items-center gap-2">
             <AppIcon name="drill" className="h-4 w-4" />
@@ -586,7 +641,7 @@ export function DashboardPageClient() {
           <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">{t.viewProgress}</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          {(engagement.milestones ?? []).map((milestone: any) => (
+          {milestones.map((milestone: any) => (
             <div key={milestone.label} className="rounded-2xl border border-[var(--line)] p-3">
               <div className="flex items-center gap-2">
                 <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${milestone.completed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950' : 'bg-gray-100 text-gray-500 dark:bg-gray-800'}`}>
@@ -602,14 +657,14 @@ export function DashboardPageClient() {
 
 
       <section className="grid grid-cols-1 xl:grid-cols-[1.25fr,0.75fr] gap-4">
-        {analytics.insights.length > 0 ? (
+        {insights.length > 0 ? (
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-[var(--text)]">{t.performanceInsights}</h2>
-              <span className="badge-blue">{analytics.insights.length} {t.insights}</span>
+              <span className="badge-blue">{insights.length} {t.insights}</span>
             </div>
             <div className="space-y-2.5">
-              {analytics.insights.map((ins: any, i: number) => (
+              {insights.map((ins: any, i: number) => (
                 <div
                   key={i}
                   className={`rounded-xl px-3 py-2.5 text-sm flex items-start gap-2 ${
@@ -664,16 +719,16 @@ export function DashboardPageClient() {
         </div>
       </section>
 
-      {analytics.score_history.length > 1 && (
-        <DashboardCharts scoreHistory={analytics.score_history} subjectPerformance={analytics.subject_performance} />
+      {scoreHistory.length > 1 && (
+        <DashboardCharts scoreHistory={scoreHistory} subjectPerformance={subjectPerformance} />
       )}
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {analytics.weak_topics.length > 0 && (
+        {weakTopics.length > 0 && (
           <div className="card p-5">
             <h2 className="text-sm font-semibold text-[var(--text)] mb-3">{t.priorityWeakTopics}</h2>
             <div className="space-y-2.5">
-              {analytics.weak_topics.slice(0, 6).map((topic: any) => (
+              {weakTopics.slice(0, 6).map((topic: any) => (
                 <div key={topic.subject_id} className="rounded-2xl border border-[var(--line)] p-3">
                   <div className="flex items-center gap-3">
                     <span className="text-red-400 shrink-0"><AppIcon name="alert" className="h-4 w-4" /></span>
@@ -713,14 +768,14 @@ export function DashboardPageClient() {
         )}
       </section>
 
-      {data.recentResults.length > 0 ? (
+      {recentResults.length > 0 ? (
         <section className="card overflow-hidden">
           <div className="px-5 py-3 border-b border-[var(--line)] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[var(--text)]">{t.recentAttempts}</h2>
             <Link href="/results" className="text-xs text-[var(--brand)] hover:underline">{t.viewAll}</Link>
           </div>
           <div className="divide-y divide-[var(--line)]">
-            {data.recentResults.map((result: any) => {
+            {recentResults.map((result: any) => {
               const pct = result.maxScore > 0 ? ((result.score / result.maxScore) * 100).toFixed(0) : '0';
               return (
                 <Link

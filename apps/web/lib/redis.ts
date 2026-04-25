@@ -98,7 +98,7 @@ export const CacheKeys = {
   subjects: (examId: string) => `subjects:${examId}`,
   performance: (userId: string, examId?: string) =>
     `perf:${userId}:${examId ?? 'all'}`,
-  dashboardSummary: (userId: string) => `dashboard:${userId}:summary`,
+  dashboardSummary: (userId: string) => `dashboard:${userId}:summary:v3`,
   resultsHistory: (userId: string) => `results:${userId}:history`,
   leaderboard: (
     id: string,
