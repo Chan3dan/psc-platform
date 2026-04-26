@@ -122,6 +122,25 @@ export async function PublicTopicPage({ slug }: { slug: TopicLandingPage['slug']
           },
         })),
       },
+      {
+        '@type': 'WebPage',
+        name: topic.title,
+        url: joinSiteUrl(`/${topic.slug}`),
+        description: topic.description,
+        inLanguage: 'en-NP',
+      },
+      {
+        '@type': 'Course',
+        name: `${topic.title} course path`,
+        description: topic.description,
+        provider: {
+          '@type': 'Organization',
+          name: settings.brandName,
+          url: joinSiteUrl('/'),
+        },
+        about: topic.keywords,
+        url: joinSiteUrl(`/${topic.slug}`),
+      },
     ],
   };
 

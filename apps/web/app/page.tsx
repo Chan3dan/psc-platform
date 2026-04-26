@@ -28,6 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: '/',
+      type: 'website',
     },
     twitter: {
       title,
@@ -53,6 +54,11 @@ export default async function LandingPage() {
         '@type': 'WebSite',
         name: settings.brandName,
         url: joinSiteUrl('/'),
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${joinSiteUrl('/')}search?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
       },
       {
         '@type': 'SoftwareApplication',
@@ -85,6 +91,16 @@ export default async function LandingPage() {
               text: 'Yes. You can request upcoming exam tracks directly from the home page or dashboard feedback flow.',
             },
           },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: 'Featured exam preparation tracks',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, url: joinSiteUrl('/computer-operator'), name: 'Computer Operator Preparation' },
+          { '@type': 'ListItem', position: 2, url: joinSiteUrl('/na-su'), name: 'NaSu Preparation' },
+          { '@type': 'ListItem', position: 3, url: joinSiteUrl('/kharidar'), name: 'Kharidar Preparation' },
+          { '@type': 'ListItem', position: 4, url: joinSiteUrl('/loksewa'), name: 'Loksewa Preparation' },
         ],
       },
     ],

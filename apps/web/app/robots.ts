@@ -8,8 +8,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/exam/', '/brand/'],
-        disallow: ['/admin/', '/dashboard', '/results', '/planner', '/mock', '/practice', '/bookmarks', '/api/'],
+        allow: ['/', '/exam/', '/computer-operator', '/loksewa', '/na-su', '/kharidar', '/gk', '/ict', '/brand/'],
+        disallow: ['/admin/', '/dashboard', '/results', '/planner', '/mock', '/practice', '/bookmarks', '/api/', '/login', '/register', '/settings'],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

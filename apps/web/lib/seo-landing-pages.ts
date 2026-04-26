@@ -1,5 +1,5 @@
 export type TopicLandingPage = {
-  slug: 'computer-operator' | 'loksewa' | 'gk' | 'ict';
+  slug: 'computer-operator' | 'loksewa' | 'gk' | 'ict' | 'na-su' | 'kharidar';
   title: string;
   description: string;
   keywords: string[];
@@ -10,7 +10,7 @@ export type TopicLandingPage = {
   studyPoints: string[];
   faqs: { question: string; answer: string }[];
   relatedRoutes: Array<{
-    href: '/computer-operator' | '/loksewa' | '/gk' | '/ict';
+    href: '/computer-operator' | '/loksewa' | '/gk' | '/ict' | '/na-su' | '/kharidar';
     label: string;
     description: string;
   }>;
@@ -141,6 +141,130 @@ export const TOPIC_LANDING_PAGES: Record<TopicLandingPage['slug'], TopicLandingP
       },
     ],
     examKeywords: ['loksewa', 'psc', 'public service', 'computer operator'],
+  },
+  'na-su': {
+    slug: 'na-su',
+    title: 'NaSu Preparation in Nepal',
+    description:
+      'Prepare for NaSu Loksewa exams in Nepal with syllabus-focused study flow, model questions, subject practice, mock tests, and revision support.',
+    keywords: [
+      'na su preparation Nepal',
+      'nayab subba preparation Nepal',
+      'na su syllabus Nepal',
+      'na su mock test Nepal',
+      'na su old question Nepal',
+    ],
+    badge: 'NaSu Exam Track',
+    heading: 'NaSu preparation that connects syllabus, model questions, and revision',
+    intro:
+      'NaSu aspirants usually struggle when preparation is scattered across notices, PDFs, old questions, and random notes. This track is designed to make NaSu preparation in Nepal feel organized and measurable.',
+    valueProps: [
+      'Prepare around syllabus-aware practice, targeted mock sessions, and revision checkpoints.',
+      'Use model-question style practice for public management, awareness, and exam-pattern familiarity.',
+      'Reduce last-minute confusion by grouping notes, practice, and score review in one flow.',
+    ],
+    studyPoints: [
+      'Start with the latest NaSu syllabus and build chapter coverage before full mock attempts.',
+      'Use old-question style revision to understand recurring patterns in Loksewa exams.',
+      'Review low-confidence answers early so theory gaps do not stay hidden until exam day.',
+    ],
+    faqs: [
+      {
+        question: 'Is this page useful for NaSu Loksewa preparation in Nepal?',
+        answer:
+          'Yes. It is built for aspirants preparing for Nayab Subba style exams with a mix of syllabus reading, question practice, and structured revision.',
+      },
+      {
+        question: 'Can I use this even if NaSu content is still expanding?',
+        answer:
+          'Yes. This landing page helps capture the preparation journey and can be expanded with notes, mock tests, and topic pages as coverage grows.',
+      },
+      {
+        question: 'What should I study first for NaSu preparation?',
+        answer:
+          'Start with the latest syllabus, identify the high-weight sections, and then move into topic practice and model questions before full mock tests.',
+      },
+    ],
+    relatedRoutes: [
+      {
+        href: '/loksewa',
+        label: 'Loksewa Preparation',
+        description: 'See the broader Loksewa preparation flow and how NaSu fits into it.',
+      },
+      {
+        href: '/kharidar',
+        label: 'Kharidar Preparation',
+        description: 'Compare another major Loksewa exam track with similar preparation needs.',
+      },
+      {
+        href: '/computer-operator',
+        label: 'Computer Operator',
+        description: 'Explore the current strongest live exam track on Niyukta.',
+      },
+    ],
+    examKeywords: ['na su', 'nayab subba', 'subba', 'administration'],
+  },
+  kharidar: {
+    slug: 'kharidar',
+    title: 'Kharidar Preparation in Nepal',
+    description:
+      'Prepare for Kharidar Loksewa exams in Nepal with syllabus guides, subject practice, model questions, mock tests, and revision tools on Niyukta.',
+    keywords: [
+      'kharidar preparation Nepal',
+      'kharidar syllabus Nepal',
+      'kharidar mock test Nepal',
+      'kharidar old question Nepal',
+      'kharidar model question Nepal',
+    ],
+    badge: 'Kharidar Exam Track',
+    heading: 'Kharidar preparation built around syllabus clarity and repeated practice',
+    intro:
+      'Kharidar preparation in Nepal works best when candidates combine syllabus understanding, topic revision, and repeated model-question practice instead of relying on passive reading alone.',
+    valueProps: [
+      'Build preparation around the Kharidar syllabus, public-management style revision, and focused practice.',
+      'Move from theory coverage into timed attempts and pattern familiarity with mock support.',
+      'Use review-driven learning to improve accuracy and reduce repeated mistakes.',
+    ],
+    studyPoints: [
+      'Break the syllabus into weekly chunks so coverage stays realistic and consistent.',
+      'Use repeated model-question practice to improve exam rhythm and question interpretation.',
+      'Review wrong answers immediately to turn practice into retention, not just exposure.',
+    ],
+    faqs: [
+      {
+        question: 'Can Niyukta support Kharidar preparation in Nepal?',
+        answer:
+          'Yes. This landing page is structured to support Kharidar-focused preparation with room for mock tests, notes, and syllabus-linked study expansion.',
+      },
+      {
+        question: 'Is Kharidar preparation different from Computer Operator preparation?',
+        answer:
+          'Yes. Computer Operator is more technical, while Kharidar preparation usually needs stronger general, office, and public-management oriented coverage.',
+      },
+      {
+        question: 'What is the best way to start Kharidar preparation?',
+        answer:
+          'Start with the official syllabus and create a weekly plan around topic coverage, revision, and repeated question practice.',
+      },
+    ],
+    relatedRoutes: [
+      {
+        href: '/loksewa',
+        label: 'Loksewa Preparation',
+        description: 'Understand the wider Loksewa study system used across multiple exams.',
+      },
+      {
+        href: '/na-su',
+        label: 'NaSu Preparation',
+        description: 'Explore a closely related administrative exam preparation track.',
+      },
+      {
+        href: '/gk',
+        label: 'GK Practice',
+        description: 'Strengthen the general knowledge base used across many Loksewa exams.',
+      },
+    ],
+    examKeywords: ['kharidar', 'assistant', 'loksewa', 'administration'],
   },
   gk: {
     slug: 'gk',
