@@ -447,7 +447,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto">
-              <div className="hidden md:block">
+              <div className="h-full overflow-auto p-4">
                 <table className="w-full min-w-[760px] text-sm">
                   <thead className="sticky top-0 bg-[var(--bg-elev)]">
                     <tr className="border-b border-[var(--line)]">
@@ -469,30 +469,6 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
                     ))}
                   </tbody>
                 </table>
-              </div>
-
-              <div className="grid gap-3 p-4 md:hidden">
-                {published.rows.map((row: any) => (
-                  <div key={row.result_id} className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/55 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-[var(--text)]">#{row.rank} {row.user_name}</p>
-                        <p className="mt-1 break-all text-xs text-[var(--muted)]">{row.user_email}</p>
-                      </div>
-                      <span className="badge-green">{row.accuracy_percent}%</span>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded-xl bg-[var(--bg-elev)] px-3 py-2">
-                        <p className="text-[var(--muted)]">Score</p>
-                        <p className="mt-1 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</p>
-                      </div>
-                      <div className="rounded-xl bg-[var(--bg-elev)] px-3 py-2">
-                        <p className="text-[var(--muted)]">Time</p>
-                        <p className="mt-1 font-semibold text-[var(--text)]">{formatDuration(row.total_time_seconds)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </section>
@@ -527,7 +503,7 @@ function AnchoredFeedModal({
         onClick={onClose}
       />
       <div
-        className={`relative z-[1] w-full ${widthClassName} max-h-[calc(100dvh-4rem)] overflow-hidden md:max-h-[calc(100dvh-3rem)]`}
+        className={`relative z-[1] h-[calc(100dvh-4rem)] w-full ${widthClassName} overflow-hidden md:h-auto md:max-h-[calc(100dvh-3rem)]`}
       >
         <div className="max-h-full overflow-hidden">{children}</div>
       </div>
