@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { createPortal } from 'react-dom';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { formatDuration } from '@/lib/results';
 
@@ -17,6 +18,32 @@ const TABS: Array<{ id: FeedTab; label: string; helper: string }> = [
 async function readJson(response: Response) {
   const text = await response.text();
   return text ? JSON.parse(text) : null;
+}
+
+function getKathmanduTodayKey() {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Katmandu',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(new Date());
+}
+
+function diffDaysFromToday(targetKey?: string | null) {
+  if (!targetKey) return null;
+  const todayKey = getKathmanduTodayKey();
+  const today = new Date(`${todayKey}T00:00:00Z`);
+  const target = new Date(`${targetKey}T00:00:00Z`);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function formatDaysLeft(targetKey?: string | null) {
+  const diff = diffDaysFromToday(targetKey);
+  if (diff === null) return '';
+  if (diff <= 0) return 'Today';
+  if (diff === 1) return '1 day left';
+  return `${diff} days left`;
 }
 
 export function NewsfeedPageClient() {
@@ -199,6 +226,7 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
 
   if (!weeklyMock.can_attempt) {
     const attempted = Boolean(weeklyMock.already_attempted);
+    const countdownLabel = formatDaysLeft(weeklyMock.attempt_date);
     return (
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)]/90 p-4 shadow-lg shadow-blue-500/5">
         <div className="flex items-start gap-3">
@@ -207,11 +235,12 @@ function WeeklyMockCard({ data, isLoading }: { data: any; isLoading: boolean }) 
           </span>
           <span className="min-w-0 flex-1">
             <span className={attempted ? 'badge-green' : 'badge-amber'}>{attempted ? 'Attempt completed' : 'Weekly mock locked'}</span>
+            {!attempted && countdownLabel && <span className="ml-2 badge-blue">{countdownLabel}</span>}
             <span className="mt-2 block font-semibold text-[var(--text)]">{weeklyMock.title}</span>
             <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
               {attempted
                 ? 'Your ranked attempt is saved. Rankings publish after midnight NPT, then this test appears in Past Weekly Mocks for normal practice.'
-                : `Opens only on ${weeklyMock.attempt_date} for focused exam-day discipline. Results publish after the day closes.`}
+                : `Opens on ${weeklyMock.attempt_date}. Weekly ranking counts only on that day, then result publishing starts after midnight NPT.`}
             </span>
             <Link href="/planner" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)]">
               Prepare with planner
@@ -257,11 +286,13 @@ function PastWeeklyMockLauncher({
   setOpen: (value: boolean) => void;
 }) {
   const pastMocks = Array.isArray(data?.weekly?.pastWeeklyMocks) ? data.weekly.pastWeeklyMocks : [];
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   if (isLoading || pastMocks.length === 0) return null;
 
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         className="group block w-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-4 text-left transition-colors hover:border-[var(--brand)]/50 hover:bg-[var(--brand-soft)]/25"
@@ -284,14 +315,8 @@ function PastWeeklyMockLauncher({
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[90]">
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
-            aria-label="Close past weekly mocks"
-            onClick={() => setOpen(false)}
-          />
-          <section className="absolute inset-x-3 top-8 mx-auto flex max-h-[86dvh] max-w-2xl flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
+        <AnchoredFeedModal anchorRef={triggerRef} onClose={() => setOpen(false)} widthClassName="max-w-2xl">
+          <section className="flex max-h-[86dvh] flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">Expired weekly tests</p>
@@ -324,7 +349,7 @@ function PastWeeklyMockLauncher({
               </div>
             </div>
           </section>
-        </div>
+        </AnchoredFeedModal>
       )}
     </>
   );
@@ -332,6 +357,7 @@ function PastWeeklyMockLauncher({
 
 function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const published = data?.weekly?.publishedResult;
   if (isLoading) return null;
 
@@ -365,8 +391,8 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setOpen(true)} className="btn-primary text-xs">
-              {open ? 'Rankings open below' : 'Open rankings'}
+            <button ref={triggerRef} type="button" onClick={() => setOpen(true)} className="btn-primary text-xs">
+              Open rankings
             </button>
             <Link href="/leaderboard" className="btn-secondary text-xs">Full leaderboard</Link>
           </div>
@@ -390,7 +416,8 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
           </div>
         </div>
         {open && (
-          <section className="mt-4 overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
+          <AnchoredFeedModal anchorRef={triggerRef} onClose={() => setOpen(false)} widthClassName="max-w-5xl">
+          <section className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
             <div className="flex flex-col gap-3 border-b border-[var(--line)] p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Weekly ranking published</p>
@@ -469,9 +496,71 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
               </div>
             </div>
           </section>
+          </AnchoredFeedModal>
         )}
       </div>
     </>
+  );
+}
+
+function AnchoredFeedModal({
+  anchorRef,
+  onClose,
+  children,
+  widthClassName = 'max-w-3xl',
+}: {
+  anchorRef: React.RefObject<HTMLElement | null>;
+  onClose: () => void;
+  children: React.ReactNode;
+  widthClassName?: string;
+}) {
+  const [position, setPosition] = useState<{ top: number; left: number; mobile: boolean }>({ top: 24, left: 24, mobile: false });
+
+  useEffect(() => {
+    function updatePosition() {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      const mobile = window.innerWidth < 768;
+      if (!rect) {
+        setPosition({ top: 24, left: 24, mobile });
+        return;
+      }
+      const panelWidth = Math.min(window.innerWidth - 24, mobile ? window.innerWidth - 16 : 960);
+      const left = mobile
+        ? 8
+        : Math.min(Math.max(12, rect.left + rect.width / 2 - panelWidth / 2), window.innerWidth - panelWidth - 12);
+      const top = mobile ? 64 : Math.min(rect.bottom + 12, window.innerHeight - 160);
+      setPosition({ top, left, mobile });
+    }
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [anchorRef]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[95]">
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
+        aria-label="Close modal"
+        onClick={onClose}
+      />
+      <div
+        className={`absolute w-[min(96vw,960px)] ${widthClassName}`}
+        style={
+          position.mobile
+            ? { left: 8, right: 8, top: position.top, bottom: 12, width: 'auto' }
+            : { left: position.left, top: position.top }
+        }
+      >
+        {children}
+      </div>
+    </div>,
+    document.body
   );
 }
 
