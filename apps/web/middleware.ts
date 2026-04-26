@@ -9,6 +9,9 @@ const PUBLIC_EXACT_ROUTES = new Set([
   '/auth/error',
   '/offline',
   '/manifest.json',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/googlee8f36920ba0141bb.html',
   '/sw.js',
   ...PUBLIC_TOPIC_ROUTES,
 ]);
@@ -42,6 +45,9 @@ export default withAuth(
         if (pathname.startsWith('/api/exams') && req.method === 'GET') return true;
         if (pathname.startsWith('/_next')) return true;
         if (pathname.startsWith('/favicon')) return true;
+        if (pathname.endsWith('.xml')) return true;
+        if (pathname.endsWith('.txt')) return true;
+        if (pathname.endsWith('.html')) return true;
 
         // All other routes require auth
         return !!token;
@@ -52,6 +58,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icons|images|brand).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons|images|brand|robots.txt|sitemap.xml|googlee8f36920ba0141bb.html).*)',
   ],
 };
