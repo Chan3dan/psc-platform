@@ -98,7 +98,7 @@ export function NewsfeedPageClient() {
   return (
     <div className="page-wrap space-y-5">
       <section className="card glass overflow-hidden p-4 sm:p-5">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {TABS.map((tab) => {
                 const active = activeTab === tab.id;
                 return (
@@ -121,7 +121,7 @@ export function NewsfeedPageClient() {
 
             <div className="mt-5">
               {activeTab === 'latest' && (
-                <div className="grid gap-3">
+                <div className="grid gap-3 lg:grid-cols-2">
                   <WeeklyMockCard data={feedQuery.data} isLoading={feedQuery.isLoading} />
                   <PastWeeklyMockLauncher
                     data={feedQuery.data}
@@ -331,6 +331,7 @@ function PastWeeklyMockLauncher({
 }
 
 function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }) {
+  const [open, setOpen] = useState(false);
   const published = data?.weekly?.publishedResult;
   if (isLoading) return null;
 
@@ -353,43 +354,133 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
   }
 
   return (
-    <div className="rounded-3xl border border-emerald-300 bg-emerald-50/70 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <span className="badge-green">Published weekly ranking</span>
-          <h2 className="mt-2 font-semibold text-[var(--text)]">{published.title}</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Attempt date {published.attempt_date ?? published.week_end} · Published {published.published_at_label}
-          </p>
+    <>
+      <div className="rounded-3xl border border-emerald-300 bg-emerald-50/70 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <span className="badge-green">Published weekly ranking</span>
+            <h2 className="mt-2 font-semibold text-[var(--text)]">{published.title}</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Attempt date {published.attempt_date ?? published.week_end} · Published {published.published_at_label}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setOpen(true)} className="btn-primary text-xs">
+              Open rankings
+            </button>
+            <Link href="/leaderboard" className="btn-secondary text-xs">Full leaderboard</Link>
+          </div>
         </div>
-        <Link href="/leaderboard" className="btn-secondary text-xs">Full leaderboard</Link>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Participants</p>
+            <p className="mt-1 text-2xl font-bold text-[var(--text)]">{published.total_attempts}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Top score</p>
+            <p className="mt-1 text-2xl font-bold text-[var(--text)]">
+              {published.rows?.[0] ? `${published.rows[0].score}/${published.rows[0].max_score}` : '—'}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Fastest top run</p>
+            <p className="mt-1 text-2xl font-bold text-[var(--text)]">
+              {published.rows?.[0] ? formatDuration(published.rows[0].total_time_seconds) : '—'}
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/80">
-        <table className="w-full min-w-[620px] text-sm">
-          <thead className="bg-[var(--brand-soft)]/35">
-            <tr>
-              {['Rank', 'User', 'Score', 'Accuracy', 'Time'].map((heading) => (
-                <th key={heading} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{heading}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--line)]">
-            {published.rows.slice(0, 5).map((row: any) => (
-              <tr key={row.result_id}>
-                <td className="px-4 py-3 font-bold text-[var(--text)]">#{row.rank}</td>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-[var(--text)]">{row.user_name}</p>
-                  <p className="text-xs text-[var(--muted)]">{row.user_email}</p>
-                </td>
-                <td className="px-4 py-3 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</td>
-                <td className="px-4 py-3 text-emerald-600 font-semibold">{row.accuracy_percent}%</td>
-                <td className="px-4 py-3 text-[var(--muted)]">{formatDuration(row.total_time_seconds)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+
+      {open && (
+        <div className="fixed inset-0 z-[95]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
+            aria-label="Close weekly ranking"
+            onClick={() => setOpen(false)}
+          />
+          <section className="absolute inset-x-3 top-6 bottom-6 mx-auto flex max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
+            <div className="flex flex-col gap-3 border-b border-[var(--line)] p-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Weekly ranking published</p>
+                <h2 className="mt-1 text-lg font-bold text-[var(--text)]">{published.title}</h2>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Attempt date {published.attempt_date ?? published.week_end} · Published {published.published_at_label}
+                </p>
+              </div>
+              <button type="button" onClick={() => setOpen(false)} className="btn-secondary !px-3 !py-2 text-xs">
+                Close
+              </button>
+            </div>
+
+            <div className="grid gap-3 border-b border-[var(--line)] p-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/55 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Participants</p>
+                <p className="mt-1 text-xl font-bold text-[var(--text)]">{published.total_attempts}</p>
+              </div>
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/55 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Visible rows</p>
+                <p className="mt-1 text-xl font-bold text-[var(--text)]">{published.rows?.length ?? 0}</p>
+              </div>
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/55 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Top accuracy</p>
+                <p className="mt-1 text-xl font-bold text-emerald-600">{published.rows?.[0]?.accuracy_percent ?? 0}%</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              <div className="hidden md:block">
+                <table className="w-full min-w-[760px] text-sm">
+                  <thead className="sticky top-0 bg-[var(--bg-elev)]">
+                    <tr className="border-b border-[var(--line)]">
+                      {['Rank', 'User', 'Email', 'Score', 'Accuracy', 'Time'].map((heading) => (
+                        <th key={heading} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--line)]">
+                    {published.rows.map((row: any) => (
+                      <tr key={row.result_id} className="hover:bg-[var(--brand-soft)]/20">
+                        <td className="px-4 py-3 font-bold text-[var(--text)]">#{row.rank}</td>
+                        <td className="px-4 py-3 font-medium text-[var(--text)]">{row.user_name}</td>
+                        <td className="px-4 py-3 text-xs text-[var(--muted)]">{row.user_email}</td>
+                        <td className="px-4 py-3 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</td>
+                        <td className="px-4 py-3 font-semibold text-emerald-600">{row.accuracy_percent}%</td>
+                        <td className="px-4 py-3 text-[var(--muted)]">{formatDuration(row.total_time_seconds)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="grid gap-3 p-4 md:hidden">
+                {published.rows.map((row: any) => (
+                  <div key={row.result_id} className="rounded-2xl border border-[var(--line)] bg-[var(--bg)]/55 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-[var(--text)]">#{row.rank} {row.user_name}</p>
+                        <p className="mt-1 text-xs text-[var(--muted)] break-all">{row.user_email}</p>
+                      </div>
+                      <span className="badge-green">{row.accuracy_percent}%</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-xl bg-[var(--bg-elev)] px-3 py-2">
+                        <p className="text-[var(--muted)]">Score</p>
+                        <p className="mt-1 font-semibold text-[var(--text)]">{row.score}/{row.max_score}</p>
+                      </div>
+                      <div className="rounded-xl bg-[var(--bg-elev)] px-3 py-2">
+                        <p className="text-[var(--muted)]">Time</p>
+                        <p className="mt-1 font-semibold text-[var(--text)]">{formatDuration(row.total_time_seconds)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
   );
 }
 
