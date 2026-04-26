@@ -355,7 +355,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
 
   return (
     <>
-      <div className="rounded-3xl border border-emerald-300 bg-emerald-50/70 p-4">
+      <div className="rounded-3xl border border-emerald-300/55 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--bg-elev)_92%,#ffffff_8%),color-mix(in_oklab,var(--brand-soft)_28%,var(--bg-elev)_72%))] p-4 shadow-lg shadow-emerald-500/5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <span className="badge-green">Published weekly ranking</span>
@@ -366,7 +366,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setOpen(true)} className="btn-primary text-xs">
-              Open rankings
+              {open ? 'Rankings open below' : 'Open rankings'}
             </button>
             <Link href="/leaderboard" className="btn-secondary text-xs">Full leaderboard</Link>
           </div>
@@ -389,17 +389,8 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
             </p>
           </div>
         </div>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 z-[95]">
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
-            aria-label="Close weekly ranking"
-            onClick={() => setOpen(false)}
-          />
-          <section className="absolute inset-x-3 top-6 bottom-6 mx-auto flex max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
+        {open && (
+          <section className="mt-4 overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
             <div className="flex flex-col gap-3 border-b border-[var(--line)] p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Weekly ranking published</p>
@@ -428,7 +419,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto">
+            <div className="max-h-[70vh] overflow-auto">
               <div className="hidden md:block">
                 <table className="w-full min-w-[760px] text-sm">
                   <thead className="sticky top-0 bg-[var(--bg-elev)]">
@@ -459,7 +450,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-[var(--text)]">#{row.rank} {row.user_name}</p>
-                        <p className="mt-1 text-xs text-[var(--muted)] break-all">{row.user_email}</p>
+                        <p className="mt-1 break-all text-xs text-[var(--muted)]">{row.user_email}</p>
                       </div>
                       <span className="badge-green">{row.accuracy_percent}%</span>
                     </div>
@@ -478,8 +469,8 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
               </div>
             </div>
           </section>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }
