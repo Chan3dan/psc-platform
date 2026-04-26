@@ -514,35 +514,12 @@ function AnchoredFeedModal({
   children: React.ReactNode;
   widthClassName?: string;
 }) {
-  const [position, setPosition] = useState<{ top: number; left: number; mobile: boolean }>({ top: 24, left: 24, mobile: false });
-
   useEffect(() => {
-    function updatePosition() {
-      const rect = anchorRef.current?.getBoundingClientRect();
-      const mobile = window.innerWidth < 768;
-      if (!rect) {
-        setPosition({ top: 24, left: 24, mobile });
-        return;
-      }
-      const panelWidth = Math.min(window.innerWidth - 24, mobile ? window.innerWidth - 16 : 960);
-      const left = mobile
-        ? 8
-        : Math.min(Math.max(12, rect.left + rect.width / 2 - panelWidth / 2), window.innerWidth - panelWidth - 12);
-      const top = mobile ? 64 : Math.min(rect.bottom + 12, window.innerHeight - 160);
-      setPosition({ top, left, mobile });
-    }
-
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
+    anchorRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [anchorRef]);
 
   return createPortal(
-    <div className="fixed inset-0 z-[95]">
+    <div className="fixed inset-0 z-[95] flex items-start justify-center p-3 pt-16 md:items-center md:p-6">
       <button
         type="button"
         className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
@@ -550,24 +527,7 @@ function AnchoredFeedModal({
         onClick={onClose}
       />
       <div
-        className={`absolute overflow-hidden ${widthClassName}`}
-        style={
-          position.mobile
-            ? {
-                left: 8,
-                right: 8,
-                top: position.top,
-                bottom: 12,
-                width: 'auto',
-                maxHeight: `calc(100dvh - ${position.top}px - 12px)`,
-              }
-            : {
-                left: position.left,
-                top: position.top,
-                width: 'min(96vw, 960px)',
-                maxHeight: `calc(100dvh - ${position.top}px - 16px)`,
-              }
-        }
+        className={`relative z-[1] w-full ${widthClassName} max-h-[calc(100dvh-4rem)] overflow-hidden md:max-h-[calc(100dvh-3rem)]`}
       >
         <div className="max-h-full overflow-hidden">{children}</div>
       </div>
@@ -696,9 +656,9 @@ function DailyQuestionCard({
               onClick={() => setSelectedOption(optionIndex)}
               className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
                 correct
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  ? 'border-emerald-500/70 bg-emerald-500/12 text-emerald-300'
                   : wrongPick
-                    ? 'border-red-500 bg-red-50 text-red-700'
+                    ? 'border-red-500/70 bg-red-500/12 text-red-300'
                     : selected
                       ? 'border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--text)]'
                       : 'border-[var(--line)] bg-[var(--bg-elev)]/80 text-[var(--text)] hover:border-[var(--brand)]/45'

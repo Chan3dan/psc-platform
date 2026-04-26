@@ -353,7 +353,7 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
               {dailyResultsLoading ? (
                 <div className="h-56 animate-pulse rounded-3xl bg-[var(--brand-soft)]/25" />
               ) : dailyResultsError ? (
-                <div className="rounded-2xl border border-red-300/60 bg-red-50/90 p-5 text-sm text-red-600">
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/12 p-5 text-sm text-red-300">
                   {dailyResultsError}
                 </div>
               ) : dailyResults ? (
