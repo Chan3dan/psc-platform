@@ -564,7 +564,7 @@ function DailyQuestionCard({
   if (error || !questionOfDay || !question) {
     return (
       <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)]/85 p-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/50">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
           <AppIcon name="alert" className="h-6 w-6" />
         </div>
         <h2 className="font-semibold text-[var(--text)]">Question is not ready yet</h2>
@@ -604,9 +604,9 @@ function DailyQuestionCard({
               onClick={() => setSelectedOption(optionIndex)}
               className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
                 correct
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                   : wrongPick
-                    ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                    ? 'border-red-500 bg-red-50 text-red-700'
                     : selected
                       ? 'border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--text)]'
                       : 'border-[var(--line)] bg-[var(--bg-elev)]/80 text-[var(--text)] hover:border-[var(--brand)]/45'

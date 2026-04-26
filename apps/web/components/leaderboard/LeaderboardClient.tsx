@@ -135,13 +135,13 @@ export function LeaderboardClient({ initialExamId = '' }: { initialExamId?: stri
             {lb.leaderboard.map((entry: any) => {
               const isMe = String(entry.user_id) === String(lb.current_user_id);
               return (
-                <div key={entry.rank} className={`flex items-center gap-4 px-5 py-3 ${isMe ? 'bg-[var(--brand-soft)]/45' : ''}`}>
+                <div key={entry.rank} className={`flex items-center gap-4 px-5 py-3 ${isMe ? 'bg-[var(--brand-soft)]/55' : ''}`}>
                   <span className="w-8 text-center text-lg">{entry.rank <= 3 ? medals[entry.rank - 1] : `#${entry.rank}`}</span>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${isMe ? 'text-[var(--brand)]' : 'text-[var(--text)]'}`}>
                       {entry.name}{isMe ? ' (You)' : ''}
                     </p>
-                    <p className="text-xs text-[var(--muted)]">{entry.accuracy}% accuracy · {Math.floor(entry.time_taken / 60)}m {entry.time_taken % 60}s</p>
+                    <p className={`text-xs ${isMe ? 'text-[var(--brand)]/85' : 'text-[var(--muted)]'}`}>{entry.accuracy}% accuracy · {Math.floor(entry.time_taken / 60)}m {entry.time_taken % 60}s</p>
                   </div>
                   <p className="text-sm font-semibold text-[var(--text)]">{entry.score}</p>
                 </div>

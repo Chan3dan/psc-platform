@@ -696,7 +696,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
 
         <DistEditor rows={rows} setRows={setRows} subjects={subjects} totalQuestions={totalQuestions} />
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
         <button className="btn-primary w-full sm:w-auto" onClick={createMock} disabled={saving}>
           {saving ? 'Creating...' : 'Create Mock Test'}
         </button>
@@ -772,7 +772,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
             <DistEditor rows={editing.rows} setRows={(next) => setEditing((p) => p ? { ...p, rows: typeof next === 'function' ? next(p.rows) : next } : p)} subjects={editSubjects} totalQuestions={editing.total_questions} />
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              {editError ? <p className="text-sm text-red-500">{editError}</p> : <div />}
+              {editError ? <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{editError}</p> : <div />}
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <button className="btn-secondary text-sm" onClick={() => setEditing((p) => p ? { ...p, slug: slugify(p.title) } : p)}>Regenerate Slug</button>
                 <button className="btn-primary text-sm" onClick={saveEdit} disabled={updating}>
@@ -838,7 +838,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
                         {m.is_active ? 'Deactivate' : 'Activate'}
                       </button>
                       <button
-                        className="text-xs px-3 py-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300 w-full sm:w-auto"
+                        className="w-full rounded-lg bg-red-100 px-3 py-1.5 text-xs text-red-600 sm:w-auto"
                         onClick={() => setDeleteTarget({ id: m._id, title: m.title })}
                       >
                         Delete
@@ -998,7 +998,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
             )}
 
             {importErr && (
-              <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
                 <span className="inline-flex items-center gap-1.5">
                   <AppIcon name="alert" className="h-4 w-4" />
                   {importErr}
@@ -1006,7 +1006,7 @@ export function MockTestManager({ exams, initialMocks }: { exams: any[]; initial
               </p>
             )}
             {importQuestions && (
-              <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">
+              <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                 <span className="inline-flex items-center gap-1.5">
                   <AppIcon name="check" className="h-4 w-4" />
                   {importQuestions.length} questions ready to import

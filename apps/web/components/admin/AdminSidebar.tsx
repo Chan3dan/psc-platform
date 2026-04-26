@@ -62,7 +62,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
                 className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
                   active
                     ? 'bg-[var(--brand-soft)] text-[var(--brand)] font-semibold'
-                    : 'text-[var(--muted)] hover:bg-white/60 dark:hover:bg-white/5 hover:text-[var(--text)]'
+                    : 'text-[var(--muted)] hover:bg-[var(--brand-soft)]/45 hover:text-[var(--text)]'
                 }`}
               >
                 <span className="w-5 h-5 flex items-center justify-center">

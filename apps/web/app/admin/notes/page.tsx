@@ -291,7 +291,7 @@ export default function AdminNotesPage() {
                 type="file"
                 accept="application/pdf,.pdf"
                 onChange={(e) => setForm((p) => ({ ...p, file: e.target.files?.[0] ?? null }))}
-                className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                className="block w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--brand-soft)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--brand)] hover:file:opacity-90"
               />
             </div>
           ) : (
@@ -341,7 +341,7 @@ export default function AdminNotesPage() {
           ) : (
             <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
               {notes.map((note: any) => (
-                <article key={note._id} className={`rounded-2xl border p-4 ${note.is_active ? 'border-[var(--line)] bg-[var(--bg-elev)]/92' : 'border-amber-200 bg-amber-50/70'}`}>
+                <article key={note._id} className={`rounded-2xl border p-4 ${note.is_active ? 'border-[var(--line)] bg-[var(--bg-elev)]/92' : 'border-amber-300 bg-amber-50/85'}`}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -365,7 +365,7 @@ export default function AdminNotesPage() {
                           Test PDF
                         </button>
                       )}
-                      <button onClick={() => deleteNote(note)} className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700">Delete</button>
+                      <button onClick={() => deleteNote(note)} className="btn-danger px-3 py-2 text-xs">Delete</button>
                     </div>
                   </div>
                 </article>

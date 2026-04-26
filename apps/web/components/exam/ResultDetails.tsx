@@ -72,7 +72,7 @@ export function ResultDetails({
         </span>
       </div>
 
-      <div className={`card p-6 md:p-8 text-center border-2 ${pass ? 'border-emerald-300 dark:border-emerald-700' : 'border-red-300 dark:border-red-700'}`}>
+      <div className={`card p-6 text-center md:p-8 ${pass ? 'border-2 border-emerald-300' : 'border-2 border-red-300'}`}>
         <div className={`text-5xl font-bold mb-2 ${pass ? 'text-emerald-600' : 'text-red-500'}`}>
           {result.score}<span className="text-2xl text-[var(--muted)] font-normal">/{result.max_score}</span>
         </div>
@@ -116,7 +116,7 @@ export function ResultDetails({
                   {sb.accuracy_percent}%
                 </span>
               </div>
-              <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2">
+              <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-[var(--line)]/65">
                 <div className={`h-full rounded-full ${sb.accuracy_percent >= 70 ? 'bg-emerald-500' : sb.accuracy_percent >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                   style={{ width: `${sb.accuracy_percent}%` }} />
               </div>

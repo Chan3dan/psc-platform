@@ -206,7 +206,7 @@ export default function DrillPage() {
                 <button
                   key={v}
                   onClick={() => setDifficulty(v)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex-1 ${difficulty === v ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex-1 ${difficulty === v ? 'bg-blue-600 text-white' : 'border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:bg-[var(--brand-soft)]/35'}`}
                 >
                   {l}
                 </button>
@@ -214,7 +214,7 @@ export default function DrillPage() {
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">{error}</p>}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
           <button onClick={startDrill} disabled={!examId || starting} className="btn-primary w-full py-3">
             {starting ? 'Starting…' : 'Start Drill'}
           </button>
@@ -282,7 +282,7 @@ export default function DrillPage() {
             className={`text-xs px-3 py-1.5 rounded-lg border shrink-0 transition-colors ${
               isBookmarked
                 ? 'border-amber-300 bg-amber-50 text-amber-700'
-                : 'border-gray-300 bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700'
+                : 'border-[var(--line)] bg-[var(--bg-elev)] text-[var(--text)]'
             } disabled:opacity-60`}
             title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
           >
@@ -299,7 +299,7 @@ export default function DrillPage() {
           <button
             key={opt.index}
             onClick={() => selectAnswer(q._id, opt.index)}
-            className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${selected === opt.index ? 'border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200' : 'border-gray-200 dark:border-gray-700 text-[var(--text)]'}`}
+            className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${selected === opt.index ? 'border-blue-400 bg-[var(--brand-soft)]/60 text-[var(--brand)]' : 'border-[var(--line)] bg-[var(--bg-elev)] text-[var(--text)] hover:bg-[var(--brand-soft)]/25'}`}
           >
             <span className="font-medium mr-3">{String.fromCharCode(65 + opt.index)}.</span>
             {opt.text}

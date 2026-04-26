@@ -120,7 +120,7 @@ export function MobileHeader({ user, targetExamName }: MobileHeaderProps) {
               {user.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="group flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 transition-all mt-2"
+                  className="group flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-orange-600 hover:bg-orange-100/80 transition-all mt-2"
                 >
                   <span className="w-5 h-5 flex items-center justify-center">
                     <AppIcon name="admin" className="h-[18px] w-[18px]" />

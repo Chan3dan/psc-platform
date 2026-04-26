@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { formatDuration, formatResultDate } from '@/lib/results';
 
 type AdminResultFilter = 'all' | 'flagged' | 'mock' | 'practice' | 'daily_question';
 const PAGE_SIZE = 12;
 
 export function AdminResultsClient({ results, isLoading = false }: { results: any[]; isLoading?: boolean }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<AdminResultFilter>('all');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -153,9 +155,13 @@ export function AdminResultsClient({ results, isLoading = false }: { results: an
             <button type="button" onClick={() => setDailyResultsOpen(true)} className="btn-secondary text-xs !px-3 !py-2">
               Daily question table
             </button>
-            <Link href="/admin/flagged" className="btn-secondary text-xs !px-3 !py-2">
+            <button
+              type="button"
+              onClick={() => router.push('/admin/flagged')}
+              className="btn-secondary text-xs !px-3 !py-2"
+            >
               Open flagged queue
-            </Link>
+            </button>
           </div>
         </div>
 

@@ -372,12 +372,12 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
           </div>
         )}
 
-        <div className="text-xs text-[var(--muted)] bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-lg p-3">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
           Media support: use image URLs in `question_image_url` and `option_*_image_url`.
         </div>
 
         {parseErr && (
-          <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
             <span className="inline-flex items-center gap-1.5">
               <AppIcon name="alert" className="h-4 w-4" />
               {parseErr}
@@ -385,7 +385,7 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
           </p>
         )}
         {parsed && (
-          <p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
             <span className="inline-flex items-center gap-1.5">
               <AppIcon name="check" className="h-4 w-4" />
               {parsedCount} valid questions ready to upload
@@ -393,7 +393,7 @@ export function BulkUploadClient({ exams }: { exams: any[] }) {
           </p>
         )}
         {result && (
-          <p className={`text-sm px-3 py-2 rounded-lg ${result.startsWith('Error:') ? 'bg-red-50 dark:bg-red-950 text-red-600' : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}`}>
+          <p className={`rounded-lg px-3 py-2 text-sm ${result.startsWith('Error:') ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
             <span className="inline-flex items-center gap-1.5">
               <AppIcon name={result.startsWith('Error:') ? 'alert' : 'check'} className="h-4 w-4" />
               {result}

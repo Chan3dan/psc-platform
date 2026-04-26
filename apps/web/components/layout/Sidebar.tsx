@@ -64,7 +64,7 @@ export function Sidebar({ user, targetExamName }: SidebarProps) {
                 className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all
                   ${active
                     ? 'bg-[var(--brand-soft)] text-[var(--brand)] font-semibold'
-                    : 'text-[var(--muted)] hover:bg-white/60 dark:hover:bg-white/5 hover:text-[var(--text)]'
+                    : 'text-[var(--muted)] hover:bg-[var(--brand-soft)]/45 hover:text-[var(--text)]'
                   }`}>
                 <span className="w-5 h-5 flex items-center justify-center">
                   <AppIcon name={item.icon as any} className="h-[18px] w-[18px]" />
@@ -75,7 +75,7 @@ export function Sidebar({ user, targetExamName }: SidebarProps) {
           })}
           {user.role === 'admin' && (
             <Link href="/admin"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors mt-1">
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-orange-600 hover:bg-orange-100/80 transition-colors mt-1">
               <span className="w-5 h-5 flex items-center justify-center">
                 <AppIcon name="admin" className="h-[18px] w-[18px]" />
               </span>

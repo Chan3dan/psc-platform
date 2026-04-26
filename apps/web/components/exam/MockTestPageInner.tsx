@@ -8,8 +8,8 @@ import { cacheMockSession, readCachedMockSession } from '@/lib/offline-question-
 const STATUS_COLOR: Record<string, string> = {
   answered: 'bg-emerald-500 text-white',
   flagged: 'bg-amber-400 text-white',
-  skipped: 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300',
-  'not-visited': 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400',
+  skipped: 'bg-gray-300 text-gray-700',
+  'not-visited': 'border border-[var(--line)] bg-[var(--bg-elev)] text-[var(--muted)]',
 };
 
 export function MockTestPageInner({ initialSession }: { initialSession?: ExamSession | null }) {
@@ -211,7 +211,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
 
   if (!session) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="flex h-screen items-center justify-center bg-[var(--bg)]">
         <div className="text-center">
           {!testId ? (
             <>
@@ -221,7 +221,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
           ) : (
             <>
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-gray-500">{bootstrapError || 'Preparing your test…'}</p>
+              <p className="text-sm text-[var(--muted)]">{bootstrapError || 'Preparing your test…'}</p>
               {bootstrapError && (
                 <button
                   type="button"
@@ -240,10 +240,10 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
 
   if (isSubmitting) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="flex h-screen items-center justify-center bg-[var(--bg)]">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Submitting your answers…</p>
+          <p className="text-sm text-[var(--muted)]">Submitting your answers…</p>
         </div>
       </div>
     );
@@ -275,8 +275,8 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
   const statusLegend = [
     { label: 'Answered', dot: 'bg-emerald-500' },
     { label: 'Flagged', dot: 'bg-amber-400' },
-    { label: 'Skipped', dot: 'bg-gray-400 dark:bg-gray-500' },
-    { label: 'Not Visited', dot: 'border border-gray-400 dark:border-gray-500 bg-transparent' },
+    { label: 'Skipped', dot: 'bg-gray-400' },
+    { label: 'Not Visited', dot: 'border border-[var(--line)] bg-transparent' },
   ];
 
   return (
@@ -289,9 +289,9 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
               Question {currentIndex + 1} of {session.questions.length} · {completionPct}% answered
             </p>
             {offlineMode && (
-              <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                Offline mode
-              </span>
+                <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                  Offline mode
+                </span>
             )}
           </div>
 
@@ -303,7 +303,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
                 </span>
                 <span className="text-[11px] text-[var(--muted)] sm:hidden">Time left</span>
               </div>
-              <div className="w-full sm:w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-1">
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[var(--line)]/65 sm:w-20">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${isLow ? 'bg-red-500' : totalPct > 50 ? 'bg-emerald-500' : 'bg-amber-500'}`}
                   style={{ width: `${Math.max(0, totalPct)}%` }}
@@ -319,8 +319,8 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
         <div className="mt-2 flex items-center gap-2 flex-wrap">
           <span className="badge badge-green text-xs">Answered: {answeredCount}</span>
           <span className="badge badge-amber text-xs">Flagged: {flaggedCount}</span>
-          <span className="badge text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">Skipped: {skippedCount}</span>
-          <span className="badge text-xs bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">Not Visited: {notVisitedCount}</span>
+          <span className="badge text-xs bg-gray-100 text-gray-600">Skipped: {skippedCount}</span>
+          <span className="badge text-xs bg-sky-100 text-sky-700">Not Visited: {notVisitedCount}</span>
         </div>
 
         <div className="mt-2 flex items-center gap-x-3 gap-y-1 flex-wrap text-[11px] text-[var(--muted)]">
@@ -332,7 +332,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
           ))}
         </div>
         {submitError && (
-          <div className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-300">
+          <div className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
             {submitError}
           </div>
         )}
@@ -347,14 +347,14 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
               </span>
               <span className="text-xs text-[var(--muted)]">Question {currentIndex + 1}</span>
               <div className="ml-auto flex items-center gap-2">
-                {ans?.flagged && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 text-xs">Flagged</span>}
+                {ans?.flagged && <span className="badge bg-amber-100 text-xs text-amber-700">Flagged</span>}
                 <button
                   onClick={() => flagQuestion(q._id)}
                   title={ans?.flagged ? 'Flagged for review' : 'Flag for review'}
                   className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition-colors ${
                     ans?.flagged
-                      ? 'border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                      : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800'
+                      ? 'border-amber-200 bg-amber-100 text-amber-700'
+                      : 'border-[var(--line)] text-[var(--muted)] hover:bg-[var(--brand-soft)]/30'
                   }`}
                   aria-label={ans?.flagged ? 'Question flagged for review' : 'Flag question for review'}
                 >
@@ -366,8 +366,8 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
                   title={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
                   className={`inline-flex items-center justify-center h-9 w-9 rounded-full border transition-colors ${
                     isBookmarked
-                      ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                      : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
+                      ? 'border-amber-300 bg-amber-50 text-amber-700'
+                      : 'border-[var(--line)] text-[var(--muted)] hover:bg-[var(--brand-soft)]/30'
                   } disabled:opacity-50`}
                   aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
                 >
@@ -396,13 +396,13 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
                     onClick={() => selectAnswer(q._id, opt.index)}
                     className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all
                       ${selected
-                        ? 'border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-medium shadow-sm'
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-950/30'
+                        ? 'border-blue-400 bg-[var(--brand-soft)]/60 text-[var(--brand)] font-medium shadow-sm'
+                        : 'border-[var(--line)] bg-[var(--bg-elev)] text-[var(--text)] hover:border-blue-300 hover:bg-[var(--brand-soft)]/25'
                       }`}
                   >
                     <span className="flex items-start gap-3">
                       <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0
-                        ${selected ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                        ${selected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
                         {String.fromCharCode(65 + opt.index)}
                       </span>
                       <span className="min-w-0 break-words">{opt.text ?? 'Option text unavailable'}</span>
@@ -412,18 +412,18 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
               })}
             </div>
 
-            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
+            <div className="mt-5 space-y-3 border-t border-[var(--line)] pt-4">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:hidden">
                 <button
                   onClick={() => clearAnswer(q._id)}
                   disabled={!ans?.selected_option && ans?.selected_option !== 0}
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-30 border border-transparent"
+                  className="rounded-lg border border-transparent px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--brand-soft)]/30 hover:text-[var(--text)] disabled:opacity-30"
                 >
                   Clear
                 </button>
                 <button
                   onClick={() => setQuickJumpOpen(true)}
-                  className="text-sm px-3 py-2 rounded-lg transition-colors border border-gray-200 text-gray-600 hover:bg-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--brand-soft)]/30 hover:text-[var(--text)]"
                 >
                   Quick Jump
                 </button>
@@ -449,8 +449,8 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
           </div>
         </main>
 
-        <aside className="hidden lg:flex flex-col w-56 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 overflow-y-auto">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Questions</h3>
+        <aside className="hidden w-56 flex-col overflow-y-auto border-l border-[var(--line)] bg-[var(--bg-elev)] p-4 lg:flex">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Questions</h3>
           <div className="grid grid-cols-5 gap-1.5 mb-4">
             {session.questions.map((sq: any, i: number) => {
               const status = getStatus(sq._id);
@@ -461,7 +461,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
                   title={`Q${i + 1} — ${status}`}
                   className={`w-8 h-8 text-xs rounded font-medium transition-all
                     ${STATUS_COLOR[status]}
-                    ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900' : ''}`}
+                    ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-[var(--bg-elev)]' : ''}`}
                 >
                   {i + 1}
                 </button>
@@ -469,12 +469,12 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
             })}
           </div>
 
-          <div className="space-y-1.5 text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+          <div className="mt-auto space-y-1.5 border-t border-[var(--line)] pt-4 text-xs text-[var(--muted)]">
             {[
               ['bg-emerald-500', 'Answered'],
               ['bg-amber-400', 'Flagged'],
-              ['bg-gray-300 dark:bg-gray-600', 'Skipped'],
-              ['bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600', 'Not Visited'],
+              ['bg-gray-300', 'Skipped'],
+              ['border border-[var(--line)] bg-[var(--bg-elev)]', 'Not Visited'],
             ].map(([c, l]) => (
               <div key={l} className="flex items-center gap-2">
                 <span className={`w-3 h-3 rounded inline-block shrink-0 ${c}`} />
@@ -483,18 +483,18 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
             ))}
           </div>
 
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-1 text-xs">
+          <div className="mt-3 space-y-1 border-t border-[var(--line)] pt-3 text-xs">
             {(['answered', 'flagged', 'skipped', 'not-visited'] as const).map((s) => {
               const count = session.questions.filter((sq: any) => getStatus(sq._id) === s).length;
               if (s === 'not-visited') {
                 return (
-                  <div key={s} className="flex justify-between text-gray-400">
+                  <div key={s} className="flex justify-between text-[var(--muted)]">
                     <span>Not Visited</span><span>{count}</span>
                   </div>
                 );
               }
               return (
-                <div key={s} className={`flex justify-between font-medium ${s === 'answered' ? 'text-emerald-600' : s === 'flagged' ? 'text-amber-600' : 'text-gray-400'}`}>
+                <div key={s} className={`flex justify-between font-medium ${s === 'answered' ? 'text-emerald-600' : s === 'flagged' ? 'text-amber-600' : 'text-[var(--muted)]'}`}>
                   <span>{s.charAt(0).toUpperCase() + s.slice(1)}</span>
                   <span>{count}</span>
                 </div>
@@ -586,7 +586,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
                   <span className="badge badge-green text-xs">Answered: {answeredCount}</span>
                   <span className="badge badge-amber text-xs">Flagged: {flaggedCount}</span>
-                  <span className="badge text-xs bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">Not Visited: {notVisitedCount}</span>
+                  <span className="badge text-xs bg-sky-100 text-sky-700">Not Visited: {notVisitedCount}</span>
                 </div>
               </div>
               <button className="btn-secondary text-xs px-3 py-1.5" onClick={() => setQuickJumpOpen(false)}>
@@ -604,7 +604,7 @@ export function MockTestPageInner({ initialSession }: { initialSession?: ExamSes
                       goToQuestion(i);
                       setQuickJumpOpen(false);
                     }}
-                    className={`w-full aspect-square text-xs rounded font-medium transition-all ${STATUS_COLOR[status]} ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900' : ''}`}
+                    className={`w-full aspect-square text-xs rounded font-medium transition-all ${STATUS_COLOR[status]} ${currentIndex === i ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-[var(--bg-elev)]' : ''}`}
                   >
                     {i + 1}
                   </button>

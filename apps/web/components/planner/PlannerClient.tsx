@@ -186,7 +186,7 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
           </div>
 
           {generate.isError && (
-            <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-xl">
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
               {(generate.error as Error).message}
             </p>
           )}
@@ -314,7 +314,7 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
         </div>
       </div>
 
-      <div className="card overflow-hidden border border-blue-200 dark:border-blue-900">
+      <div className="card overflow-hidden border border-[var(--brand)]/25">
         <div className="grid gap-0 lg:grid-cols-[0.8fr,1.2fr]">
           <div className="bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.22),transparent_42%),linear-gradient(145deg,var(--brand-soft),transparent)] p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">Today’s boost</p>
@@ -370,7 +370,7 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
             {done}/{total} days
           </span>
         </div>
-        <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+        <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]/65">
           <div
             className="h-full bg-emerald-500 rounded-full transition-all duration-500"
             style={{ width: `${total > 0 ? Math.round((done / total) * 100) : 0}%` }}
@@ -394,10 +394,10 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
                   ${selDay === i
                     ? 'bg-blue-600 text-white'
                     : d.is_completed
-                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-emerald-100 text-emerald-700'
                     : isPast
-                    ? 'bg-red-50 dark:bg-red-950 text-red-400'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}
+                    ? 'bg-red-50 text-red-500'
+                    : 'border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)]'}
                   ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
               >
                 <div className="text-[10px] font-medium">{dt.toLocaleDateString('en', { weekday: 'short' })}</div>
@@ -442,12 +442,12 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
             <div
               key={ti}
               className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                task.is_completed ? 'bg-emerald-50 dark:bg-emerald-950' : 'bg-[var(--brand-soft)]/20'
+                task.is_completed ? 'bg-emerald-50' : 'bg-[var(--brand-soft)]/20'
               }`}
             >
               <span
                 className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors
-                  ${task.is_completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 text-transparent'}`}
+                  ${task.is_completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-[var(--line)] text-transparent'}`}
               >
                 {task.is_completed && <AppIcon name="check" className="h-3 w-3" />}
               </span>
@@ -477,7 +477,7 @@ export function PlannerClient({ initialPlan, exams, initialExamId }: Props) {
             </div>
           ))}
           {syncProgress.isError && (
-            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950">
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
               {(syncProgress.error as Error).message}
             </p>
           )}

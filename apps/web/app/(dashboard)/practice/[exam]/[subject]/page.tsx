@@ -194,8 +194,8 @@ export default function PracticePage() {
   if (mode === 'setup') return (
     <div className="max-w-md mx-auto px-6 py-12">
       <div className="mb-6">
-        <Link href={`/exams/${params.exam}`} className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Back to exam</Link>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{subjectInfo?.name ?? 'Practice'}</h1>
+        <Link href={`/exams/${params.exam}`} className="text-sm text-[var(--muted)] transition hover:text-[var(--text)]">Back to exam</Link>
+        <h1 className="mt-2 text-2xl font-semibold text-[var(--text)]">{subjectInfo?.name ?? 'Practice'}</h1>
         <p className="text-sm text-gray-500 mt-1">{subjectInfo?.question_count ?? 0} questions available</p>
         {!isOnline && (
           <p className="text-xs text-amber-600 mt-1">Offline mode is available for practice sets loaded before.</p>
@@ -210,7 +210,7 @@ export default function PracticePage() {
           <div className="flex gap-2">
             {[10, 20, 30, 50].map(n => (
               <button key={n} onClick={() => setSettings(s => ({ ...s, count: n }))}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${settings.count === n ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${settings.count === n ? 'bg-blue-600 text-white' : 'border border-[var(--line)] bg-[var(--bg)] text-[var(--text)] hover:bg-[var(--brand-soft)]/35'}`}>
                 {n}
               </button>
             ))}
@@ -221,13 +221,13 @@ export default function PracticePage() {
           <div className="flex gap-2">
             {[['', 'All'], ['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']].map(([v, l]) => (
               <button key={v} onClick={() => setSettings(s => ({ ...s, difficulty: v }))}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${settings.difficulty === v ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${settings.difficulty === v ? 'bg-blue-600 text-white' : 'border border-[var(--line)] bg-[var(--bg)] text-[var(--text)] hover:bg-[var(--brand-soft)]/35'}`}>
                 {l}
               </button>
             ))}
           </div>
         </div>
-        {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
         <button onClick={() => start(focusQuestionId || undefined)} disabled={!subjectInfo || loadingStart} className="btn-primary w-full py-3 disabled:opacity-50">
           {loadingStart ? 'Loading questions…' : 'Start Practice'}
         </button>
@@ -245,7 +245,7 @@ export default function PracticePage() {
     <div className="max-w-2xl mx-auto px-6 py-8">
       <div className="flex items-center gap-3 mb-6">
         <span className="text-sm text-gray-500 shrink-0">{idx + 1} / {questions.length}</span>
-        <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+        <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-[var(--line)]/65">
           <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${((idx + 1) / questions.length) * 100}%` }} />
         </div>
         <span className={`badge text-xs shrink-0 ${q.difficulty === 'easy' ? 'badge-green' : q.difficulty === 'medium' ? 'badge-amber' : 'badge-red'}`}>{q.difficulty}</span>
@@ -258,7 +258,7 @@ export default function PracticePage() {
           className={`text-xs px-3 py-1.5 rounded-lg border shrink-0 transition-colors ${
             isBookmarked
               ? 'border-amber-300 bg-amber-50 text-amber-700'
-              : 'border-gray-300 bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700'
+              : 'border-[var(--line)] bg-[var(--bg-elev)] text-[var(--text)]'
           } disabled:opacity-60`}
           title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
         >
@@ -270,23 +270,23 @@ export default function PracticePage() {
       </div>
 
       <div className="card p-6 mb-4">
-        <p className="text-gray-900 dark:text-gray-100 leading-relaxed">{q.question_text}</p>
+        <p className="leading-relaxed text-[var(--text)]">{q.question_text}</p>
         {q.question_image_url && <img src={q.question_image_url} alt="Question" className="mt-4 rounded-lg max-h-48 object-contain" />}
       </div>
 
       <div className="space-y-3 mb-6">
         {q.options.map((opt: any) => {
-          let cls = 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200';
+          let cls = 'border-[var(--line)] bg-[var(--bg-elev)] text-[var(--text)]';
           if (rev) {
-            if (opt.index === rev.correct_answer) cls = 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200';
-            else if (opt.index === sel && opt.index !== rev.correct_answer) cls = 'border-red-400 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300';
+            if (opt.index === rev.correct_answer) cls = 'border-emerald-400 bg-emerald-50 text-emerald-800';
+            else if (opt.index === sel && opt.index !== rev.correct_answer) cls = 'border-red-400 bg-red-50 text-red-700';
           } else if (sel === opt.index) {
-            cls = 'border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200';
+            cls = 'border-blue-400 bg-[var(--brand-soft)]/60 text-[var(--brand)]';
           }
           return (
             <button key={opt.index} disabled={!!rev}
               onClick={() => setAnswers(a => ({ ...a, [q._id]: opt.index }))}
-              className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm disabled:cursor-default ${cls} ${!rev && sel !== opt.index ? 'hover:border-gray-300 dark:hover:border-gray-600' : ''}`}>
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm disabled:cursor-default ${cls} ${!rev && sel !== opt.index ? 'hover:bg-[var(--brand-soft)]/25' : ''}`}>
               <span className="font-medium mr-3">{String.fromCharCode(65 + opt.index)}.</span>
               {opt.text}
               {rev && opt.index === rev.correct_answer && <span className="float-right text-emerald-600"><AppIcon name="check" className="h-4 w-4 inline-block" /></span>}
@@ -297,9 +297,9 @@ export default function PracticePage() {
       </div>
 
       {rev?.explanation && (
-        <div className="card p-4 mb-4 border-l-4 border-blue-400 bg-blue-50 dark:bg-blue-950">
-          <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Explanation</p>
-          <p className="text-sm text-blue-800 dark:text-blue-200">{rev.explanation}</p>
+        <div className="card mb-4 border-l-4 border-blue-400 bg-[var(--brand-soft)]/40 p-4">
+          <p className="mb-1 text-xs font-semibold text-[var(--brand)]">Explanation</p>
+          <p className="text-sm text-[var(--text)]">{rev.explanation}</p>
         </div>
       )}
 

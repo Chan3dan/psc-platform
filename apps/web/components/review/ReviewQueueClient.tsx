@@ -79,7 +79,7 @@ export function ReviewQueueClient() {
           <div className="p-6 text-sm text-[var(--muted)]">Loading your review queue...</div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
               <AppIcon name="check" className="h-6 w-6" />
             </div>
             <h3 className="font-semibold text-[var(--text)]">No review items here</h3>
@@ -126,7 +126,7 @@ export function ReviewQueueClient() {
                         Your answer: <span className="font-semibold text-[var(--text)]">{item.selected_option === null ? 'Not answered' : String.fromCharCode(65 + item.selected_option)}</span>
                       </p>
                       {question.explanation && (
-                        <div className="mt-3 rounded-xl bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                        <div className="mt-3 rounded-xl border border-[var(--line)] bg-[var(--brand-soft)]/35 p-3 text-sm text-[var(--text)]">
                           <strong>Explanation: </strong>{question.explanation}
                         </div>
                       )}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { AppIcon } from '@/components/icons/AppIcon';
 import { formatResultDateTime } from '@/lib/results';
@@ -26,6 +27,7 @@ function AdminOverviewLoadingState() {
 }
 
 export function AdminOverviewClient() {
+  const router = useRouter();
   const { data, isLoading } = useQuery({
     queryKey: ['admin-overview'],
     queryFn: async () => {
@@ -87,9 +89,9 @@ export function AdminOverviewClient() {
             <h2 className="font-semibold text-[var(--text)] text-sm">Flagged By Users</h2>
             <p className="text-xs text-[var(--muted)] mt-0.5">Recent questions users marked for review during tests.</p>
           </div>
-          <Link href="/admin/flagged" className="btn-secondary px-3 py-2 text-xs">
+          <button type="button" onClick={() => router.push('/admin/flagged')} className="btn-secondary px-3 py-2 text-xs">
             Open flagged queue
-          </Link>
+          </button>
         </div>
         {recentFlaggedQuestions.length === 0 ? (
           <div className="px-4 md:px-6 py-5 text-sm text-[var(--muted)]">No flagged questions yet.</div>

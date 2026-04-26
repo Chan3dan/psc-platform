@@ -235,10 +235,10 @@ export function ExamPreferenceSelector({
       </div>
 
       {error ? (
-        <p className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-300">{error}</p>
+        <p className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       ) : null}
       {notice ? (
-        <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">{notice}</p>
+        <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>
       ) : null}
     </section>
   );

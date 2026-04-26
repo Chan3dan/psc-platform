@@ -14,7 +14,7 @@ export function SyllabusPdfViewer({ title, url, proxyUrl }: SyllabusPdfViewerPro
 
   return (
     <div className="w-full">
-      <button type="button" onClick={() => setOpen(true)} className="btn-secondary text-sm">
+      <button type="button" onClick={() => setOpen(true)} className="btn-secondary inline-flex items-center gap-2 text-sm">
         Open PDF
       </button>
 

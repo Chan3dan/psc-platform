@@ -201,7 +201,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
             <p className="text-xs text-[var(--muted)]">
               Example: if each question carries 2 marks and negative marking is 20%, each wrong answer deducts 0.4 marks.
             </p>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
             <div className="flex gap-3">
               <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving...' : 'Save Exam'}</button>
               <button onClick={() => { setEditing(null); setSyllabusFile(null); }} className="btn-secondary">Cancel</button>
@@ -234,7 +234,7 @@ export function ExamManager({ initialExams }: { initialExams: any[] }) {
               </div>
               <button
                 onClick={() => { setEditing({ ...exam, negative_marking: normalizePercent(exam.negative_marking ?? 20) }); setSyllabusFile(null); }}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--brand)] transition hover:bg-[var(--brand-soft)]/45"
               >
                 Edit
               </button>

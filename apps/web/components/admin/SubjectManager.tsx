@@ -158,7 +158,7 @@ export function SubjectManager({ exams, initialSubjects }: { exams: any[]; initi
               <input className="input" value={editing.description ?? ''}
                 onChange={e => setEditing((p: any) => ({ ...p, description: e.target.value }))} />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
             <div className="flex gap-3">
               <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving...' : 'Save Subject'}</button>
               <button onClick={() => setEditing(null)} className="btn-secondary">Cancel</button>
@@ -180,8 +180,12 @@ export function SubjectManager({ exams, initialSubjects }: { exams: any[]; initi
               </div>
               <p className="mt-0.5 text-xs text-[var(--muted)]">{sub.exam_id?.name} · {sub.question_count ?? 0} questions</p>
             </div>
-            <button onClick={() => setEditing({ ...sub, exam_id: sub.exam_id?._id ?? sub.exam_id })}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium">Edit</button>
+            <button
+              onClick={() => setEditing({ ...sub, exam_id: sub.exam_id?._id ?? sub.exam_id })}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--brand)] transition hover:bg-[var(--brand-soft)]/45"
+            >
+              Edit
+            </button>
           </div>
         ))}
       </div>

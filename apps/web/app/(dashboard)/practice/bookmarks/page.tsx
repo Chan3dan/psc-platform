@@ -71,7 +71,7 @@ export default function BookmarkPracticePage() {
           <button
             key={opt.index}
             onClick={() => selectAnswer(q._id, opt.index)}
-            className={`w-full text-left px-4 py-3 rounded-xl border text-sm ${ans?.selected_option === opt.index ? 'border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200' : 'border-[var(--line)] text-[var(--text)]'}`}
+            className={`w-full rounded-xl border px-4 py-3 text-left text-sm ${ans?.selected_option === opt.index ? 'border-blue-400 bg-[var(--brand-soft)]/60 text-[var(--brand)]' : 'border-[var(--line)] bg-[var(--bg-elev)] text-[var(--text)] hover:bg-[var(--brand-soft)]/25'}`}
           >
             <span className="font-medium mr-2">{String.fromCharCode(65 + opt.index)}.</span>
             {opt.text}
@@ -87,7 +87,7 @@ export default function BookmarkPracticePage() {
               <button
                 key={item._id}
                 onClick={() => goToQuestion(i)}
-                className={`h-8 rounded text-xs ${i === currentIndex ? 'bg-blue-600 text-white' : answered ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-gray-800 text-[var(--muted)]'}`}
+                className={`h-8 rounded text-xs ${i === currentIndex ? 'bg-blue-600 text-white' : answered ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-[var(--muted)]'}`}
               >
                 {i + 1}
               </button>
