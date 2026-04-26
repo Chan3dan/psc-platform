@@ -316,7 +316,7 @@ function PastWeeklyMockLauncher({
 
       {open && (
         <AnchoredFeedModal anchorRef={triggerRef} onClose={() => setOpen(false)} widthClassName="max-w-2xl">
-          <section className="flex max-h-[86dvh] flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
+          <section className="flex h-full max-h-full flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">Expired weekly tests</p>
@@ -417,7 +417,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
         </div>
         {open && (
           <AnchoredFeedModal anchorRef={triggerRef} onClose={() => setOpen(false)} widthClassName="max-w-5xl">
-          <section className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
+          <section className="flex h-full max-h-full flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
             <div className="flex flex-col gap-3 border-b border-[var(--line)] p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Weekly ranking published</p>
@@ -446,7 +446,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
               </div>
             </div>
 
-            <div className="max-h-[70vh] overflow-auto">
+            <div className="min-h-0 flex-1 overflow-auto">
               <div className="hidden md:block">
                 <table className="w-full min-w-[760px] text-sm">
                   <thead className="sticky top-0 bg-[var(--bg-elev)]">
@@ -550,14 +550,26 @@ function AnchoredFeedModal({
         onClick={onClose}
       />
       <div
-        className={`absolute w-[min(96vw,960px)] ${widthClassName}`}
+        className={`absolute overflow-hidden ${widthClassName}`}
         style={
           position.mobile
-            ? { left: 8, right: 8, top: position.top, bottom: 12, width: 'auto' }
-            : { left: position.left, top: position.top }
+            ? {
+                left: 8,
+                right: 8,
+                top: position.top,
+                bottom: 12,
+                width: 'auto',
+                maxHeight: `calc(100dvh - ${position.top}px - 12px)`,
+              }
+            : {
+                left: position.left,
+                top: position.top,
+                width: 'min(96vw, 960px)',
+                maxHeight: `calc(100dvh - ${position.top}px - 16px)`,
+              }
         }
       >
-        {children}
+        <div className="max-h-full overflow-hidden">{children}</div>
       </div>
     </div>,
     document.body
@@ -700,13 +712,15 @@ function DailyQuestionCard({
       </div>
 
       {questionOfDay.attempt ? (
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/20 p-4">
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--brand-soft)]/35 p-4">
           <p className="text-sm font-semibold text-[var(--text)]">Correct answer: Option {String.fromCharCode(65 + Number(question.correct_answer ?? 0))}</p>
           {question.explanation && <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{question.explanation}</p>}
         </div>
       ) : (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-red-500">{submitQuestion.isError ? (submitQuestion.error as Error).message : ''}</p>
+          <p className={`text-sm ${submitQuestion.isError ? 'rounded-xl border border-red-500/30 bg-red-500/12 px-3 py-2 text-red-300' : 'text-transparent'}`}>
+            {submitQuestion.isError ? (submitQuestion.error as Error).message : 'No error'}
+          </p>
           <button
             type="button"
             onClick={() => submitQuestion.mutate()}
