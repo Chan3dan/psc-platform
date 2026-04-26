@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { SiteSettings } from '@/lib/site-settings-config';
 
 const FALLBACK_SITE_URL = 'https://niyukta.vercel.app';
+const GOOGLE_SITE_VERIFICATION = 'wnuq427UHlFQ9h4cuxd6dnkSJzW4DV_GcKOiRHiwe9w';
 
 export const SEO_KEYWORDS = [
   'Niyukta',
@@ -98,6 +99,9 @@ export function buildDefaultMetadata(settings: SiteSettings): Metadata {
         'max-snippet': -1,
         'max-video-preview': -1,
       },
+    },
+    verification: {
+      google: GOOGLE_SITE_VERIFICATION,
     },
   };
 }
