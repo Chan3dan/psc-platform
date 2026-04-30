@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import NepaliDate from 'nepali-date-converter';
 
 type ExamOption = { _id: string; name: string; slug: string };
 type SubjectOption = { _id: string; name: string; slug: string; weightage_percent?: number };
@@ -29,6 +30,11 @@ type GeneratorForm = {
 };
 
 type CalendarMode = 'en' | 'ne';
+type CalendarCell = {
+  date: Date | null;
+  key: string;
+  displayDay?: number;
+};
 
 const WEEKDAY_LABELS: Record<CalendarMode, string[]> = {
   en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -44,6 +50,10 @@ function formatNumber(value: number, mode: CalendarMode) {
 }
 
 function formatFullDate(value: string | Date, mode: CalendarMode) {
+  if (mode === 'ne') {
+    return NepaliDate.fromAD(new Date(value)).format('ddd DD, MMMM YYYY', 'np');
+  }
+
   return new Date(value).toLocaleDateString(getLocale(mode), {
     weekday: 'long',
     year: 'numeric',
@@ -54,6 +64,10 @@ function formatFullDate(value: string | Date, mode: CalendarMode) {
 }
 
 function formatMonthTitle(value: Date, mode: CalendarMode) {
+  if (mode === 'ne') {
+    return NepaliDate.fromAD(value).format('MMMM YYYY', 'np');
+  }
+
   return value.toLocaleDateString(getLocale(mode), {
     year: 'numeric',
     month: 'long',
@@ -88,23 +102,61 @@ function addMonths(value: Date, amount: number) {
   return new Date(value.getFullYear(), value.getMonth() + amount, 1);
 }
 
-function getMonthCells(monthDate: Date) {
+function addCalendarMonths(value: Date, amount: number, mode: CalendarMode) {
+  if (mode === 'ne') {
+    const bsDate = NepaliDate.fromAD(value);
+    return new NepaliDate(bsDate.getYear(), bsDate.getMonth() + amount, 1).toJsDate();
+  }
+
+  return addMonths(value, amount);
+}
+
+function getInternationalMonthCells(monthDate: Date) {
   const first = startOfMonth(monthDate);
   const startOffset = first.getDay();
   const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
-  const cells: Array<{ date: Date | null; key: string }> = [];
+  const cells: CalendarCell[] = [];
 
   for (let index = 0; index < startOffset; index += 1) {
     cells.push({ date: null, key: `blank-start-${index}` });
   }
   for (let day = 1; day <= daysInMonth; day += 1) {
     const date = new Date(first.getFullYear(), first.getMonth(), day);
-    cells.push({ date, key: dateKey(date) });
+    cells.push({ date, key: dateKey(date), displayDay: day });
   }
   while (cells.length % 7 !== 0) {
     cells.push({ date: null, key: `blank-end-${cells.length}` });
   }
   return cells;
+}
+
+function getNepaliMonthCells(monthDate: Date) {
+  const anchor = NepaliDate.fromAD(monthDate);
+  const year = anchor.getYear();
+  const month = anchor.getMonth();
+  const first = new NepaliDate(year, month, 1);
+  const cells: CalendarCell[] = [];
+
+  for (let index = 0; index < first.getDay(); index += 1) {
+    cells.push({ date: null, key: `bs-blank-start-${index}` });
+  }
+
+  for (let day = 1; day <= 32; day += 1) {
+    const bsDate = new NepaliDate(year, month, day);
+    if (bsDate.getYear() !== year || bsDate.getMonth() !== month) break;
+    const date = bsDate.toJsDate();
+    cells.push({ date, key: dateKey(date), displayDay: day });
+  }
+
+  while (cells.length % 7 !== 0) {
+    cells.push({ date: null, key: `bs-blank-end-${cells.length}` });
+  }
+
+  return cells;
+}
+
+function getMonthCells(monthDate: Date, mode: CalendarMode) {
+  return mode === 'ne' ? getNepaliMonthCells(monthDate) : getInternationalMonthCells(monthDate);
 }
 
 function getDayProgress(day: any) {
@@ -211,7 +263,19 @@ export function StudyPlanGenerator({
     return map;
   }, [plan?.daily_schedule]);
 
-  const visibleCells = useMemo(() => getMonthCells(visibleMonth), [visibleMonth]);
+  const visibleCells = useMemo(() => getMonthCells(visibleMonth, calendarMode), [visibleMonth, calendarMode]);
+
+  useEffect(() => {
+    if (!selectedDay) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const previousOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'contain';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.overscrollBehavior = previousOverscroll;
+    };
+  }, [selectedDay]);
 
   return (
     <section className="card p-5">
@@ -365,7 +429,7 @@ export function StudyPlanGenerator({
             <div>
               <h3 className="font-semibold text-[var(--text)]">Study calendar</h3>
               <p className="text-xs text-[var(--muted)]">
-                Real monthly calendar · Nepal time {formatNepalTime(calendarMode)}
+                {calendarMode === 'ne' ? 'Bikram Sambat calendar' : 'International calendar'} · Nepal time {formatNepalTime(calendarMode)}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -374,27 +438,27 @@ export function StudyPlanGenerator({
                 className={calendarMode === 'ne' ? 'btn-primary !px-3 !py-2 text-xs' : 'btn-secondary !px-3 !py-2 text-xs'}
                 onClick={() => setCalendarMode('ne')}
               >
-                नेपाली
+                Nepali BS
               </button>
               <button
                 type="button"
                 className={calendarMode === 'en' ? 'btn-primary !px-3 !py-2 text-xs' : 'btn-secondary !px-3 !py-2 text-xs'}
                 onClick={() => setCalendarMode('en')}
               >
-                English
+                International
               </button>
             </div>
           </div>
           <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] p-3">
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addMonths(current, -1))}>
+              <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addCalendarMonths(current, -1, calendarMode))}>
                 Previous
               </button>
               <div className="text-center">
                 <p className="font-semibold text-[var(--text)]">{formatMonthTitle(visibleMonth, calendarMode)}</p>
-                <p className="text-[11px] text-[var(--muted)]">{calendarMode === 'ne' ? 'नेपाली दृश्य' : 'English view'}</p>
+                <p className="text-[11px] text-[var(--muted)]">{calendarMode === 'ne' ? 'Bikram Sambat' : 'Gregorian / AD'}</p>
               </div>
-              <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addMonths(current, 1))}>
+              <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addCalendarMonths(current, 1, calendarMode))}>
                 Next
               </button>
             </div>
@@ -409,7 +473,6 @@ export function StudyPlanGenerator({
             <div className="grid grid-cols-7 gap-2">
               {visibleCells.map((cell) => {
                 const day = cell.date ? scheduleByDate.get(cell.key) : null;
-                const dateNumber = cell.date ? cell.date.getDate() : null;
                 return (
                   <button
                     key={cell.key}
@@ -425,7 +488,7 @@ export function StudyPlanGenerator({
                     {cell.date && (
                       <div className="flex items-start justify-between gap-1">
                         <span className="text-sm font-bold text-[var(--text)]">
-                          {formatNumber(dateNumber ?? 0, calendarMode)}
+                          {formatNumber(cell.displayDay ?? 0, calendarMode)}
                         </span>
                         {day && (
                           <span className="rounded-full bg-[var(--brand-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--brand)]">
@@ -461,8 +524,16 @@ export function StudyPlanGenerator({
       )}
 
       {selectedDay && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
-          <div className="max-h-[88vh] w-full overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:max-w-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setSelectedDay(null)}
+        >
+          <div
+            className="max-h-[min(88dvh,720px)] w-full overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:max-w-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--card)] p-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
