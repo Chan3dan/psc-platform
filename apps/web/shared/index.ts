@@ -7,6 +7,8 @@ export {
   User,
   Result,
   StudyPlan,
+  StudySession,
+  RevisionLog,
   Bookmark,
   Note,
   Feedback,

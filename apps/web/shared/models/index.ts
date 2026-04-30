@@ -426,10 +426,11 @@ const SiteSettingSchema = new Schema<ISiteSetting>(
 export interface IDailyTask {
   subject_id: Types.ObjectId;
   subject_name: string;
-  task_type: 'practice' | 'revision' | 'mock';
+  subject_slug?: string;
+  task_type: 'practice' | 'revision' | 'mock' | 'notes';
   duration_minutes: number;
   question_count?: number;
-  verification_mode?: 'questions' | 'mock';
+  verification_mode?: 'questions' | 'mock' | 'revision' | 'notes';
   minimum_questions?: number;
   minimum_minutes?: number;
   verified_questions?: number;
@@ -475,10 +476,11 @@ const StudyPlanSchema = new Schema<IStudyPlan>(
           {
             subject_id: { type: Schema.Types.ObjectId, ref: 'Subject' },
             subject_name: String,
-            task_type: { type: String, enum: ['practice', 'revision', 'mock'] },
+            subject_slug: String,
+            task_type: { type: String, enum: ['practice', 'revision', 'mock', 'notes'] },
             duration_minutes: Number,
             question_count: Number,
-            verification_mode: { type: String, enum: ['questions', 'mock'], default: 'questions' },
+            verification_mode: { type: String, enum: ['questions', 'mock', 'revision', 'notes'], default: 'questions' },
             minimum_questions: Number,
             minimum_minutes: Number,
             verified_questions: { type: Number, default: 0 },
@@ -501,6 +503,76 @@ const StudyPlanSchema = new Schema<IStudyPlan>(
   { timestamps: { createdAt: 'created_at' } }
 );
 StudyPlanSchema.index({ user_id: 1, is_active: 1 });
+
+export interface IStudySession extends Document {
+  user_id: Types.ObjectId;
+  exam_id?: Types.ObjectId;
+  subject_id?: Types.ObjectId;
+  topic_slug: string;
+  topic_name: string;
+  date: Date;
+  duration_minutes: number;
+  completed: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const StudySessionSchema = new Schema<IStudySession>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    exam_id: { type: Schema.Types.ObjectId, ref: 'Exam' },
+    subject_id: { type: Schema.Types.ObjectId, ref: 'Subject' },
+    topic_slug: { type: String, required: true },
+    topic_name: { type: String, required: true },
+    date: { type: Date, required: true },
+    duration_minutes: { type: Number, default: 0 },
+    completed: { type: Boolean, default: false },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+StudySessionSchema.index({ user_id: 1, date: 1, topic_slug: 1 });
+StudySessionSchema.index({ user_id: 1, topic_slug: 1, created_at: -1 });
+
+export interface IRevisionLog extends Document {
+  user_id: Types.ObjectId;
+  exam_id?: Types.ObjectId;
+  subject_id?: Types.ObjectId;
+  topic_slug: string;
+  topic_name: string;
+  last_studied: Date;
+  next_revision: Date;
+  revision_count: number;
+  history: Array<{
+    date: Date;
+    action: 'studied' | 'revised';
+    duration_minutes?: number;
+  }>;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const RevisionLogSchema = new Schema<IRevisionLog>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    exam_id: { type: Schema.Types.ObjectId, ref: 'Exam' },
+    subject_id: { type: Schema.Types.ObjectId, ref: 'Subject' },
+    topic_slug: { type: String, required: true },
+    topic_name: { type: String, required: true },
+    last_studied: { type: Date, required: true },
+    next_revision: { type: Date, required: true },
+    revision_count: { type: Number, default: 0 },
+    history: [
+      {
+        date: { type: Date, required: true },
+        action: { type: String, enum: ['studied', 'revised'], required: true },
+        duration_minutes: Number,
+      },
+    ],
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+RevisionLogSchema.index({ user_id: 1, next_revision: 1 });
+RevisionLogSchema.index({ user_id: 1, exam_id: 1, topic_slug: 1 }, { unique: true });
 
 const BookmarkSchema = new Schema(
   {
@@ -566,6 +638,10 @@ export const Result = mongoose.models.Result || mongoose.model<IResult>('Result'
 export const SiteSetting =
   mongoose.models.SiteSetting || mongoose.model<ISiteSetting>('SiteSetting', SiteSettingSchema);
 export const StudyPlan = mongoose.models.StudyPlan || mongoose.model<IStudyPlan>('StudyPlan', StudyPlanSchema);
+export const StudySession =
+  mongoose.models.StudySession || mongoose.model<IStudySession>('StudySession', StudySessionSchema);
+export const RevisionLog =
+  mongoose.models.RevisionLog || mongoose.model<IRevisionLog>('RevisionLog', RevisionLogSchema);
 export const Bookmark = mongoose.models.Bookmark || mongoose.model('Bookmark', BookmarkSchema);
 export const Note = mongoose.models.Note || mongoose.model('Note', NoteSchema);
 export const Feedback =

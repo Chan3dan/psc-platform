@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { Result, StudyPlan, User } from '@psc/shared/models';
+import { Result, StudyPlan, StudySession, User } from '@psc/shared/models';
 import { err, notFound, ok, serverError, unauthorized } from '@/lib/apiResponse';
 import { updateStreak } from '@psc/shared/utils/planner';
 import { CacheKeys, cacheDel } from '@/lib/redis';
@@ -48,8 +48,17 @@ function buildDayActivity(results: any[]) {
   return { bySubject, mocks };
 }
 
-function syncPlanDay(day: any, results: any[]) {
+function syncPlanDay(day: any, results: any[], sessions: any[] = []) {
   const { bySubject, mocks } = buildDayActivity(results);
+  const sessionsBySlug = new Map<string, any>();
+  for (const session of sessions) {
+    const slug = String(session.topic_slug ?? '');
+    if (!slug) continue;
+    const current = sessionsBySlug.get(slug) ?? { duration_minutes: 0, completed: false };
+    current.duration_minutes += Number(session.duration_minutes ?? 0);
+    current.completed = current.completed || Boolean(session.completed);
+    sessionsBySlug.set(slug, current);
+  }
   const remainingBySubject = new Map<string, SubjectActivity>();
   const remainingMocks = [...mocks];
 
@@ -78,7 +87,17 @@ function syncPlanDay(day: any, results: any[]) {
     task.is_completed = false;
     task.completed_at = undefined;
 
-    if (verificationMode === 'mock' || task.task_type === 'mock') {
+    if (verificationMode === 'notes' || task.task_type === 'notes') {
+      const slug = String(task.subject_slug ?? task.subject_name ?? '').toLowerCase().replace(/\s+/g, '-');
+      const session = sessionsBySlug.get(slug) ?? { duration_minutes: 0, completed: false };
+      const hasEnoughMinutes = requiredMinutes === 0 ? session.completed : session.duration_minutes >= requiredMinutes;
+      task.verified_minutes = Math.max(0, Math.round(Number(session.duration_minutes ?? 0)));
+      task.verification_source = hasEnoughMinutes || session.completed ? 'manual_notes_session' : '';
+      if (hasEnoughMinutes || session.completed) {
+        task.is_completed = true;
+        task.completed_at = new Date();
+      }
+    } else if (verificationMode === 'mock' || task.task_type === 'mock') {
       const matchIndex = remainingMocks.findIndex((mock) => mock.minutes >= requiredMinutes || mock.questions >= 1);
       if (matchIndex >= 0) {
         const match = remainingMocks.splice(matchIndex, 1)[0];
@@ -157,15 +176,21 @@ export async function POST(
     const overallStart = windows.reduce((min: Date, item: { start: Date }) => (item.start < min ? item.start : min), windows[0].start);
     const overallEnd = windows.reduce((max: Date, item: { end: Date }) => (item.end > max ? item.end : max), windows[0].end);
 
-    const results = await Result.find({
-      user_id: session.user.id,
-      exam_id: plan.exam_id,
-      created_at: { $gte: overallStart, $lte: overallEnd },
-    })
-      .select(
-        '_id test_type created_at total_time_seconds correct_count wrong_count skipped_count subject_breakdown'
-      )
-      .lean();
+    const [results, sessions] = await Promise.all([
+      Result.find({
+        user_id: session.user.id,
+        exam_id: plan.exam_id,
+        created_at: { $gte: overallStart, $lte: overallEnd },
+      })
+        .select(
+          '_id test_type created_at total_time_seconds correct_count wrong_count skipped_count subject_breakdown'
+        )
+        .lean(),
+      StudySession.find({
+        user_id: session.user.id,
+        date: { $gte: overallStart, $lte: overallEnd },
+      }).lean(),
+    ]);
 
     const resultsByDay = new Map<string, any[]>();
     for (const result of results) {
@@ -173,6 +198,13 @@ export async function POST(
       const list = resultsByDay.get(key) ?? [];
       list.push(result);
       resultsByDay.set(key, list);
+    }
+    const sessionsByDay = new Map<string, any[]>();
+    for (const item of sessions) {
+      const key = new Date(item.date).toDateString();
+      const list = sessionsByDay.get(key) ?? [];
+      list.push(item);
+      sessionsByDay.set(key, list);
     }
 
     const todayKey = new Date().toDateString();
@@ -183,7 +215,7 @@ export async function POST(
       const day = dailySchedule[index];
       const key = new Date(day.date).toDateString();
       if (key === todayKey) completedTodayBefore = Boolean(day.is_completed);
-      syncPlanDay(day, resultsByDay.get(key) ?? []);
+      syncPlanDay(day, resultsByDay.get(key) ?? [], sessionsByDay.get(key) ?? []);
       if (key === todayKey) completedTodayNow = Boolean(day.is_completed);
     }
 
