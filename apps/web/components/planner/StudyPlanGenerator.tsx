@@ -279,11 +279,27 @@ export function StudyPlanGenerator({
   function openDayModal(event: MouseEvent<HTMLButtonElement>, day: any) {
     const rect = event.currentTarget.getBoundingClientRect();
     const isMobile = window.innerWidth < 640;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const estimatedHeight = isMobile ? Math.min(viewportHeight * 0.62, 520) : Math.min(viewportHeight * 0.82, 720);
+    const estimatedWidth = isMobile ? viewportWidth - 24 : 672;
+    const edgePadding = 12;
+    const preferredTop = rect.top + rect.height / 2;
+    const preferredLeft = isMobile ? viewportWidth / 2 : rect.left + rect.width / 2;
+    const top = Math.min(
+      Math.max(preferredTop, estimatedHeight / 2 + edgePadding),
+      viewportHeight - estimatedHeight / 2 - edgePadding,
+    );
+    const left = Math.min(
+      Math.max(preferredLeft, estimatedWidth / 2 + edgePadding),
+      viewportWidth - estimatedWidth / 2 - edgePadding,
+    );
+
     setSelectedDay(day);
     setModalPosition({
-      top: isMobile ? window.innerHeight : Math.min(rect.top + rect.height / 2, window.innerHeight - 24),
-      left: isMobile ? window.innerWidth / 2 : Math.min(Math.max(rect.left + rect.width / 2, 340), window.innerWidth - 340),
-      transform: isMobile ? 'translate(-50%, -100%)' : 'translate(-50%, -50%)',
+      top,
+      left,
+      transform: 'translate(-50%, -50%)',
     });
   }
 
@@ -299,16 +315,33 @@ export function StudyPlanGenerator({
 
   useEffect(() => {
     if (!selectedDay) return undefined;
+    const scrollY = window.scrollY;
     const previousOverflow = document.body.style.overflow;
     const previousOverscroll = document.body.style.overscrollBehavior;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousLeft = document.body.style.left;
+    const previousRight = document.body.style.right;
+    const previousWidth = document.body.style.width;
     const previousHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehavior = 'contain';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
     document.documentElement.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = previousOverflow;
       document.body.style.overscrollBehavior = previousOverscroll;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.left = previousLeft;
+      document.body.style.right = previousRight;
+      document.body.style.width = previousWidth;
       document.documentElement.style.overflow = previousHtmlOverflow;
+      window.scrollTo(0, scrollY);
     };
   }, [selectedDay]);
 
@@ -563,10 +596,13 @@ export function StudyPlanGenerator({
           className="fixed inset-0 z-50 bg-black/55 p-3 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          onClick={() => setSelectedDay(null)}
+          onClick={() => {
+            setSelectedDay(null);
+            setModalPosition(null);
+          }}
         >
           <div
-            className="fixed max-h-[min(82dvh,720px)] w-[calc(100vw-1.5rem)] overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:w-full sm:max-w-2xl"
+            className="fixed max-h-[62dvh] w-[calc(100vw-1.5rem)] overscroll-contain overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:max-h-[min(82dvh,720px)] sm:w-full sm:max-w-2xl"
             style={{
               top: modalPosition ? `${modalPosition.top}px` : '50%',
               left: modalPosition ? `${modalPosition.left}px` : '50%',
@@ -586,7 +622,14 @@ export function StudyPlanGenerator({
                   {formatNumber(selectedDay.total_minutes, calendarMode)} minutes planned · {formatNumber(getDayProgress(selectedDay), calendarMode)}% complete
                 </p>
               </div>
-              <button type="button" className="btn-secondary text-sm" onClick={() => setSelectedDay(null)}>
+              <button
+                type="button"
+                className="btn-secondary text-sm"
+                onClick={() => {
+                  setSelectedDay(null);
+                  setModalPosition(null);
+                }}
+              >
                 Close
               </button>
             </div>
@@ -597,7 +640,10 @@ export function StudyPlanGenerator({
                   key={`${task.task_type}-${task.subject_slug}-${index}`}
                   href={getTaskHref(task, examSlug)}
                   className="block rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] p-4 transition hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]/20"
-                  onClick={() => setSelectedDay(null)}
+                  onClick={() => {
+                    setSelectedDay(null);
+                    setModalPosition(null);
+                  }}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
