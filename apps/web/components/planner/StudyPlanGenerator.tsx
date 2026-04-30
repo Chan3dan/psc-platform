@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -39,10 +40,33 @@ function getWeeks(schedule: any[]) {
   return weeks.slice(0, 6);
 }
 
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 function getDayProgress(day: any) {
   const tasks = Array.isArray(day.tasks) ? day.tasks : [];
   if (!tasks.length) return 0;
   return Math.round((tasks.filter((task: any) => task.is_completed).length / tasks.length) * 100);
+}
+
+function taskLabel(task: any) {
+  if (task.task_type === 'notes') return 'Study notes';
+  if (task.task_type === 'mock') return 'Take mock';
+  if (task.task_type === 'revision') return 'Revise MCQs';
+  return 'Practice MCQs';
+}
+
+function cleanSubjectSlug(task: any) {
+  return String(task.subject_slug ?? '')
+    .replace(/-notes$/, '')
+    .replace(/\s+/g, '-')
+    .toLowerCase();
+}
+
+function getTaskHref(task: any, examSlug: string) {
+  if (task.task_type === 'notes' || task.verification_mode === 'notes') return '/notes';
+  if (task.task_type === 'mock' || task.verification_mode === 'mock') return '/mock';
+  const subjectSlug = cleanSubjectSlug(task);
+  return examSlug && subjectSlug ? `/practice/${examSlug}/${subjectSlug}` : '/practice';
 }
 
 export function StudyPlanGenerator({
@@ -54,6 +78,7 @@ export function StudyPlanGenerator({
 }: Props) {
   const queryClient = useQueryClient();
   const [plan, setPlan] = useState(initialPlan);
+  const [selectedDay, setSelectedDay] = useState<any | null>(null);
   const [form, setForm] = useState<GeneratorForm>({
     exam_id: initialExamId ?? exams[0]?._id ?? '',
     examDate: '',
@@ -68,6 +93,10 @@ export function StudyPlanGenerator({
   });
 
   const subjects = subjectsByExam[form.exam_id] ?? [];
+  const selectedExam =
+    exams.find((exam) => exam._id === form.exam_id) ??
+    exams.find((exam) => exam._id === String(plan?.exam_id?._id ?? plan?.exam_id));
+  const examSlug = String(plan?.exam_id?.slug ?? selectedExam?.slug ?? '');
   const minDate = useMemo(() => {
     const date = new Date();
     date.setDate(date.getDate() + 7);
@@ -249,15 +278,31 @@ export function StudyPlanGenerator({
 
       {plan?.daily_schedule?.length > 0 && (
         <div className="mt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--text)]">Weekly calendar</h3>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="font-semibold text-[var(--text)]">Study calendar</h3>
+              <p className="text-xs text-[var(--muted)]">Click a day to open tasks. Each task opens the right study flow.</p>
+            </div>
             <p className="text-xs text-[var(--muted)]">First six weeks preview</p>
           </div>
-          <div className="space-y-3">
-            {getWeeks(plan.daily_schedule).map((week, index) => (
-              <div key={index} className="grid gap-2 sm:grid-cols-7">
+          <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] p-3">
+            <div className="mb-2 hidden grid-cols-7 gap-2 sm:grid">
+              {WEEKDAY_LABELS.map((label) => (
+                <div key={label} className="px-2 py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  {label}
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              {getWeeks(plan.daily_schedule).map((week, index) => (
+                <div key={index} className="grid grid-cols-2 gap-2 sm:grid-cols-7">
                 {week.map((day: any) => (
-                  <div key={day.day} className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] p-3">
+                  <button
+                    key={day.day}
+                    type="button"
+                    onClick={() => setSelectedDay(day)}
+                    className="min-h-28 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3 text-left transition hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]/20 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-semibold text-[var(--text)]">Day {day.day}</p>
                       <span className="text-[10px] text-[var(--muted)]">{formatDate(day.date)}</span>
@@ -269,16 +314,74 @@ export function StudyPlanGenerator({
                       max={100}
                     />
                     <div className="mt-3 space-y-1">
-                      {(day.tasks ?? []).slice(0, 3).map((task: any, taskIndex: number) => (
-                        <p key={taskIndex} className="truncate text-[11px] text-[var(--muted)]">
-                          {task.task_type}: {task.subject_name}
-                        </p>
-                      ))}
+                      <p className="text-[11px] font-semibold text-[var(--text)]">
+                        {(day.tasks ?? []).length} tasks
+                      </p>
+                      <p className="truncate text-[11px] text-[var(--muted)]">
+                        {(day.tasks ?? []).map((task: any) => task.task_type).slice(0, 3).join(' · ')}
+                      </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedDay && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
+          <div className="max-h-[88vh] w-full overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:max-w-2xl">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--card)] p-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
+                  {formatDate(selectedDay.date)}
+                </p>
+                <h3 className="mt-1 text-xl font-bold text-[var(--text)]">Day {selectedDay.day} tasks</h3>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  {selectedDay.total_minutes} minutes planned · {getDayProgress(selectedDay)}% complete
+                </p>
+              </div>
+              <button type="button" className="btn-secondary text-sm" onClick={() => setSelectedDay(null)}>
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-3 p-5">
+              {(selectedDay.tasks ?? []).map((task: any, index: number) => (
+                <Link
+                  key={`${task.task_type}-${task.subject_slug}-${index}`}
+                  href={getTaskHref(task, examSlug)}
+                  className="block rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] p-4 transition hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]/20"
+                  onClick={() => setSelectedDay(null)}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--brand)]">
+                          {taskLabel(task)}
+                        </span>
+                        {task.is_completed && (
+                          <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-500">
+                            Completed
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="mt-2 font-semibold text-[var(--text)]">{task.subject_name}</h4>
+                      <p className="mt-1 text-sm text-[var(--muted)]">
+                        {task.duration_minutes} min
+                        {task.minimum_questions ? ` · ${task.minimum_questions}+ questions` : ''}
+                        {task.minimum_minutes ? ` · ${task.minimum_minutes}+ minutes` : ''}
+                      </p>
+                    </div>
+                    <span className="btn-primary text-center text-sm">
+                      Open
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
