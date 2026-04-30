@@ -28,19 +28,84 @@ type GeneratorForm = {
   };
 };
 
-function formatDate(value: string | Date) {
-  return new Date(value).toLocaleDateString('en-NP', { month: 'short', day: 'numeric' });
+type CalendarMode = 'en' | 'ne';
+
+const WEEKDAY_LABELS: Record<CalendarMode, string[]> = {
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  ne: ['आइत', 'सोम', 'मंगल', 'बुध', 'बिहि', 'शुक्र', 'शनि'],
+};
+
+function getLocale(mode: CalendarMode) {
+  return mode === 'ne' ? 'ne-NP' : 'en-NP';
 }
 
-function getWeeks(schedule: any[]) {
-  const weeks: any[][] = [];
-  for (let index = 0; index < schedule.length; index += 7) {
-    weeks.push(schedule.slice(index, index + 7));
+function formatNumber(value: number, mode: CalendarMode) {
+  return new Intl.NumberFormat(getLocale(mode), { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatFullDate(value: string | Date, mode: CalendarMode) {
+  return new Date(value).toLocaleDateString(getLocale(mode), {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Kathmandu',
+  });
+}
+
+function formatMonthTitle(value: Date, mode: CalendarMode) {
+  return value.toLocaleDateString(getLocale(mode), {
+    year: 'numeric',
+    month: 'long',
+    timeZone: 'Asia/Kathmandu',
+  });
+}
+
+function formatNepalTime(mode: CalendarMode) {
+  return new Date().toLocaleTimeString(getLocale(mode), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'Asia/Kathmandu',
+  });
+}
+
+function dateKey(value: string | Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Kathmandu',
+  }).formatToParts(new Date(value));
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function startOfMonth(value: Date) {
+  return new Date(value.getFullYear(), value.getMonth(), 1);
+}
+
+function addMonths(value: Date, amount: number) {
+  return new Date(value.getFullYear(), value.getMonth() + amount, 1);
+}
+
+function getMonthCells(monthDate: Date) {
+  const first = startOfMonth(monthDate);
+  const startOffset = first.getDay();
+  const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const cells: Array<{ date: Date | null; key: string }> = [];
+
+  for (let index = 0; index < startOffset; index += 1) {
+    cells.push({ date: null, key: `blank-start-${index}` });
   }
-  return weeks.slice(0, 6);
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(first.getFullYear(), first.getMonth(), day);
+    cells.push({ date, key: dateKey(date) });
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push({ date: null, key: `blank-end-${cells.length}` });
+  }
+  return cells;
 }
-
-const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function getDayProgress(day: any) {
   const tasks = Array.isArray(day.tasks) ? day.tasks : [];
@@ -79,6 +144,11 @@ export function StudyPlanGenerator({
   const queryClient = useQueryClient();
   const [plan, setPlan] = useState(initialPlan);
   const [selectedDay, setSelectedDay] = useState<any | null>(null);
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>('ne');
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const firstPlanDate = initialPlan?.daily_schedule?.[0]?.date;
+    return startOfMonth(firstPlanDate ? new Date(firstPlanDate) : new Date());
+  });
   const [form, setForm] = useState<GeneratorForm>({
     exam_id: initialExamId ?? exams[0]?._id ?? '',
     examDate: '',
@@ -116,6 +186,9 @@ export function StudyPlanGenerator({
     },
     onSuccess: (newPlan) => {
       setPlan(newPlan);
+      if (newPlan?.daily_schedule?.[0]?.date) {
+        setVisibleMonth(startOfMonth(new Date(newPlan.daily_schedule[0].date)));
+      }
       onPlanGenerated?.(newPlan);
       queryClient.invalidateQueries({ queryKey: ['planner', 'today'] });
     },
@@ -130,6 +203,16 @@ export function StudyPlanGenerator({
     }));
   }
 
+  const scheduleByDate = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const day of plan?.daily_schedule ?? []) {
+      map.set(dateKey(day.date), day);
+    }
+    return map;
+  }, [plan?.daily_schedule]);
+
+  const visibleCells = useMemo(() => getMonthCells(visibleMonth), [visibleMonth]);
+
   return (
     <section className="card p-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -142,7 +225,7 @@ export function StudyPlanGenerator({
         </div>
         {plan && (
           <span className="rounded-full border border-[var(--line)] px-3 py-1 text-xs font-semibold text-[var(--muted)]">
-            {plan.daily_schedule?.length ?? 0} days planned
+            {formatNumber(plan.daily_schedule?.length ?? 0, calendarMode)} days planned
           </span>
         )}
       </div>
@@ -281,50 +364,97 @@ export function StudyPlanGenerator({
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="font-semibold text-[var(--text)]">Study calendar</h3>
-              <p className="text-xs text-[var(--muted)]">Click a day to open tasks. Each task opens the right study flow.</p>
+              <p className="text-xs text-[var(--muted)]">
+                Real monthly calendar · Nepal time {formatNepalTime(calendarMode)}
+              </p>
             </div>
-            <p className="text-xs text-[var(--muted)]">First six weeks preview</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className={calendarMode === 'ne' ? 'btn-primary !px-3 !py-2 text-xs' : 'btn-secondary !px-3 !py-2 text-xs'}
+                onClick={() => setCalendarMode('ne')}
+              >
+                नेपाली
+              </button>
+              <button
+                type="button"
+                className={calendarMode === 'en' ? 'btn-primary !px-3 !py-2 text-xs' : 'btn-secondary !px-3 !py-2 text-xs'}
+                onClick={() => setCalendarMode('en')}
+              >
+                English
+              </button>
+            </div>
           </div>
           <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] p-3">
-            <div className="mb-2 hidden grid-cols-7 gap-2 sm:grid">
-              {WEEKDAY_LABELS.map((label) => (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
+              <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addMonths(current, -1))}>
+                Previous
+              </button>
+              <div className="text-center">
+                <p className="font-semibold text-[var(--text)]">{formatMonthTitle(visibleMonth, calendarMode)}</p>
+                <p className="text-[11px] text-[var(--muted)]">{calendarMode === 'ne' ? 'नेपाली दृश्य' : 'English view'}</p>
+              </div>
+              <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addMonths(current, 1))}>
+                Next
+              </button>
+            </div>
+
+            <div className="mb-2 grid grid-cols-7 gap-2">
+              {WEEKDAY_LABELS[calendarMode].map((label) => (
                 <div key={label} className="px-2 py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                   {label}
                 </div>
               ))}
             </div>
-            <div className="space-y-2">
-              {getWeeks(plan.daily_schedule).map((week, index) => (
-                <div key={index} className="grid grid-cols-2 gap-2 sm:grid-cols-7">
-                {week.map((day: any) => (
+            <div className="grid grid-cols-7 gap-2">
+              {visibleCells.map((cell) => {
+                const day = cell.date ? scheduleByDate.get(cell.key) : null;
+                const dateNumber = cell.date ? cell.date.getDate() : null;
+                return (
                   <button
-                    key={day.day}
+                    key={cell.key}
                     type="button"
-                    onClick={() => setSelectedDay(day)}
-                    className="min-h-28 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3 text-left transition hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]/20 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                    disabled={!day}
+                    onClick={() => day && setSelectedDay(day)}
+                    className={`min-h-24 rounded-2xl border p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--brand)] sm:min-h-32 sm:p-3 ${
+                      day
+                        ? 'border-[var(--line)] bg-[var(--bg)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]/20'
+                        : 'cursor-default border-transparent bg-transparent opacity-40'
+                    }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-semibold text-[var(--text)]">Day {day.day}</p>
-                      <span className="text-[10px] text-[var(--muted)]">{formatDate(day.date)}</span>
-                    </div>
-                    <p className="mt-1 text-[11px] text-[var(--muted)]">{day.total_minutes} min</p>
-                    <progress
-                      className="mt-2 h-1.5 w-full overflow-hidden rounded-full accent-blue-600"
-                      value={getDayProgress(day)}
-                      max={100}
-                    />
-                    <div className="mt-3 space-y-1">
-                      <p className="text-[11px] font-semibold text-[var(--text)]">
-                        {(day.tasks ?? []).length} tasks
-                      </p>
-                      <p className="truncate text-[11px] text-[var(--muted)]">
-                        {(day.tasks ?? []).map((task: any) => task.task_type).slice(0, 3).join(' · ')}
-                      </p>
-                    </div>
+                    {cell.date && (
+                      <div className="flex items-start justify-between gap-1">
+                        <span className="text-sm font-bold text-[var(--text)]">
+                          {formatNumber(dateNumber ?? 0, calendarMode)}
+                        </span>
+                        {day && (
+                          <span className="rounded-full bg-[var(--brand-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--brand)]">
+                            {formatNumber(day.day, calendarMode)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {day && (
+                      <div className="mt-2">
+                        <p className="hidden text-[11px] text-[var(--muted)] sm:block">
+                          {formatNumber(day.total_minutes, calendarMode)} min
+                        </p>
+                        <progress
+                          className="mt-2 h-1.5 w-full overflow-hidden rounded-full accent-blue-600"
+                          value={getDayProgress(day)}
+                          max={100}
+                        />
+                        <p className="mt-2 truncate text-[10px] font-semibold text-[var(--text)] sm:text-[11px]">
+                          {(day.tasks ?? []).length} tasks
+                        </p>
+                        <p className="hidden truncate text-[11px] text-[var(--muted)] sm:block">
+                          {(day.tasks ?? []).map((task: any) => task.task_type).slice(0, 2).join(' · ')}
+                        </p>
+                      </div>
+                    )}
                   </button>
-                ))}
-              </div>
-            ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -336,11 +466,13 @@ export function StudyPlanGenerator({
             <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--card)] p-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
-                  {formatDate(selectedDay.date)}
+                  {formatFullDate(selectedDay.date, calendarMode)}
                 </p>
-                <h3 className="mt-1 text-xl font-bold text-[var(--text)]">Day {selectedDay.day} tasks</h3>
+                <h3 className="mt-1 text-xl font-bold text-[var(--text)]">
+                  Day {formatNumber(selectedDay.day, calendarMode)} tasks
+                </h3>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  {selectedDay.total_minutes} minutes planned · {getDayProgress(selectedDay)}% complete
+                  {formatNumber(selectedDay.total_minutes, calendarMode)} minutes planned · {formatNumber(getDayProgress(selectedDay), calendarMode)}% complete
                 </p>
               </div>
               <button type="button" className="btn-secondary text-sm" onClick={() => setSelectedDay(null)}>
@@ -370,9 +502,9 @@ export function StudyPlanGenerator({
                       </div>
                       <h4 className="mt-2 font-semibold text-[var(--text)]">{task.subject_name}</h4>
                       <p className="mt-1 text-sm text-[var(--muted)]">
-                        {task.duration_minutes} min
-                        {task.minimum_questions ? ` · ${task.minimum_questions}+ questions` : ''}
-                        {task.minimum_minutes ? ` · ${task.minimum_minutes}+ minutes` : ''}
+                        {formatNumber(task.duration_minutes, calendarMode)} min
+                        {task.minimum_questions ? ` · ${formatNumber(task.minimum_questions, calendarMode)}+ questions` : ''}
+                        {task.minimum_minutes ? ` · ${formatNumber(task.minimum_minutes, calendarMode)}+ minutes` : ''}
                       </p>
                     </div>
                     <span className="btn-primary text-center text-sm">
