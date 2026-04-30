@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { MouseEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import NepaliDate from 'nepali-date-converter';
@@ -34,6 +35,11 @@ type CalendarCell = {
   date: Date | null;
   key: string;
   displayDay?: number;
+};
+type ModalPosition = {
+  top: number;
+  left: number;
+  transform: string;
 };
 
 const WEEKDAY_LABELS: Record<CalendarMode, string[]> = {
@@ -96,6 +102,15 @@ function dateKey(value: string | Date) {
 
 function startOfMonth(value: Date) {
   return new Date(value.getFullYear(), value.getMonth(), 1);
+}
+
+function startOfCalendarMonth(value: Date, mode: CalendarMode) {
+  if (mode === 'ne') {
+    const bsDate = NepaliDate.fromAD(value);
+    return new NepaliDate(bsDate.getYear(), bsDate.getMonth(), 1).toJsDate();
+  }
+
+  return startOfMonth(value);
 }
 
 function addMonths(value: Date, amount: number) {
@@ -196,10 +211,11 @@ export function StudyPlanGenerator({
   const queryClient = useQueryClient();
   const [plan, setPlan] = useState(initialPlan);
   const [selectedDay, setSelectedDay] = useState<any | null>(null);
+  const [modalPosition, setModalPosition] = useState<ModalPosition | null>(null);
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('ne');
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const firstPlanDate = initialPlan?.daily_schedule?.[0]?.date;
-    return startOfMonth(firstPlanDate ? new Date(firstPlanDate) : new Date());
+    return startOfCalendarMonth(firstPlanDate ? new Date(firstPlanDate) : new Date(), 'ne');
   });
   const [form, setForm] = useState<GeneratorForm>({
     exam_id: initialExamId ?? exams[0]?._id ?? '',
@@ -239,7 +255,7 @@ export function StudyPlanGenerator({
     onSuccess: (newPlan) => {
       setPlan(newPlan);
       if (newPlan?.daily_schedule?.[0]?.date) {
-        setVisibleMonth(startOfMonth(new Date(newPlan.daily_schedule[0].date)));
+        setVisibleMonth(startOfCalendarMonth(new Date(newPlan.daily_schedule[0].date), calendarMode));
       }
       onPlanGenerated?.(newPlan);
       queryClient.invalidateQueries({ queryKey: ['planner', 'today'] });
@@ -253,6 +269,22 @@ export function StudyPlanGenerator({
         ? current.weakTopicSlugs.filter((item) => item !== slug)
         : [...current.weakTopicSlugs, slug],
     }));
+  }
+
+  function changeCalendarMode(mode: CalendarMode) {
+    setCalendarMode(mode);
+    setVisibleMonth((current) => startOfCalendarMonth(current, mode));
+  }
+
+  function openDayModal(event: MouseEvent<HTMLButtonElement>, day: any) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const isMobile = window.innerWidth < 640;
+    setSelectedDay(day);
+    setModalPosition({
+      top: isMobile ? window.innerHeight : Math.min(rect.top + rect.height / 2, window.innerHeight - 24),
+      left: isMobile ? window.innerWidth / 2 : Math.min(Math.max(rect.left + rect.width / 2, 340), window.innerWidth - 340),
+      transform: isMobile ? 'translate(-50%, -100%)' : 'translate(-50%, -50%)',
+    });
   }
 
   const scheduleByDate = useMemo(() => {
@@ -269,11 +301,14 @@ export function StudyPlanGenerator({
     if (!selectedDay) return undefined;
     const previousOverflow = document.body.style.overflow;
     const previousOverscroll = document.body.style.overscrollBehavior;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehavior = 'contain';
+    document.documentElement.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = previousOverflow;
       document.body.style.overscrollBehavior = previousOverscroll;
+      document.documentElement.style.overflow = previousHtmlOverflow;
     };
   }, [selectedDay]);
 
@@ -436,26 +471,26 @@ export function StudyPlanGenerator({
               <button
                 type="button"
                 className={calendarMode === 'ne' ? 'btn-primary !px-3 !py-2 text-xs' : 'btn-secondary !px-3 !py-2 text-xs'}
-                onClick={() => setCalendarMode('ne')}
+                onClick={() => changeCalendarMode('ne')}
               >
                 Nepali BS
               </button>
               <button
                 type="button"
                 className={calendarMode === 'en' ? 'btn-primary !px-3 !py-2 text-xs' : 'btn-secondary !px-3 !py-2 text-xs'}
-                onClick={() => setCalendarMode('en')}
+                onClick={() => changeCalendarMode('en')}
               >
                 International
               </button>
             </div>
           </div>
-          <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] p-3">
-            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
+          <div className="rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] p-2 sm:p-3">
+            <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2 sm:gap-3 sm:p-3">
               <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addCalendarMonths(current, -1, calendarMode))}>
-                Previous
+                Prev
               </button>
-              <div className="text-center">
-                <p className="font-semibold text-[var(--text)]">{formatMonthTitle(visibleMonth, calendarMode)}</p>
+              <div className="min-w-0 flex-1 text-center">
+                <p className="truncate text-sm font-semibold text-[var(--text)] sm:text-base">{formatMonthTitle(visibleMonth, calendarMode)}</p>
                 <p className="text-[11px] text-[var(--muted)]">{calendarMode === 'ne' ? 'Bikram Sambat' : 'Gregorian / AD'}</p>
               </div>
               <button type="button" className="btn-secondary !px-3 !py-2 text-xs" onClick={() => setVisibleMonth((current) => addCalendarMonths(current, 1, calendarMode))}>
@@ -463,14 +498,14 @@ export function StudyPlanGenerator({
               </button>
             </div>
 
-            <div className="mb-2 grid grid-cols-7 gap-2">
+            <div className="mb-1 grid grid-cols-7 gap-1 sm:mb-2 sm:gap-2">
               {WEEKDAY_LABELS[calendarMode].map((label) => (
-                <div key={label} className="px-2 py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                <div key={label} className="px-1 py-1 text-center text-[9px] font-semibold uppercase tracking-wide text-[var(--muted)] sm:px-2 sm:text-[11px]">
                   {label}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {visibleCells.map((cell) => {
                 const day = cell.date ? scheduleByDate.get(cell.key) : null;
                 return (
@@ -478,36 +513,36 @@ export function StudyPlanGenerator({
                     key={cell.key}
                     type="button"
                     disabled={!day}
-                    onClick={() => day && setSelectedDay(day)}
-                    className={`min-h-24 rounded-2xl border p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--brand)] sm:min-h-32 sm:p-3 ${
+                    onClick={(event) => day && openDayModal(event, day)}
+                    className={`min-h-16 rounded-xl border p-1 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--brand)] sm:min-h-32 sm:rounded-2xl sm:p-3 ${
                       day
                         ? 'border-[var(--line)] bg-[var(--bg)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]/20'
                         : 'cursor-default border-transparent bg-transparent opacity-40'
                     }`}
                   >
                     {cell.date && (
-                      <div className="flex items-start justify-between gap-1">
-                        <span className="text-sm font-bold text-[var(--text)]">
+                      <div className="flex items-start justify-between gap-0.5 sm:gap-1">
+                        <span className="text-xs font-bold text-[var(--text)] sm:text-sm">
                           {formatNumber(cell.displayDay ?? 0, calendarMode)}
                         </span>
                         {day && (
-                          <span className="rounded-full bg-[var(--brand-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--brand)]">
+                          <span className="rounded-full bg-[var(--brand-soft)] px-1 py-0.5 text-[9px] font-semibold text-[var(--brand)] sm:px-1.5 sm:text-[10px]">
                             {formatNumber(day.day, calendarMode)}
                           </span>
                         )}
                       </div>
                     )}
                     {day && (
-                      <div className="mt-2">
+                      <div className="mt-1 sm:mt-2">
                         <p className="hidden text-[11px] text-[var(--muted)] sm:block">
                           {formatNumber(day.total_minutes, calendarMode)} min
                         </p>
                         <progress
-                          className="mt-2 h-1.5 w-full overflow-hidden rounded-full accent-blue-600"
+                          className="mt-1 h-1 w-full overflow-hidden rounded-full accent-blue-600 sm:mt-2 sm:h-1.5"
                           value={getDayProgress(day)}
                           max={100}
                         />
-                        <p className="mt-2 truncate text-[10px] font-semibold text-[var(--text)] sm:text-[11px]">
+                        <p className="mt-1 truncate text-[9px] font-semibold text-[var(--text)] sm:mt-2 sm:text-[11px]">
                           {(day.tasks ?? []).length} tasks
                         </p>
                         <p className="hidden truncate text-[11px] text-[var(--muted)] sm:block">
@@ -525,13 +560,18 @@ export function StudyPlanGenerator({
 
       {selectedDay && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm"
+          className="fixed inset-0 z-50 bg-black/55 p-3 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           onClick={() => setSelectedDay(null)}
         >
           <div
-            className="max-h-[min(88dvh,720px)] w-full overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:max-w-2xl"
+            className="fixed max-h-[min(82dvh,720px)] w-[calc(100vw-1.5rem)] overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--card)] shadow-2xl sm:w-full sm:max-w-2xl"
+            style={{
+              top: modalPosition ? `${modalPosition.top}px` : '50%',
+              left: modalPosition ? `${modalPosition.left}px` : '50%',
+              transform: modalPosition?.transform ?? 'translate(-50%, -50%)',
+            }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--card)] p-5">
