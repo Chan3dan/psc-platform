@@ -316,7 +316,7 @@ function PastWeeklyMockLauncher({
 
       {open && (
         <AnchoredFeedModal anchorRef={triggerRef} onClose={() => setOpen(false)} widthClassName="max-w-2xl">
-          <section className="flex h-full max-h-full flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
+          <section className="flex h-full min-h-0 max-h-full flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand)]">Expired weekly tests</p>
@@ -327,7 +327,7 @@ function PastWeeklyMockLauncher({
                 Close
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="min-h-0 flex-1 overscroll-contain overflow-y-auto p-4">
               <div className="grid gap-3">
                 {pastMocks.map((mock: any) => (
                   <Link
@@ -417,7 +417,7 @@ function WeeklyResultCard({ data, isLoading }: { data: any; isLoading: boolean }
         </div>
         {open && (
           <AnchoredFeedModal anchorRef={triggerRef} onClose={() => setOpen(false)} widthClassName="max-w-5xl">
-          <section className="flex h-full max-h-full flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
+          <section className="flex h-full min-h-0 max-h-full flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--bg-elev)] shadow-[var(--shadow-strong)]">
             <div className="flex flex-col gap-3 border-b border-[var(--line)] p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Weekly ranking published</p>
@@ -495,7 +495,7 @@ function AnchoredFeedModal({
   }, [anchorRef]);
 
   return createPortal(
-    <div className="fixed inset-0 z-[95] flex items-start justify-center p-3 pt-16 md:items-center md:p-6">
+    <div className="fixed inset-0 z-[95] flex items-start justify-center overflow-hidden p-3 pt-16 md:items-center md:p-6">
       <button
         type="button"
         className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
@@ -503,9 +503,9 @@ function AnchoredFeedModal({
         onClick={onClose}
       />
       <div
-        className={`relative z-[1] h-[calc(100dvh-4rem)] w-full ${widthClassName} overflow-hidden md:h-auto md:max-h-[calc(100dvh-3rem)]`}
+        className={`relative z-[1] flex h-[calc(100dvh-5rem)] min-h-0 w-full ${widthClassName} flex-col overflow-hidden md:h-auto md:max-h-[calc(100dvh-3rem)]`}
       >
-        <div className="max-h-full overflow-hidden">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:max-h-full">{children}</div>
       </div>
     </div>,
     document.body
