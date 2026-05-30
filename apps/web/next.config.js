@@ -5,9 +5,6 @@ const withPWA = require('next-pwa')({
   skipWaiting: true,
   clientsClaim: true,
   cleanupOutdatedCaches: true,
-  fallbacks: {
-    document: '/offline',
-  },
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic|googleapis)\.com\/.*/i,

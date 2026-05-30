@@ -7,6 +7,32 @@ import { AppIcon } from '@/components/icons/AppIcon';
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
+const MIN_ZOOM = 0.75;
+const MAX_ZOOM = 3;
+
+type SwipeGesture = {
+  startX: number;
+  startY: number;
+  startScrollLeft: number;
+  startScrollTop: number;
+};
+
+type PinchGesture = {
+  startDistance: number;
+  startZoom: number;
+  contentX: number;
+  contentY: number;
+};
+
+type ZoomFocus = {
+  startZoom: number;
+  nextZoom: number;
+  contentX: number;
+  contentY: number;
+  viewportX: number;
+  viewportY: number;
+};
+
 type PdfReaderProps = {
   url: string;
   title: string;
@@ -25,7 +51,10 @@ export function PdfReader({
   const shellRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const touchStartRef = useRef<number | null>(null);
+  const swipeGestureRef = useRef<SwipeGesture | null>(null);
+  const pinchGestureRef = useRef<PinchGesture | null>(null);
+  const zoomFocusRef = useRef<ZoomFocus | null>(null);
+  const zoomRef = useRef(1);
   const renderTaskRef = useRef<any>(null);
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(1);
@@ -35,6 +64,10 @@ export function PdfReader({
   const [message, setMessage] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [turning, setTurning] = useState<'left' | 'right' | ''>('');
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,6 +143,15 @@ export function PdfReader({
       canvas.height = Math.floor(viewport.height * pixelRatio);
       canvas.style.width = `${Math.floor(viewport.width)}px`;
       canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+      const zoomFocus = zoomFocusRef.current;
+      if (zoomFocus && Math.abs(zoom - zoomFocus.nextZoom) < 0.001) {
+        const zoomRatio = zoomFocus.nextZoom / zoomFocus.startZoom;
+        holder.scrollLeft = zoomFocus.contentX * zoomRatio - zoomFocus.viewportX;
+        holder.scrollTop = zoomFocus.contentY * zoomRatio - zoomFocus.viewportY;
+        zoomFocusRef.current = null;
+      }
+
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context.clearRect(0, 0, viewport.width, viewport.height);
 
@@ -170,6 +212,10 @@ export function PdfReader({
     window.setTimeout(() => setTurning(''), 260);
   }
 
+  function clampZoom(nextZoom: number) {
+    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextZoom));
+  }
+
   async function toggleFullscreen() {
     if (!shellRef.current) return;
     if (document.fullscreenElement) {
@@ -179,13 +225,105 @@ export function PdfReader({
     }
   }
 
-  function onTouchEnd(clientX: number) {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    if (start === null) return;
-    const delta = clientX - start;
-    if (Math.abs(delta) < 45) return;
-    goToPage(delta < 0 ? page + 1 : page - 1);
+  function getTouchDistance(touches: React.TouchList) {
+    const first = touches[0];
+    const second = touches[1];
+    if (!first || !second) return 0;
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  }
+
+  function getTouchCenter(touches: React.TouchList) {
+    const first = touches[0];
+    const second = touches[1];
+    if (!first || !second) return null;
+    return {
+      x: (first.clientX + second.clientX) / 2,
+      y: (first.clientY + second.clientY) / 2,
+    };
+  }
+
+  function onTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    if (event.touches.length === 2) {
+      const center = getTouchCenter(event.touches);
+      const distance = getTouchDistance(event.touches);
+      if (!center || !distance) return;
+
+      const rect = viewport.getBoundingClientRect();
+      pinchGestureRef.current = {
+        startDistance: distance,
+        startZoom: zoomRef.current,
+        contentX: viewport.scrollLeft + center.x - rect.left,
+        contentY: viewport.scrollTop + center.y - rect.top,
+      };
+      swipeGestureRef.current = null;
+      return;
+    }
+
+    if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      swipeGestureRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startScrollLeft: viewport.scrollLeft,
+        startScrollTop: viewport.scrollTop,
+      };
+    }
+  }
+
+  function onTouchMove(event: React.TouchEvent<HTMLDivElement>) {
+    const viewport = viewportRef.current;
+    const pinch = pinchGestureRef.current;
+    if (!viewport || !pinch || event.touches.length !== 2) return;
+
+    event.preventDefault();
+    const center = getTouchCenter(event.touches);
+    const distance = getTouchDistance(event.touches);
+    if (!center || !distance) return;
+
+    const rect = viewport.getBoundingClientRect();
+    const nextZoom = clampZoom(pinch.startZoom * (distance / pinch.startDistance));
+    zoomFocusRef.current = {
+      startZoom: pinch.startZoom,
+      nextZoom,
+      contentX: pinch.contentX,
+      contentY: pinch.contentY,
+      viewportX: center.x - rect.left,
+      viewportY: center.y - rect.top,
+    };
+    setZoom(nextZoom);
+  }
+
+  function onTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    if (event.touches.length > 0) return;
+
+    const swipe = swipeGestureRef.current;
+    const pinched = Boolean(pinchGestureRef.current);
+    swipeGestureRef.current = null;
+    pinchGestureRef.current = null;
+    if (!swipe || pinched || event.changedTouches.length !== 1) return;
+
+    const viewport = viewportRef.current;
+    const touch = event.changedTouches[0];
+    if (!viewport || !touch) return;
+
+    const deltaX = touch.clientX - swipe.startX;
+    const deltaY = touch.clientY - swipe.startY;
+    const scrolledX = Math.abs(viewport.scrollLeft - swipe.startScrollLeft);
+    const scrolledY = Math.abs(viewport.scrollTop - swipe.startScrollTop);
+    const hasScrollableWidth = viewport.scrollWidth > viewport.clientWidth + 4;
+    const isPageSwipe =
+      Math.abs(deltaX) >= 70 &&
+      Math.abs(deltaX) > Math.abs(deltaY) * 1.35 &&
+      scrolledX < 8 &&
+      scrolledY < 8 &&
+      (!hasScrollableWidth || zoomRef.current <= 1.02);
+
+    if (isPageSwipe) {
+      goToPage(deltaX < 0 ? page + 1 : page - 1);
+    }
   }
 
   return (
@@ -233,11 +371,17 @@ export function PdfReader({
         <>
           <div
             ref={viewportRef}
-            className="relative min-h-0 flex-1 overflow-auto bg-[radial-gradient(circle_at_top,#26334a_0,#0f172a_45%,#020617_100%)] p-3"
-            onTouchStart={(event) => { touchStartRef.current = event.changedTouches[0]?.clientX ?? null; }}
-            onTouchEnd={(event) => onTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+            className="relative min-h-0 flex-1 touch-pan-x touch-pan-y overflow-auto overscroll-contain bg-[radial-gradient(circle_at_top,#26334a_0,#0f172a_45%,#020617_100%)] p-3"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onTouchCancel={() => {
+              swipeGestureRef.current = null;
+              pinchGestureRef.current = null;
+              zoomFocusRef.current = null;
+            }}
           >
-            <div className={`mx-auto flex min-h-full items-center justify-center transition-transform duration-200 ${turning === 'right' ? 'translate-x-2 opacity-80' : turning === 'left' ? '-translate-x-2 opacity-80' : ''}`}>
+            <div className={`mx-auto flex min-h-full min-w-max items-center justify-center transition-transform duration-200 ${turning === 'right' ? 'translate-x-2 opacity-80' : turning === 'left' ? '-translate-x-2 opacity-80' : ''}`}>
               <canvas ref={canvasRef} className="rounded-lg bg-white shadow-2xl ring-1 ring-black/20" />
             </div>
 
@@ -271,9 +415,9 @@ export function PdfReader({
               Previous
             </button>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setZoom((z) => Math.max(0.75, z - 0.15))} className="rounded-lg bg-slate-800 px-3 py-2 text-sm">-</button>
+              <button type="button" onClick={() => setZoom((z) => clampZoom(z - 0.15))} className="rounded-lg bg-slate-800 px-3 py-2 text-sm">-</button>
               <span className="min-w-12 text-center text-xs text-slate-300">{Math.round(zoom * 100)}%</span>
-              <button type="button" onClick={() => setZoom((z) => Math.min(2, z + 0.15))} className="rounded-lg bg-slate-800 px-3 py-2 text-sm">+</button>
+              <button type="button" onClick={() => setZoom((z) => clampZoom(z + 0.15))} className="rounded-lg bg-slate-800 px-3 py-2 text-sm">+</button>
             </div>
             <button
               type="button"
