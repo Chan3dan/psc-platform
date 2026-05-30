@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 if (!MONGODB_URI) throw new Error('MONGODB_URI env variable is not set');
+const SERVER_SELECTION_TIMEOUT_MS = Number(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS || 5000);
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -21,6 +22,9 @@ export async function connectDB() {
     cached.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
       maxPoolSize: 10,
+      maxIdleTimeMS: 30000,
+      serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+      socketTimeoutMS: 20000,
     });
   }
   try {

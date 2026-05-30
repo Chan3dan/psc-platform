@@ -8,7 +8,6 @@ node_modules/
 out/
 dist/
 build/
-apps/web/public/sw.js
 apps/web/public/workbox-*.js
 apps/web/public/fallback-*.js
 
